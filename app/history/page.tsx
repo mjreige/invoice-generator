@@ -277,12 +277,12 @@ export default function HistoryPage() {
               </div>
 
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
-                <div className="grid grid-cols-12 gap-3 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                  <div className="col-span-6">Description</div>
-                  <div className="col-span-2 text-center">Qty</div>
-                  <div className="col-span-2 text-right">Unit</div>
-                  <div className="col-span-2 text-right">Total</div>
-                </div>
+                <div className="grid grid-cols-12 gap-1 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-3 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
+				  <div className="col-span-5">Description</div>
+				  <div className="col-span-2 text-center">Qty</div>
+				  <div className="col-span-2 text-right">Unit</div>
+				  <div className="col-span-3 text-right">Total</div>
+				</div>
                 <div className="space-y-2 p-3">
                   {(previewInvoice.line_items ?? []).map((li, idx) => {
                     const qty = Number(li.quantity || 0);
@@ -294,10 +294,10 @@ export default function HistoryPage() {
 
                     return (
                       <div
-                        key={`${previewInvoice.id}-${idx}`}
-                        className="grid grid-cols-12 items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200"
-                      >
-                        <div className="col-span-6 text-sm font-medium text-slate-900">
+						  key={`${previewInvoice.id}-${idx}`}
+						  className="grid grid-cols-12 items-center gap-1 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200"
+						>
+						  <div className="col-span-5 text-sm font-medium text-slate-900">
                           {li.description || "—"}
                         </div>
                         <div className="col-span-2 text-center text-sm text-slate-800">
@@ -306,7 +306,7 @@ export default function HistoryPage() {
                         <div className="col-span-2 text-right text-sm text-slate-800">
                           {li.unitPrice ? `$${formatMoney(unit)}` : "—"}
                         </div>
-                        <div className="col-span-2 text-right text-sm font-semibold text-slate-900">
+                        <div className="col-span-3 text-right text-sm font-semibold text-slate-900">
                           ${formatMoney(rowTotal)}
                         </div>
                       </div>
