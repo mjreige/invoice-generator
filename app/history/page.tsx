@@ -220,11 +220,11 @@ export default function HistoryPage() {
 
       {previewInvoice && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4"
+		  className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 px-4 py-4 overflow-y-auto"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl shadow-black/40">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl shadow-black/40 my-auto">
             <div className="border-b border-slate-200 bg-gradient-to-b from-white to-slate-50 px-6 py-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
