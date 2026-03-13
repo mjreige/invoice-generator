@@ -165,42 +165,46 @@ export default function HistoryPage() {
                   {invoices.map((invoice) => (
                     <div
   key={invoice.id}
-  className="grid grid-cols-12 items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200"
+  className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid sm:grid-cols-12 sm:items-center"
 >
-  <div className="col-span-3">
+  <div className="sm:col-span-3">
     <div className="text-sm font-semibold text-slate-900">
       {invoice.invoice_number || "Untitled invoice"}
     </div>
     <div className="text-xs text-slate-500">
-      Created{" "}
-      {new Date(invoice.created_at).toLocaleString()}
+      Created {new Date(invoice.created_at).toLocaleString()}
     </div>
   </div>
-  <div className="col-span-2 text-sm text-slate-800">
-    {invoice.client_name || "—"}
+  <div className="flex items-center justify-between sm:contents">
+    <div className="flex flex-col gap-1 sm:col-span-2 sm:block">
+      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 sm:hidden">Client</span>
+      <span className="text-sm text-slate-800">{invoice.client_name || "—"}</span>
+    </div>
+    <div className="flex flex-col gap-1 sm:col-span-2 sm:block sm:text-center">
+      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 sm:hidden">Due date</span>
+      <span className="text-sm text-slate-800">
+        {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "—"}
+      </span>
+    </div>
+    <div className="flex flex-col gap-1 sm:col-span-1 sm:block sm:text-right">
+      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 sm:hidden">Total</span>
+      <span className="text-sm font-semibold text-slate-900">
+        {typeof invoice.grand_total === "number" ? `$${invoice.grand_total.toFixed(2)}` : "—"}
+      </span>
+    </div>
   </div>
-  <div className="col-span-2 text-center text-sm text-slate-800">
-    {invoice.due_date
-      ? new Date(invoice.due_date).toLocaleDateString()
-      : "—"}
-  </div>
-  <div className="col-span-1 text-right text-sm font-semibold text-slate-900">
-    {typeof invoice.grand_total === "number"
-      ? `$${invoice.grand_total.toFixed(2)}`
-      : "—"}
-  </div>
-  <div className="col-span-4 flex items-center justify-end gap-2">
+  <div className="flex items-center gap-2 sm:col-span-4 sm:justify-end">
     <button
       type="button"
       onClick={() => setPreviewInvoice(invoice)}
-      className="inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:translate-y-px"
+      className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:translate-y-px"
     >
       View
     </button>
     <button
       type="button"
       onClick={() => handleDownload(invoice)}
-      className="inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 active:translate-y-px"
+      className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 active:translate-y-px"
     >
       Download PDF
     </button>
