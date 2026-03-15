@@ -13,11 +13,16 @@ export default function AuthHeader() {
 
   useEffect(() => {
     const load = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      setEmail(user?.email ?? null);
-      setUser(user);
+      // Check and refresh session first
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (!error && session) {
+        setEmail(session.user?.email ?? null);
+        setUser(session.user);
+      } else {
+        setEmail(null);
+        setUser(null);
+      }
     };
 
     void load();
@@ -123,6 +128,12 @@ export default function AuthHeader() {
                   </div>
                   
                   <div className="py-1">
+                    <a
+                      href="/profile"
+                      className="block px-4 py-3 h-11 min-h-[44px] flex items-center text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                    >
+                      Business Profile
+                    </a>
                     <a
                       href="/change-password"
                       className="block px-4 py-3 h-11 min-h-[44px] flex items-center text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"

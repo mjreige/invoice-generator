@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { generateInvoicePdf } from "@/lib/pdf";
 import type { LineItemForPdf } from "@/lib/types";
 
 type InvoiceRow = {
@@ -21,28 +20,77 @@ type InvoiceRow = {
   created_at: string;
 };
 
+type SortOption = "newest" | "oldest" | "total_high" | "total_low" | "client_az";
+
 export default function HistoryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [previewInvoice, setPreviewInvoice] = useState<InvoiceRow | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalInvoices, setTotalInvoices] = useState(0);
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const load = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.replace("/login");
+      // Check and refresh session first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        router.replace("/login?redirect=/history");
         return;
       }
 
+      const user = session.user;
+
+      // Get total count first
+      const { count } = await supabase
+        .from("invoices")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      
+      setTotalInvoices(count || 0);
+
+      // Determine sort order
+      let orderByColumn = "created_at";
+      let ascending = false;
+      
+      switch (sortBy) {
+        case "oldest":
+          orderByColumn = "created_at";
+          ascending = true;
+          break;
+        case "total_high":
+          orderByColumn = "grand_total";
+          ascending = false;
+          break;
+        case "total_low":
+          orderByColumn = "grand_total";
+          ascending = true;
+          break;
+        case "client_az":
+          orderByColumn = "client_name";
+          ascending = true;
+          break;
+        case "newest":
+        default:
+          orderByColumn = "created_at";
+          ascending = false;
+          break;
+      }
+
+      // Fetch paginated data - only fetch fields needed for list view
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+      
       const { data, error } = await supabase
         .from("invoices")
-        .select("*")
+        .select("id, invoice_number, client_name, due_date, grand_total, created_at")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order(orderByColumn, { ascending })
+        .range(from, to);
 
       if (!error && data) {
         setInvoices(data as InvoiceRow[]);
@@ -52,19 +100,116 @@ export default function HistoryPage() {
     };
 
     void load();
-  }, [router]);
+  }, [router, currentPage, sortBy]);
+
+  const totalPages = Math.ceil(totalInvoices / itemsPerPage);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleSortChange = (newSort: SortOption) => {
+    setSortBy(newSort);
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
+
+  const handleViewInvoice = async (invoiceId: string) => {
+    setLoadingPreview(true);
+    try {
+      // Check and refresh session first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) return;
+      
+      const user = session.user;
+
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("id", invoiceId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (!error && data) {
+        setPreviewInvoice(data as InvoiceRow);
+      }
+    } catch (err) {
+      console.error("Error fetching invoice details:", err);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
 
   const hasInvoices = useMemo(
     () => !loading && invoices.length > 0,
     [loading, invoices.length]
   );
 
-  const handleDownload = (invoice: InvoiceRow) => {
-    if (!invoice.line_items) return;
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="space-y-4">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="animate-pulse">
+          <div className="rounded-lg bg-slate-200 p-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+              <div className="h-4 rounded bg-slate-300"></div>
+              <div className="h-4 rounded bg-slate-300"></div>
+              <div className="h-4 rounded bg-slate-300"></div>
+              <div className="h-4 rounded bg-slate-300"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
-    const subtotal = invoice.subtotal ?? invoice.grand_total ?? 0;
-    const discountValue = invoice.discount_value ?? 0;
-    const discountType = invoice.discount_type ?? "percent";
+  const handleDownload = async (invoice: InvoiceRow) => {
+    // Check and refresh session first
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) return;
+    
+    const user = session.user;
+
+    // Fetch full invoice details if needed
+    let fullInvoice = invoice;
+    if (!invoice.line_items) {
+      try {
+        const { data, error } = await supabase
+          .from("invoices")
+          .select("*")
+          .eq("id", invoice.id)
+          .eq("user_id", user.id)
+          .single();
+
+        if (!error && data) {
+          fullInvoice = data as InvoiceRow;
+        }
+      } catch (err) {
+        console.error("Error fetching invoice details for download:", err);
+        return;
+      }
+    }
+
+    // Fetch business profile for header
+    let businessProfile = null;
+    try {
+      const { data: profileData } = await supabase
+        .from("business_profiles")
+        .select("business_name, email, show_header")
+        .eq("user_id", user.id)
+        .single();
+      
+      businessProfile = profileData;
+    } catch (err) {
+      console.error("Error fetching business profile for PDF:", err);
+    }
+
+    if (!fullInvoice.line_items) return;
+
+    const subtotal = fullInvoice.subtotal ?? fullInvoice.grand_total ?? 0;
+    const discountValue = fullInvoice.discount_value ?? 0;
+    const discountType = fullInvoice.discount_type ?? "percent";
 
     const discountAmount =
       discountValue > 0
@@ -74,20 +219,23 @@ export default function HistoryPage() {
         : 0;
 
     const grandTotal =
-      typeof invoice.grand_total === "number"
-        ? invoice.grand_total
+      typeof fullInvoice.grand_total === "number"
+        ? fullInvoice.grand_total
         : Math.max(0, subtotal - discountAmount);
 
-    generateInvoicePdf({
-      senderName: invoice.sender_name ?? "",
-      clientName: invoice.client_name ?? "",
-      dueDate: invoice.due_date ?? "",
-      invoiceNumber: invoice.invoice_number ?? "",
-      lineItems: invoice.line_items,
+    // Dynamic import PDF generation
+    const { generateInvoicePdf } = await import("@/lib/pdf");
+    await generateInvoicePdf({
+      senderName: fullInvoice.sender_name ?? "",
+      clientName: fullInvoice.client_name ?? "",
+      dueDate: fullInvoice.due_date ?? "",
+      invoiceNumber: fullInvoice.invoice_number ?? "",
+      lineItems: fullInvoice.line_items,
       total: grandTotal,
       subtotal,
       discountAmount,
-      grandTotal
+      grandTotal,
+      businessProfile: businessProfile || undefined
     });
   };
 
@@ -121,7 +269,7 @@ export default function HistoryPage() {
       <div className="mx-auto w-full max-w-5xl">
         <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/95 shadow-2xl shadow-black/40 backdrop-blur">
           <div className="border-b border-slate-200/80 bg-gradient-to-b from-white to-slate-50 px-6 py-6 sm:px-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
                   Invoice history
@@ -130,19 +278,30 @@ export default function HistoryPage() {
                   View and download invoices you have generated.
                 </p>
               </div>
-              <a
-                href="/"
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-              >
-                Back to home
-              </a>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <select
+                  value={sortBy}
+                  onChange={(e) => handleSortChange(e.target.value as SortOption)}
+                  className="h-11 min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="total_high">Total high to low</option>
+                  <option value="total_low">Total low to high</option>
+                  <option value="client_az">Client A to Z</option>
+                </select>
+                <a
+                  href="/"
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 min-h-[44px]"
+                >
+                  Back to home
+                </a>
+              </div>
             </div>
           </div>
 
           <div className="px-6 py-6 sm:px-8 sm:py-8">
-            {loading && (
-              <p className="text-sm text-slate-600">Loading invoices…</p>
-            )}
+            {loading && <LoadingSkeleton />}
 
             {!loading && !hasInvoices && (
               <p className="text-sm text-slate-600">
@@ -153,64 +312,99 @@ export default function HistoryPage() {
 
             {hasInvoices && (
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
-                <div className="grid grid-cols-12 gap-3 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
-				<div className="col-span-3">Invoice</div>
-				<div className="col-span-2">Client</div>
-				<div className="col-span-2 text-center">Due date</div>
-				<div className="col-span-1 text-right">Total</div>
-				<div className="col-span-4 text-right">Actions</div>
-				</div>
+                {/* Desktop Header */}
+                <div className="hidden sm:grid grid-cols-12 gap-3 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <div className="col-span-3">Invoice</div>
+                  <div className="col-span-2">Client</div>
+                  <div className="col-span-2 text-center">Due date</div>
+                  <div className="col-span-1 text-right">Total</div>
+                  <div className="col-span-4 text-right">Actions</div>
+                </div>
 
                 <div className="space-y-2 p-3">
                   {invoices.map((invoice) => (
                     <div
-  key={invoice.id}
-  className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid sm:grid-cols-12 sm:items-center"
->
-  <div className="sm:col-span-3">
-    <div className="text-sm font-semibold text-slate-900">
-      {invoice.invoice_number || "Untitled invoice"}
-    </div>
-    <div className="text-xs text-slate-500">
-      Created {new Date(invoice.created_at).toLocaleString()}
-    </div>
-  </div>
-  <div className="flex items-center justify-between sm:contents">
-    <div className="flex flex-col gap-1 sm:col-span-2 sm:block">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 sm:hidden">Client</span>
-      <span className="text-sm text-slate-800">{invoice.client_name || "—"}</span>
-    </div>
-    <div className="flex flex-col gap-1 sm:col-span-2 sm:block sm:text-center">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 sm:hidden">Due date</span>
-      <span className="text-sm text-slate-800">
-        {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "—"}
-      </span>
-    </div>
-    <div className="flex flex-col gap-1 sm:col-span-1 sm:block sm:text-right">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 sm:hidden">Total</span>
-      <span className="text-sm font-semibold text-slate-900">
-        {typeof invoice.grand_total === "number" ? `$${invoice.grand_total.toFixed(2)}` : "—"}
-      </span>
-    </div>
-  </div>
-  <div className="flex items-center gap-2 sm:col-span-4 sm:justify-end">
-    <button
-      type="button"
-      onClick={() => setPreviewInvoice(invoice)}
-      className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:translate-y-px"
-    >
-      View
-    </button>
-    <button
-      type="button"
-      onClick={() => handleDownload(invoice)}
-      className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 active:translate-y-px"
-    >
-      Download PDF
-    </button>
-  </div>
-</div>
+                      key={invoice.id}
+                      className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid sm:grid-cols-12 sm:items-center"
+                    >
+                      <div className="sm:col-span-3">
+                        <div className="sm:hidden text-xs font-semibold text-slate-600 mb-1">Invoice</div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          {invoice.invoice_number || "Untitled invoice"}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {new Date(invoice.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <div className="sm:hidden text-xs font-semibold text-slate-600 mb-1">Client</div>
+                        <div className="text-sm font-medium text-slate-900">
+                          {invoice.client_name || "—"}
+                        </div>
+                      </div>
+                      <div className="sm:col-span-2 text-center">
+                        <div className="sm:hidden text-xs font-semibold text-slate-600 mb-1">Due date</div>
+                        <div className="text-sm text-slate-900">
+                          {invoice.due_date
+                            ? new Date(invoice.due_date).toLocaleDateString()
+                            : "—"}
+                        </div>
+                      </div>
+                      <div className="sm:col-span-1 text-right">
+                        <div className="sm:hidden text-xs font-semibold text-slate-600 mb-1">Total</div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          ${formatMoney(
+                            (() => {
+                              const { grandTotal } = getPreviewTotals(invoice);
+                              return grandTotal;
+                            })()
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 sm:col-span-4 sm:justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleViewInvoice(invoice.id)}
+                          disabled={loadingPreview}
+                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loadingPreview ? "Loading..." : "View"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(invoice)}
+                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 active:translate-y-px"
+                        >
+                          Download PDF
+                        </button>
+                      </div>
+                    </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-6">
+                <div className="text-sm text-slate-600">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="h-11 min-h-[44px] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="h-11 min-h-[44px] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    Next
+                  </button>
                 </div>
               </div>
             )}
@@ -232,7 +426,7 @@ export default function HistoryPage() {
                     Invoice preview
                   </h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    {previewInvoice.invoice_number || "Untitled invoice"}
+                    {previewInvoice?.invoice_number || "Untitled invoice"}
                   </p>
                 </div>
                 <button
@@ -251,19 +445,19 @@ export default function HistoryPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Sender</span>
                   <span className="font-semibold text-slate-900">
-                    {previewInvoice.sender_name || "—"}
+                    {previewInvoice?.sender_name || "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Client</span>
                   <span className="font-semibold text-slate-900">
-                    {previewInvoice.client_name || "—"}
+                    {previewInvoice?.client_name || "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Due date</span>
                   <span className="font-semibold text-slate-900">
-                    {previewInvoice.due_date
+                    {previewInvoice?.due_date
                       ? new Date(previewInvoice.due_date).toLocaleDateString()
                       : "—"}
                   </span>
@@ -271,7 +465,7 @@ export default function HistoryPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600">Created</span>
                   <span className="font-semibold text-slate-900">
-                    {new Date(previewInvoice.created_at).toLocaleString()}
+                    {new Date(previewInvoice?.created_at).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -284,7 +478,7 @@ export default function HistoryPage() {
 				  <div className="col-span-3 text-right">Total</div>
 				</div>
                 <div className="space-y-2 p-3">
-                  {(previewInvoice.line_items ?? []).map((li, idx) => {
+                  {(previewInvoice?.line_items ?? []).map((li, idx) => {
                     const qty = Number(li.quantity || 0);
                     const unit = Number(li.unitPrice || 0);
                     const rowTotal =
@@ -294,7 +488,7 @@ export default function HistoryPage() {
 
                     return (
                       <div
-						  key={`${previewInvoice.id}-${idx}`}
+						  key={`${previewInvoice?.id}-${idx}`}
 						  className="grid grid-cols-12 items-center gap-1 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200"
 						>
 						  <div className="col-span-5 text-sm font-medium text-slate-900">
@@ -316,6 +510,7 @@ export default function HistoryPage() {
               </div>
 
               {(() => {
+                if (!previewInvoice) return null;
                 const { subtotal, discountAmount, grandTotal } =
                   getPreviewTotals(previewInvoice);
                 return (
@@ -351,7 +546,7 @@ export default function HistoryPage() {
               </button>
               <button
                 type="button"
-                onClick={() => handleDownload(previewInvoice)}
+                onClick={() => previewInvoice && handleDownload(previewInvoice)}
                 className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px"
               >
                 Download

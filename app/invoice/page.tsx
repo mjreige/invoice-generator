@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { generateInvoicePdf } from "@/lib/pdf";
 import { supabase } from "@/lib/supabaseClient";
 
 type LineItem = {
@@ -39,6 +38,7 @@ export default function InvoicePage() {
   const [invoiceNumberTouched, setInvoiceNumberTouched] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [businessProfile, setBusinessProfile] = useState<any>(null);
 
   const [discountMode, setDiscountMode] = useState<"percent" | "fixed">(
     "percent"
@@ -55,13 +55,27 @@ export default function InvoicePage() {
 
   useEffect(() => {
     const init = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.replace("/login");
+      // Check and refresh session first
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        router.replace("/login?redirect=/invoice");
         return;
+      }
+
+      const user = session.user;
+
+      // Load business profile to pre-fill sender name
+      const { data: businessProfileData } = await supabase
+        .from("business_profiles")
+        .select("business_name, email, show_header")
+        .eq("user_id", user.id)
+        .single();
+
+      setBusinessProfile(businessProfileData);
+
+      if (businessProfileData?.business_name) {
+        setSenderName(prev => prev || businessProfileData.business_name);
       }
 
       const { count } = await supabase
@@ -173,14 +187,15 @@ export default function InvoicePage() {
   const confirmAndGenerate = async () => {
     setConfirmError(null);
 
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.replace("/login");
+    // Check and refresh session first
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+      router.replace("/login?redirect=/invoice");
       return;
     }
+
+    const user = session.user;
 
     const inv = invoiceNumber.trim();
     if (inv) {
@@ -192,14 +207,41 @@ export default function InvoicePage() {
         .limit(1);
 
       if (existing && existing.length > 0) {
-        setConfirmError(
-          "This invoice number already exists. Please use a different one."
-        );
+        setConfirmError(`Invoice "${inv}" already exists. Please choose a different number.`);
         return;
       }
     }
 
-    generateInvoicePdf({
+    const { error: insertError } = await supabase.from("invoices").insert({
+      user_id: user.id,
+      invoice_number: inv,
+      sender_name: senderName,
+      client_name: clientName,
+      due_date: dueDate,
+      line_items: lineItems,
+      subtotal,
+      discount_type: discountMode,
+      discount_value: discountValue,
+      grand_total: grandTotal
+    });
+
+    if (insertError) {
+      setConfirmError("Failed to save invoice. Please try again.");
+      return;
+    }
+
+    // Fetch business profile to pass to PDF
+    const { data: businessProfileForPdf } = await supabase
+      .from("business_profiles")
+      .select("business_name, email, show_header")
+      .eq("user_id", user.id)
+      .single();
+
+    console.log("DEBUG: Business profile fetched for PDF:", businessProfileForPdf);
+
+    // Dynamic import PDF generation
+    const { generateInvoicePdf } = await import("@/lib/pdf");
+    await generateInvoicePdf({
       senderName,
       clientName,
       dueDate,
@@ -208,37 +250,12 @@ export default function InvoicePage() {
       total: grandTotal,
       subtotal,
       discountAmount,
-      grandTotal
-    });
-
-    const discountNumeric = parseNumber(discountValue);
-
-    await supabase.from("invoices").insert({
-      user_id: user.id,
-      invoice_number: inv || null,
-      sender_name: senderName || null,
-      client_name: clientName || null,
-      due_date: dueDate || null,
-      line_items: lineItems.map((item) => ({
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice
-      })),
-      subtotal,
-      discount_type: discountMode,
-      discount_value: discountNumeric,
-      grand_total: grandTotal
+      grandTotal,
+      businessProfile: businessProfileForPdf || undefined
     });
 
     setConfirmOpen(false);
     resetForm();
-
-    const { count } = await supabase
-      .from("invoices")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id);
-    const next = (count ?? 0) + 1;
-    setInvoiceNumber(formatInvoiceNumber(next));
   };
 
   return (
@@ -543,6 +560,51 @@ export default function InvoicePage() {
               {confirmError && (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
                   {confirmError}
+                </div>
+              )}
+
+              {/* Header Preview */}
+              {businessProfile?.show_header && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-3">
+                    Header Preview
+                  </div>
+                  <div className="flex items-start gap-3">
+                    {businessProfile.logo_url && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={businessProfile.logo_url}
+                          alt="Business Logo"
+                          className="h-12 w-auto max-w-[60px] object-contain"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {businessProfile.business_name && (
+                        <div className="text-sm font-semibold text-slate-900 truncate">
+                          {businessProfile.business_name}
+                        </div>
+                      )}
+                      {(businessProfile.address1 || businessProfile.address2 || businessProfile.city || businessProfile.country) && (
+                        <div className="text-xs text-slate-600 truncate mt-1">
+                          {[
+                            businessProfile.address1,
+                            businessProfile.address2,
+                            businessProfile.city && businessProfile.country ? `${businessProfile.city}, ${businessProfile.country}` : businessProfile.city || businessProfile.country
+                          ].filter(Boolean).join(', ')}
+                        </div>
+                      )}
+                      {(businessProfile.phone || businessProfile.email || businessProfile.website) && (
+                        <div className="text-xs text-slate-600 truncate mt-1">
+                          {[
+                            businessProfile.phone && `Phone: ${businessProfile.phone}`,
+                            businessProfile.email && `Email: ${businessProfile.email}`,
+                            businessProfile.website && `Web: ${businessProfile.website}`
+                          ].filter(Boolean).join(' | ')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
