@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@paddle/paddle-js": "^1.6.2",
     "@supabase/supabase-js": "^2.48.0",
     "arabic-reshaper": "^1.1.0",
     "bidi-js": "^1.0.3",

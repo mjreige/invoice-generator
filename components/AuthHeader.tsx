@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useSubscription } from "@/lib/useSubscription";
 
 export default function AuthHeader() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function AuthHeader() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [invoiceCount, setInvoiceCount] = useState(0);
   const [loadingInvoiceCount, setLoadingInvoiceCount] = useState(false);
+  const { plan, isActive, loading: subscriptionLoading } = useSubscription();
 
   useEffect(() => {
     const load = async () => {
@@ -175,43 +177,71 @@ export default function AuthHeader() {
                     )}
                   </div>
                   
-                  {/* Invoice Usage Section */}
+                  {/* Plan Status Section */}
                   <div className="border-b border-white/5 px-4 py-3">
-                    {loadingInvoiceCount ? (
-                      <div className="text-xs text-slate-400">Loading usage...</div>
+                    {subscriptionLoading ? (
+                      <div className="text-xs text-slate-400">Loading plan...</div>
                     ) : (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-slate-300">
-                            {Math.min(invoiceCount, 5)} / 5 free invoices used
-                          </span>
-                          <a
-                            href="/pricing"
-                            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                            Upgrade to Pro
-                          </a>
-                        </div>
-                        <div className="w-full bg-slate-700 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              invoiceCount >= 5 
-                                ? 'bg-red-500' 
-                                : invoiceCount >= 3 
-                                  ? 'bg-yellow-500' 
-                                  : 'bg-green-500'
-                            }`}
-                            style={{ width: `${Math.min((Math.min(invoiceCount, 5) / 5) * 100, 100)}%` }}
-                          />
-                        </div>
-                        {invoiceCount >= 5 && (
-                          <p className="text-xs text-red-400 mt-2 font-medium">
-                            Free limit reached — Upgrade now
-                          </p>
+                      <div className="flex items-center gap-2">
+                        {plan === 'free' ? (
+                          <>
+                            <span className="text-xs font-medium text-slate-300">Free Plan</span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs text-slate-300">{Math.min(invoiceCount, 5)} / 5 invoices</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-xs font-medium text-green-400 capitalize">
+                              {plan} Plan
+                            </span>
+                          </>
                         )}
                       </div>
                     )}
                   </div>
+
+                  {/* Invoice Usage Section - Only show for free users */}
+                  {plan === 'free' && (
+                    <div className="border-b border-white/5 px-4 py-3">
+                      {loadingInvoiceCount ? (
+                        <div className="text-xs text-slate-400">Loading usage...</div>
+                      ) : (
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs text-slate-300">
+                              {Math.min(invoiceCount, 5)} / 5 free invoices used
+                            </span>
+                            <a
+                              href="/pricing"
+                              className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                              Upgrade to Pro
+                            </a>
+                          </div>
+                          <div className="w-full bg-slate-700 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                invoiceCount >= 5 
+                                  ? 'bg-red-500' 
+                                  : invoiceCount >= 3 
+                                    ? 'bg-yellow-500' 
+                                    : 'bg-green-500'
+                              }`}
+                              style={{ width: `${Math.min((Math.min(invoiceCount, 5) / 5) * 100, 100)}%` }}
+                            />
+                          </div>
+                          {invoiceCount >= 5 && (
+                            <p className="text-xs text-red-400 mt-2 font-medium">
+                              Free limit reached — Upgrade now
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="py-1">
                     <a

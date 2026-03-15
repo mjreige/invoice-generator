@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useSubscription } from "@/lib/useSubscription";
+import UpgradePopup from "@/components/UpgradePopup";
 
 type LineItem = {
   id: string;
@@ -39,6 +41,8 @@ export default function InvoicePage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
+  const { canGenerateInvoice, loading: subscriptionLoading } = useSubscription();
+  const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
 
   const [discountMode, setDiscountMode] = useState<"percent" | "fixed">(
     "percent"
@@ -529,7 +533,14 @@ export default function InvoicePage() {
                 type="button"
                 onClick={() => {
                   setConfirmError(null);
-                  setConfirmOpen(true);
+                  if (subscriptionLoading) {
+                    return; // Don't do anything while loading
+                  }
+                  if (canGenerateInvoice) {
+                    setConfirmOpen(true);
+                  } else {
+                    setUpgradePopupOpen(true);
+                  }
                 }}
                 className="h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px"
               >
@@ -692,6 +703,12 @@ export default function InvoicePage() {
           </div>
         </div>
       )}
+
+      {/* Upgrade Popup */}
+      <UpgradePopup 
+        show={upgradePopupOpen} 
+        onClose={() => setUpgradePopupOpen(false)} 
+      />
     </main>
   );
 }

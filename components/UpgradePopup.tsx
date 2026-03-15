@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { openCheckout } from "@/lib/paddle";
+import { supabase } from "@/lib/supabaseClient";
 
 interface UpgradePopupProps {
   show: boolean;
@@ -8,6 +10,32 @@ interface UpgradePopupProps {
 }
 
 export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    loadUser();
+  }, []);
+
+  const handleSubscribe = async (priceId: string) => {
+    if (!user?.email) {
+      console.error('No user email found');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await openCheckout(priceId, user.email, user.id);
+    } catch (error) {
+      console.error('Error opening checkout:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   // Close on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -136,15 +164,14 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </ul>
 
                 <a
-                  href="/pricing"
-                  onClick={onClose}
-                  className={`block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors ${
+                  onClick={() => handleSubscribe(plan.name === "PRO" ? process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID!)}
+                  className="block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors cursor-pointer ${
                     plan.popular
                       ? 'bg-blue-500 hover:bg-blue-600 text-white'
                       : 'bg-slate-600 hover:bg-slate-500 text-white'
-                  }`}
+                  } disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Subscribe
+                  {loading ? 'Opening...' : 'Subscribe'}
                 </a>
               </div>
             ))}
