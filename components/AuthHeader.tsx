@@ -92,8 +92,8 @@ export default function AuthHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur overflow-visible">
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3 overflow-visible">
         <a href="/" className="text-sm font-semibold text-white truncate">
           Invoice Generator
         </a>
@@ -117,7 +117,7 @@ export default function AuthHeader() {
               </button>
               
               {dropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 min-w-[200px] max-w-[280px] overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-xl">
+                <div className="absolute right-0 top-full mt-2 w-48 before:content-none overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50">
                   <div className="border-b border-white/5 px-4 py-3">
                     <p className="text-sm font-medium text-white truncate">
                       {getFullName()}

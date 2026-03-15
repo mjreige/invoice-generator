@@ -868,6 +868,9 @@ video {
 .overflow-hidden {
   overflow: hidden;
 }
+.overflow-visible {
+  overflow: visible;
+}
 .overflow-y-auto {
   overflow-y: auto;
 }
@@ -1344,6 +1347,11 @@ body {
   background-color: rgb(2 6 23 / var(--tw-bg-opacity, 1));
   --tw-text-opacity: 1;
   color: rgb(15 23 42 / var(--tw-text-opacity, 1));
+}
+
+.before\:content-none::before {
+  --tw-content: none;
+  content: var(--tw-content);
 }
 
 .hover\:bg-indigo-100:hover {
