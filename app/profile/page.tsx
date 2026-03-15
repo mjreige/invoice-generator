@@ -14,6 +14,8 @@ interface BusinessProfile {
   email?: string;
   website?: string;
   show_header?: boolean;
+  include_signature?: boolean;
+  signature_name?: string;
 }
 
 export default function ProfilePage() {
@@ -32,7 +34,9 @@ export default function ProfilePage() {
     phone: "",
     email: "",
     website: "",
-    show_header: false
+    show_header: false,
+    include_signature: false,
+    signature_name: ""
   });
 
   useEffect(() => {
@@ -47,16 +51,16 @@ export default function ProfilePage() {
       setLoading(true);
       
       try {
-        const { data, error } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("business_profiles")
-          .select("*")
+          .select("business_name, address1, address2, city, country, phone, email, website, show_header, include_signature, signature_name")
           .eq("user_id", user.id)
           .single();
 
-        if (error && error.code !== "PGRST116") {
-          console.error("Error loading profile:", error);
-        } else if (data) {
-          setProfile(data);
+        if (profileError && profileError.code !== "PGRST116") {
+          console.error("Error loading profile:", profileError);
+        } else if (profileData) {
+          setProfile(profileData);
         }
       } catch (err) {
         console.error("Error:", err);
@@ -327,6 +331,57 @@ export default function ProfilePage() {
                   />
                 </button>
               </div>
+            </div>
+
+            {/* Signature */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-slate-700">Signature</h3>
+              
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div>
+                  <label htmlFor="include_signature" className="text-sm font-medium text-slate-900">
+                    Include signature on invoices
+                  </label>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Add a digital signature line to the bottom of PDF invoices
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={profile.include_signature}
+                  onClick={() => handleInputChange("include_signature", !profile.include_signature)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    profile.include_signature ? "bg-blue-600" : "bg-slate-300"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      profile.include_signature ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {profile.include_signature && (
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="signature_name"
+                    className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+                  >
+                    Signature Name
+                  </label>
+                  <input
+                    id="signature_name"
+                    type="text"
+                    value={profile.signature_name || ""}
+                    onChange={(e) => handleInputChange("signature_name", e.target.value)}
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Your full name as it will appear on invoices"
+                  />
+                </div>
+              )}
             </div>
 
             {error && (

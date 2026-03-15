@@ -33,6 +33,8 @@ export type BusinessProfileForPdf = {
   website?: string;
   logo_url?: string;
   show_header?: boolean;
+  include_signature?: boolean;
+  signature_name?: string;
 };
 
 export type InvoiceForPdf = {
@@ -230,6 +232,29 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
 
     doc.text("Total", left, y);
     doc.text(`$${invoice.total.toFixed(2)}`, xTotalRight, y, { align: "right" });
+  }
+
+  // Add signature if enabled
+  if (invoice.businessProfile?.include_signature && invoice.businessProfile?.signature_name) {
+    y += 20; // Add 20mm spacing after totals
+    
+    // Draw signature line (60mm wide, ending at xTotalRight)
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(100, 100, 100);
+    doc.line(xTotalRight - 60, y, xTotalRight, y);
+    
+    // Add signature name in italic style below the line
+    y += 8; // Move below the line
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(11);
+    const processed = processArabicText(invoice.businessProfile.signature_name);
+    doc.text(processed.text, xTotalRight, y, { align: "right" });
+    
+    // Add "Authorized Signature" label below the name
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Authorized Signature", xTotalRight, y, { align: "right" });
   }
 
   // Generate filename based on client name and invoice number

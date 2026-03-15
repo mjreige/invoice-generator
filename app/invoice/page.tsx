@@ -68,7 +68,7 @@ export default function InvoicePage() {
       // Load business profile to pre-fill sender name
       const { data: businessProfileData } = await supabase
         .from("business_profiles")
-        .select("business_name, email, show_header")
+        .select("business_name, email, show_header, include_signature, signature_name")
         .eq("user_id", user.id)
         .single();
 
@@ -233,7 +233,7 @@ export default function InvoicePage() {
     // Fetch business profile to pass to PDF
     const { data: businessProfileForPdf } = await supabase
       .from("business_profiles")
-      .select("business_name, email, show_header")
+      .select("business_name, email, show_header, include_signature, signature_name")
       .eq("user_id", user.id)
       .single();
 
@@ -659,6 +659,18 @@ export default function InvoicePage() {
                   <span>${formatMoney(grandTotal)}</span>
                 </div>
               </div>
+
+              {/* Signature Note */}
+              {businessProfile?.include_signature && businessProfile?.signature_name && (
+                <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+                  <div className="flex items-center gap-2 text-blue-700">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span className="font-medium">Signature will be included</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-6 py-4">

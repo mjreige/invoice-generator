@@ -196,7 +196,7 @@ export default function HistoryPage() {
     try {
       const { data: profileData } = await supabase
         .from("business_profiles")
-        .select("business_name, email, show_header")
+        .select("business_name, email, show_header, include_signature, signature_name")
         .eq("user_id", user.id)
         .single();
       
