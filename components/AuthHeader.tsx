@@ -98,14 +98,29 @@ export default function AuthHeader() {
           Invoice Generator
         </a>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-4 flex-shrink-0">
+          <a
+            href="/pricing"
+            className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors"
+          >
+            Pricing
+          </a>
+          
           {!email ? (
-            <a
-              href="/login"
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
-            >
-              Login
-            </a>
+            <>
+              <a
+                href="/pricing"
+                className="sm:hidden text-sm font-medium text-slate-300 hover:text-white transition-colors"
+              >
+                Pricing
+              </a>
+              <a
+                href="/login"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+              >
+                Login
+              </a>
+            </>
           ) : (
             <div className="relative avatar-dropdown">
               <button
@@ -128,6 +143,12 @@ export default function AuthHeader() {
                   </div>
                   
                   <div className="py-1">
+                    <a
+                      href="/pricing"
+                      className="block px-4 py-3 min-h-[44px] flex items-center text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                    >
+                      Pricing
+                    </a>
                     <a
                       href="/profile"
                       className="block px-4 py-3 min-h-[44px] flex items-center text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
