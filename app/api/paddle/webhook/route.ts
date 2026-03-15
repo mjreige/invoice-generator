@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Supabase client inside the handler
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     const body = await request.text();
     const signature = request.headers.get('paddle-signature');
     
@@ -39,10 +41,10 @@ export async function POST(request: NextRequest) {
     switch (event.event_type) {
       case 'subscription.created':
       case 'subscription.updated':
-        await handleSubscriptionEvent(event);
+        await handleSubscriptionEvent(event, supabase);
         break;
       case 'subscription.cancelled':
-        await handleSubscriptionCancelled(event);
+        await handleSubscriptionCancelled(event, supabase);
         break;
       default:
         console.log('Unhandled event type:', event.event_type);
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleSubscriptionEvent(event: any) {
+async function handleSubscriptionEvent(event: any, supabase: any) {
   const subscription = event.data;
   const userId = subscription.custom_data?.userId;
   
@@ -93,7 +95,7 @@ async function handleSubscriptionEvent(event: any) {
   console.log(`Subscription ${event.event_type} for user ${userId}, plan: ${plan}`);
 }
 
-async function handleSubscriptionCancelled(event: any) {
+async function handleSubscriptionCancelled(event: any, supabase: any) {
   const subscription = event.data;
   const userId = subscription.custom_data?.userId;
   
