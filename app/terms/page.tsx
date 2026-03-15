@@ -26,7 +26,7 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-white mb-4">Introduction</h2>
               <p className="text-slate-300 leading-relaxed">
-                Welcome to Invoice Generator. These Terms of Service ("Terms") govern your use of our invoice generation SaaS platform and services. By accessing or using our service, you agree to be bound by these Terms.
+                Welcome to Invoice Generator. Invoice Generator is owned and operated by Michel Jreige. These Terms of Service ("Terms") govern your use of our invoice generation SaaS platform and services. By accessing or using our service, you agree to be bound by these Terms.
               </p>
             </section>
 
@@ -91,7 +91,14 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-white mb-4">Cancellation Policy</h2>
               <p className="text-slate-300 leading-relaxed">
-                You may cancel your subscription at any time. Cancellation will take effect at the end of the current billing period. You will continue to have access to paid features until the end of your billing period. No refunds are provided for partial months or unused portions of your subscription.
+                You may cancel your subscription at any time. Cancellation will take effect at the end of the current billing period. You will continue to have access to paid features until the end of your billing period.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-white mb-4">Refund Policy</h2>
+              <p className="text-slate-300 leading-relaxed">
+                We offer a 30-day refund policy. If you are not satisfied with your subscription within 30 days of purchase, you are entitled to a full refund, no questions asked. To request a refund, contact us at app.invoicegenerator@gmail.com.
               </p>
             </section>
 
@@ -137,7 +144,8 @@ export default function TermsOfService() {
               </p>
               <div className="bg-slate-700/30 rounded-lg p-4 mt-4">
                 <p className="text-slate-300">
-                  <strong>Email:</strong> contact@invoicegenerator.app<br />
+                  <strong>Business Owner:</strong> Michel Jreige<br />
+                  <strong>Email:</strong> app.invoicegenerator@gmail.com<br />
                   <strong>Service:</strong> Invoice Generator
                 </p>
               </div>
@@ -151,6 +159,37 @@ export default function TermsOfService() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-slate-900/50 backdrop-blur">
+        <div className="mx-auto max-w-4xl px-4 py-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-slate-400">
+              © {new Date().getFullYear()} Invoice Generator. All rights reserved.
+            </p>
+            <div className="flex gap-6">
+              <a
+                href="/pricing"
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                Pricing
+              </a>
+              <a
+                href="/terms"
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                Terms of Service
+              </a>
+              <a
+                href="/privacy"
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                Privacy Policy
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

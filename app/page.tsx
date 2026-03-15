@@ -262,6 +262,12 @@ export default function LandingPage() {
               >
                 Terms of Service
               </a>
+              <a
+                href="/privacy"
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                Privacy Policy
+              </a>
             </div>
           </div>
         </div>

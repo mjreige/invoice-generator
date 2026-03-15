@@ -220,6 +220,37 @@ export default function Pricing() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-slate-900/50 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 py-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-slate-400">
+              © {new Date().getFullYear()} Invoice Generator. All rights reserved.
+            </p>
+            <div className="flex gap-6">
+              <a
+                href="/pricing"
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                Pricing
+              </a>
+              <a
+                href="/terms"
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                Terms of Service
+              </a>
+              <a
+                href="/privacy"
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                Privacy Policy
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
