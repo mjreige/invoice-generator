@@ -94,11 +94,11 @@ export default function AuthHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-        <a href="/" className="text-sm font-semibold text-white">
+        <a href="/" className="text-sm font-semibold text-white truncate">
           Invoice Generator
         </a>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {!email ? (
             <a
               href="/login"
@@ -117,9 +117,9 @@ export default function AuthHeader() {
               </button>
               
               {dropdownOpen && (
-                <div className="absolute left-0 top-full mt-2 w-48 min-w-[180px] overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-xl sm:left-auto sm:right-0">
+                <div className="absolute right-0 top-full mt-2 w-56 min-w-[200px] max-w-[280px] overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-xl">
                   <div className="border-b border-white/5 px-4 py-3">
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-white truncate">
                       {getFullName()}
                     </p>
                     <p className="text-xs text-slate-400 truncate">
@@ -130,20 +130,20 @@ export default function AuthHeader() {
                   <div className="py-1">
                     <a
                       href="/profile"
-                      className="block px-4 py-3 h-11 min-h-[44px] flex items-center text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                      className="block px-4 py-3 min-h-[44px] flex items-center text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                     >
                       Business Profile
                     </a>
                     <a
                       href="/change-password"
-                      className="block px-4 py-3 h-11 min-h-[44px] flex items-center text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                      className="block px-4 py-3 min-h-[44px] flex items-center text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                     >
                       Change Password
                     </a>
                     <button
                       type="button"
                       onClick={logout}
-                      className="block w-full px-4 py-3 h-11 min-h-[44px] flex items-center text-left text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                      className="block w-full px-4 py-3 min-h-[44px] flex items-center text-left text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                     >
                       Logout
                     </button>

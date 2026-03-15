@@ -544,6 +544,9 @@ video {
 .top-full {
   top: 100%;
 }
+.right-0 {
+  right: 0px;
+}
 .z-40 {
   z-index: 40;
 }
@@ -702,11 +705,17 @@ video {
 .w-full {
   width: 100%;
 }
+.w-56 {
+  width: 14rem;
+}
 .min-w-0 {
   min-width: 0px;
 }
 .min-w-\[180px\] {
   min-width: 180px;
+}
+.min-w-\[200px\] {
+  min-width: 200px;
 }
 .max-w-2xl {
   max-width: 42rem;
@@ -725,6 +734,9 @@ video {
 }
 .max-w-md {
   max-width: 28rem;
+}
+.max-w-\[280px\] {
+  max-width: 280px;
 }
 .flex-1 {
   flex: 1 1 0%;
