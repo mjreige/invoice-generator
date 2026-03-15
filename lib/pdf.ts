@@ -1,6 +1,8 @@
 import jsPDF from "jspdf";
 
 import type { LineItemForPdf } from "./types";
+import amiriBase64 from "./amiriFont";
+import ArabicReshaper from 'arabic-reshaper';
 
 // Helper function to detect Arabic text
 function containsArabic(text: string): boolean {
@@ -8,18 +10,33 @@ function containsArabic(text: string): boolean {
 }
 
 // Helper function to process Arabic text for jsPDF
-function processArabicText(text: string): { text: string; align: "left" | "right" } {
-  if (containsArabic(text)) {
-    // Reverse Arabic characters for basic RTL support
-    return {
-      text: text.split('').reverse().join(''),
-      align: "right"
-    };
+function processArabicText(text: string): string {
+  try {
+    return ArabicReshaper.reshape(text);
+  } catch {
+    return text;
   }
-  return {
-    text: text,
-    align: "left"
-  };
+}
+
+// Helper function to render text with proper font handling
+function renderText(doc: jsPDF, text: string, x: number, y: number, options: { align?: "left" | "right" | "center", font?: string, fontSize?: number, fontStyle?: "normal" | "bold" | "italic", maxWidth?: number } = {}) {
+  const { align = "left", font = "helvetica", fontSize = 10, fontStyle = "normal", maxWidth } = options;
+  
+  if (containsArabic(text)) {
+    doc.setFont("Amiri", "normal");
+    doc.setFontSize(fontSize);
+    const reshaped = processArabicText(text);
+    const textOptions: any = { align: "left" };
+    if (maxWidth) textOptions.maxWidth = maxWidth;
+    doc.text(reshaped, x, y, textOptions);
+    doc.setFont("helvetica", "normal");
+  } else {
+    doc.setFont(font, fontStyle);
+    doc.setFontSize(fontSize);
+    const textOptions: any = { align };
+    if (maxWidth) textOptions.maxWidth = maxWidth;
+    doc.text(text, x, y, textOptions);
+  }
 }
 
 export type BusinessProfileForPdf = {
@@ -57,181 +74,253 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     format: 'a4'
   });
 
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  const left = margin;
-  const right = pageWidth - margin;
-  const tableWidth = right - left;
-  let y = margin;
+  // Embed Amiri font for Arabic text support
+  doc.addFileToVFS('Amiri-Regular.ttf', amiriBase64);
+  doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
 
-  const drawLine = (yPos: number) => {
-    doc.setLineWidth(0.4);
-    doc.line(left, yPos, right, yPos);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const left = 20;
+  const right = 20;
+  const tableWidth = pageWidth - left - right;
+  const xTotalRight = pageWidth - right;
+
+  let y = 30;
+
+  // Helper function to draw horizontal lines
+  const drawLine = (lineY: number) => {
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(200, 200, 200);
+    doc.line(left, lineY, pageWidth - right, lineY);
   };
 
   // Add business header if enabled
-  const addBusinessHeader = async () => {
-    console.log("DEBUG PDF: invoice.businessProfile:", invoice.businessProfile);
-    console.log("DEBUG PDF: show_header value:", invoice.businessProfile?.show_header);
-    
-    if (!invoice.businessProfile?.show_header) {
-      console.log("DEBUG PDF: Header not showing because show_header is false or undefined");
-      return;
-    }
-
-    const profile = invoice.businessProfile;
-    
-    console.log("DEBUG PDF: Adding business header with profile:", profile);
+  if (invoice.businessProfile?.show_header) {
+    console.log("DEBUG PDF: Adding business header with profile:", invoice.businessProfile);
     
     // Text-only header: Company name (bold) and email on separate lines
-    if (profile.business_name) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      const processed = processArabicText(profile.business_name);
-      doc.text(processed.text, left, y, { align: processed.align });
-      console.log("Business name added:", profile.business_name); // Debug log
+    if (invoice.businessProfile.business_name) {
+      // Render business name left-aligned with Amiri font support
+      renderText(doc, invoice.businessProfile.business_name, left, y, { 
+        font: "helvetica", 
+        fontStyle: "bold", 
+        fontSize: 14,
+        align: "left"
+      });
+      console.log("Business name added:", invoice.businessProfile.business_name);
       y += 8;
     }
 
-    if (profile.email) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      const processed = processArabicText(profile.email);
-      doc.text(processed.text, left, y, { align: processed.align });
+    if (invoice.businessProfile.email) {
+      renderText(doc, invoice.businessProfile.email, left, y, { 
+        font: "helvetica", 
+        fontStyle: "normal", 
+        fontSize: 10,
+        align: "left"
+      });
       y += 8;
     }
 
     // Draw line below header with tight spacing
     drawLine(y);
     y += 12; // Reduced spacing from 16px to 12px
-  };
-
-  const descW = tableWidth * 0.5;
-  const qtyW = tableWidth * 0.1;
-  const unitW = tableWidth * 0.2;
-  const totalW = tableWidth * 0.2;
-
-  const xDesc = left;
-  const xQtyRight = left + descW + qtyW;
-  const xUnitRight = left + descW + qtyW + unitW;
-  const xTotalRight = left + descW + qtyW + unitW + totalW;
-
-  // Add business header if enabled
-  await addBusinessHeader();
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.text("INVOICE", left, y);
-
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  y += 8;
-
-  if (invoice.invoiceNumber) {
-    doc.text(`Invoice #: ${invoice.invoiceNumber}`, left, y);
-    y += 6;
   }
 
-  const senderProcessed = processArabicText(`From: ${invoice.senderName || "-"}`);
-  doc.text(senderProcessed.text, left, y, { align: senderProcessed.align });
+  // Invoice title
+  renderText(doc, "INVOICE", left, y, { 
+    font: "helvetica", 
+    fontStyle: "bold", 
+    fontSize: 18,
+    align: "left"
+  });
+  y += 12;
+
+  // Invoice meta information
+  renderText(doc, `Invoice #: ${invoice.invoiceNumber}`, left, y, { 
+    font: "helvetica", 
+    fontStyle: "normal", 
+    fontSize: 10,
+    align: "left"
+  });
   y += 6;
 
-  const clientProcessed = processArabicText(`Bill To: ${invoice.clientName || "-"}`);
-  doc.text(clientProcessed.text, left, y, { align: clientProcessed.align });
+  renderText(doc, `Due Date: ${invoice.dueDate}`, left, y, { 
+    font: "helvetica", 
+    fontStyle: "normal", 
+    fontSize: 10,
+    align: "left"
+  });
   y += 6;
 
-  doc.text(`Due Date: ${invoice.dueDate || "-"}`, left, y);
+  // Client information
+  renderText(doc, "Bill To:", left, y, { 
+    font: "helvetica", 
+    fontStyle: "bold", 
+    fontSize: 10,
+    align: "left"
+  });
   y += 6;
 
-  // Line after header block
-  y += 6; // Reduced from 8
+  // Client name - render with Amiri font if Arabic, left-aligned like other text
+  renderText(doc, invoice.clientName, left, y, { 
+    font: "helvetica", 
+    fontStyle: "normal", 
+    fontSize: 10,
+    align: "left"
+  });
+  y += 6;
+
+  // Line items table
+  y += 6; // reduced from 8
   drawLine(y);
+  y += 6; // reduced from 10
 
-  y += 6; // Reduced from 10
-  doc.setFont("helvetica", "bold");
-  
-  const descProcessed = processArabicText("Description");
-  doc.text(descProcessed.text, xDesc, y, { align: descProcessed.align });
-  
-  doc.text("Qty", xQtyRight, y, { align: "right" });
-  doc.text("Unit Price", xUnitRight, y, { align: "right" });
-  doc.text("Total", xTotalRight, y, { align: "right" });
+  // Table headers
+  renderText(doc, "Description", left, y, { 
+    font: "helvetica", 
+    fontStyle: "bold", 
+    fontSize: 9,
+    align: "left"
+  });
+  renderText(doc, "Quantity", left + 100, y, { 
+    font: "helvetica", 
+    fontStyle: "bold", 
+    fontSize: 9,
+    align: "center"
+  });
+  renderText(doc, "Unit Price", left + 130, y, { 
+    font: "helvetica", 
+    fontStyle: "bold", 
+    fontSize: 9,
+    align: "right"
+  });
+  renderText(doc, "Total", xTotalRight, y, { 
+    font: "helvetica", 
+    fontStyle: "bold", 
+    fontSize: 9,
+    align: "right"
+  });
+  y += 6;
 
-  // Line below table header
-  y += 2;
   drawLine(y);
   y += 8;
 
-  doc.setFont("helvetica", "normal");
+  // Line items
   invoice.lineItems.forEach((item) => {
-    const quantity = parseFloat(item.quantity || "0");
-    const unitPrice = parseFloat(item.unitPrice || "0");
-    const rowTotal =
-      !isNaN(quantity) && !isNaN(unitPrice) ? quantity * unitPrice : 0;
+    const quantity = parseFloat(item.quantity) || 0;
+    const unitPrice = parseFloat(item.unitPrice) || 0;
+    const total = quantity * unitPrice;
 
-    if (!item.description && !quantity && !unitPrice) {
-      return;
-    }
-
-    const descProcessed = processArabicText(item.description || "-");
-    doc.text(descProcessed.text, xDesc, y, { 
-      align: descProcessed.align,
-      maxWidth: Math.max(10, descW - 4)
+    // Description (with word wrap for long text)
+    const descriptionLines = doc.splitTextToSize(item.description || "", 100);
+    descriptionLines.forEach((line: string) => {
+      // Render description left-aligned with proper max width for wrapping
+      renderText(doc, line, left, y, { 
+        font: "helvetica", 
+        fontStyle: "normal", 
+        fontSize: 9,
+        align: "left"
+      });
+      y += 5;
     });
 
-    doc.text(!isNaN(quantity) ? quantity.toString() : "-", xQtyRight, y, {
+    // Adjust y for other columns based on description height
+    const itemHeight = descriptionLines.length * 5;
+    const otherY = y - itemHeight + 5;
+
+    renderText(doc, item.quantity, left + 100, otherY, { 
+      font: "helvetica", 
+      fontStyle: "normal", 
+      fontSize: 9,
+      align: "center"
+    });
+
+    renderText(doc, `$${unitPrice.toFixed(2)}`, left + 130, otherY, { 
+      font: "helvetica", 
+      fontStyle: "normal", 
+      fontSize: 9,
       align: "right"
     });
-    doc.text(
-      !isNaN(unitPrice) ? `$${unitPrice.toFixed(2)}` : "-",
-      xUnitRight,
-      y,
-      { align: "right" }
-    );
-    doc.text(rowTotal ? `$${rowTotal.toFixed(2)}` : "-", xTotalRight, y, {
+
+    renderText(doc, `$${total.toFixed(2)}`, xTotalRight, otherY, { 
+      font: "helvetica", 
+      fontStyle: "normal", 
+      fontSize: 9,
       align: "right"
     });
-    y += 7;
+
+    y += 5;
   });
 
-  // Line after last item row (single divider only)
-  y += 3;
+  // Totals section
+  y += 10;
   drawLine(y);
-  y += 8; // Reduced from 12
+  y += 8; // reduced from 12
 
-  doc.setFont("helvetica", "bold");
-  const subtotal =
-    typeof invoice.subtotal === "number" ? invoice.subtotal : undefined;
-  const discountAmount =
-    typeof invoice.discountAmount === "number" ? invoice.discountAmount : 0;
-  const grandTotal =
-    typeof invoice.grandTotal === "number" ? invoice.grandTotal : undefined;
+  if (invoice.subtotal !== undefined && invoice.discountAmount !== undefined) {
+    // Subtotal
+    renderText(doc, "Subtotal", left, y, { 
+      font: "helvetica", 
+      fontStyle: "normal", 
+      fontSize: 10,
+      align: "left"
+    });
+    renderText(doc, `$${invoice.subtotal.toFixed(2)}`, xTotalRight, y, { 
+      font: "helvetica", 
+      fontStyle: "normal", 
+      fontSize: 10,
+      align: "right"
+    });
+    y += 6; // subtotal spacing
 
-  const hasDiscount =
-    typeof subtotal === "number" && discountAmount > 0 && typeof grandTotal === "number";
-
-  if (hasDiscount) {
-    doc.setFont("helvetica", "normal");
-    doc.text("Subtotal", left, y);
-    doc.text(`$${subtotal.toFixed(2)}`, xTotalRight, y, { align: "right" });
-    y += 6; // Reduced from 7
-
-    doc.text("Discount", left, y);
-    doc.text(`($${discountAmount.toFixed(2)})`, xTotalRight, y, { align: "right" });
-    y += 6; // Reduced from 8
+    // Discount
+    if (invoice.discountAmount > 0) {
+      renderText(doc, "Discount", left, y, { 
+        font: "helvetica", 
+        fontStyle: "normal", 
+        fontSize: 10,
+        align: "left"
+      });
+      renderText(doc, `-$${invoice.discountAmount.toFixed(2)}`, xTotalRight, y, { 
+        font: "helvetica", 
+        fontStyle: "normal", 
+        fontSize: 10,
+        align: "right"
+      });
+      y += 6; // discount spacing
+    }
 
     // No extra line above Grand Total - remove double divider
     y += 4; // Reduced spacing
 
-    doc.setFont("helvetica", "bold");
-    doc.text("Grand Total", left, y);
-    doc.text(`$${grandTotal.toFixed(2)}`, xTotalRight, y, { align: "right" });
+    renderText(doc, "Grand Total", left, y, { 
+      font: "helvetica", 
+      fontStyle: "bold", 
+      fontSize: 10,
+      align: "left"
+    });
+    renderText(doc, `$${invoice.grandTotal?.toFixed(2) || invoice.total.toFixed(2)}`, xTotalRight, y, { 
+      font: "helvetica", 
+      fontStyle: "bold", 
+      fontSize: 10,
+      align: "right"
+    });
   } else {
     // No extra line above Total row - remove double divider  
     y += 4; // Reduced spacing
 
-    doc.text("Total", left, y);
-    doc.text(`$${invoice.total.toFixed(2)}`, xTotalRight, y, { align: "right" });
+    renderText(doc, "Total", left, y, { 
+      font: "helvetica", 
+      fontStyle: "bold", 
+      fontSize: 10,
+      align: "left"
+    });
+    renderText(doc, `$${invoice.total.toFixed(2)}`, xTotalRight, y, { 
+      font: "helvetica", 
+      fontStyle: "bold", 
+      fontSize: 10,
+      align: "right"
+    });
   }
 
   // Add signature if enabled
@@ -245,16 +334,21 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     
     // Add signature name in italic style below the line
     y += 8; // Move below the line
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(11);
-    const processed = processArabicText(invoice.businessProfile.signature_name);
-    doc.text(processed.text, xTotalRight, y, { align: "right" });
+    renderText(doc, invoice.businessProfile.signature_name, xTotalRight, y, { 
+      font: "helvetica", 
+      fontStyle: "italic", 
+      fontSize: 11,
+      align: "right"
+    });
     
     // Add "Authorized Signature" label below the name
     y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("Authorized Signature", xTotalRight, y, { align: "right" });
+    renderText(doc, "Authorized Signature", xTotalRight, y, { 
+      font: "helvetica", 
+      fontStyle: "normal", 
+      fontSize: 9,
+      align: "right"
+    });
   }
 
   // Generate filename based on client name and invoice number
@@ -274,4 +368,3 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
 
   doc.save(`${fileName}.pdf`);
 }
-
