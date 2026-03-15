@@ -10,6 +10,8 @@ export default function AuthHeader() {
   const [email, setEmail] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [invoiceCount, setInvoiceCount] = useState(0);
+  const [loadingInvoiceCount, setLoadingInvoiceCount] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -36,6 +38,30 @@ export default function AuthHeader() {
       sub.subscription.unsubscribe();
     };
   }, []);
+
+  // Fetch invoice count when dropdown opens
+  useEffect(() => {
+    if (dropdownOpen && email) {
+      fetchInvoiceCount();
+    }
+  }, [dropdownOpen, email]);
+
+  const fetchInvoiceCount = async () => {
+    setLoadingInvoiceCount(true);
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('id', { count: 'exact' });
+      
+      if (!error) {
+        setInvoiceCount(data?.length || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching invoice count:', err);
+    } finally {
+      setLoadingInvoiceCount(false);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -81,6 +107,11 @@ export default function AuthHeader() {
     }
     
     return email || 'User';
+  };
+
+  const hasName = () => {
+    if (!user?.user_metadata) return false;
+    return !!(user.user_metadata.first_name || user.user_metadata.last_name);
   };
 
   const logout = async () => {
@@ -137,9 +168,49 @@ export default function AuthHeader() {
                     <p className="text-sm font-medium text-white truncate">
                       {getFullName()}
                     </p>
-                    <p className="text-xs text-slate-400 truncate">
-                      {email}
-                    </p>
+                    {hasName() && email && (
+                      <p className="text-xs text-slate-400 truncate">
+                        {email}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Invoice Usage Section */}
+                  <div className="border-b border-white/5 px-4 py-3">
+                    {loadingInvoiceCount ? (
+                      <div className="text-xs text-slate-400">Loading usage...</div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-slate-300">
+                            {Math.min(invoiceCount, 5)} / 5 free invoices used
+                          </span>
+                          <a
+                            href="/pricing"
+                            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                            Upgrade to Pro
+                          </a>
+                        </div>
+                        <div className="w-full bg-slate-700 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              invoiceCount >= 5 
+                                ? 'bg-red-500' 
+                                : invoiceCount >= 3 
+                                  ? 'bg-yellow-500' 
+                                  : 'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min((Math.min(invoiceCount, 5) / 5) * 100, 100)}%` }}
+                          />
+                        </div>
+                        {invoiceCount >= 5 && (
+                          <p className="text-xs text-red-400 mt-2 font-medium">
+                            Free limit reached — Upgrade now
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="py-1">
