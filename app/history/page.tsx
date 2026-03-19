@@ -226,16 +226,14 @@ export default function HistoryPage() {
     // Dynamic import PDF generation
     const { generateInvoicePdf } = await import("@/lib/pdf");
     await generateInvoicePdf({
-      senderName: fullInvoice.sender_name ?? "",
       clientName: fullInvoice.client_name ?? "",
       dueDate: fullInvoice.due_date ?? "",
       invoiceNumber: fullInvoice.invoice_number ?? "",
-      lineItems: fullInvoice.line_items,
-      total: grandTotal,
-      subtotal,
-      discountAmount,
-      grandTotal,
-      businessProfile: businessProfile || undefined
+      lineItems: fullInvoice.line_items || [],
+      discountMode: fullInvoice.discount_type as "percent" | "fixed" | undefined,
+      discountValue: fullInvoice.discount_value?.toString() ?? undefined,
+      businessProfile: businessProfile || undefined,
+      plan: 'free' // You may want to get this from subscription hook if needed
     });
   };
 
