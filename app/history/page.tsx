@@ -234,6 +234,9 @@ export default function HistoryPage() {
       discountValue: fullInvoice.discount_value?.toString() ?? undefined,
       businessProfile: businessProfile || undefined,
       plan: 'free' // You may want to get this from subscription hook if needed
+      ,
+      senderName: "",
+      total: 0
     });
   };
 
