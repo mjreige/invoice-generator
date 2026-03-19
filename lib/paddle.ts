@@ -6,15 +6,12 @@ export async function initPaddle() {
   if (paddle) return paddle;
 
   try {
-    const environment = process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox' ? 'sandbox' : 'production';
-    const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
-    
+    const environment = (process.env.NEXT_PUBLIC_PADDLE_ENV || 'sandbox').trim() as 'sandbox' | 'production';
+    const token = (process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || 'test_3251d959f441592a6abb85e50b6').trim();
+
     console.log('DEBUG paddle - environment:', environment);
     console.log('DEBUG paddle - token:', token ? 'present' : 'missing');
-    
-    if (!token) {
-      throw new Error('PADDLE_CLIENT_TOKEN is missing');
-    }
+    console.log('DEBUG paddle - token value:', token.substring(0, 10) + '...');
 
     paddle = await initializePaddle({
       environment: environment,
@@ -33,7 +30,7 @@ export async function initPaddle() {
 export async function openCheckout(priceId: string, userEmail: string, userId: string) {
   try {
     const paddleInstance = await initPaddle();
-    
+
     const checkoutParams = {
       items: [{ priceId: priceId, quantity: 1 }],
       customer: {
@@ -44,9 +41,9 @@ export async function openCheckout(priceId: string, userEmail: string, userId: s
       },
       successUrl: `${window.location.origin}/invoice`,
     };
-    
+
     console.log('DEBUG paddle - opening checkout with params:', checkoutParams);
-    
+
     await paddleInstance.Checkout.open(checkoutParams);
     console.log('DEBUG paddle - checkout opened successfully');
   } catch (error) {
@@ -58,7 +55,6 @@ export async function openCheckout(priceId: string, userEmail: string, userId: s
 export async function closeCheckout() {
   try {
     const paddleInstance = await initPaddle();
-    console.log('DEBUG paddle - closing checkout');
     paddleInstance.Checkout.close();
   } catch (error) {
     console.error('Failed to close checkout:', error);
