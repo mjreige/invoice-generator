@@ -54,10 +54,15 @@ export type BusinessProfileForPdf = {
 };
 
 export type InvoiceForPdf = {
-  invoiceNumber: string;
-  dueDate: string;
+  senderName: string;
   clientName: string;
+  dueDate: string;
+  invoiceNumber: string;
   lineItems: LineItemForPdf[];
+  total: number;
+  subtotal?: number;
+  discountAmount?: number;
+  grandTotal?: number;
   discountMode?: "percent" | "fixed";
   discountValue?: string;
   businessProfile?: BusinessProfileForPdf;
