@@ -201,9 +201,6 @@ export default function Pricing() {
                 </Link>
               ) : (
                 <div className="text-center">
-                  <div className="mb-4">
-                    <span className="px-3 py-1 text-xs font-medium bg-green-500 text-white rounded-full">Current Plan</span>
-                  </div>
                   {plan.name === "PRO" && (
                     <div className="text-center">
                       <div className="mb-4">
@@ -222,7 +219,6 @@ export default function Pricing() {
                         Upgrade to Business
                       </Link>
                     </div>
-                  </div>
                   )}
                   {plan.name === "BUSINESS" && (
                     <button
@@ -232,15 +228,7 @@ export default function Pricing() {
                       Business Plan Active
                     </button>
                   )}
-                  {plan.name === "FREE" && (
-                    <Link
-                      href="/signup"
-                      className="block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors bg-blue-500 hover:bg-blue-600 text-white"
-                    >
-                      Get Started Free
-                    </Link>
-                  )}
-                  {user && plan.name === "FREE" && (
+                  {!user && (
                     <Link
                       href="/login?redirect=/pricing"
                       className="mt-4 block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors bg-slate-100 border border-slate-300 text-slate-700"
