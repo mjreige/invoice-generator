@@ -22,10 +22,24 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
   }, []);
 
   const handleSubscribe = async (priceId: string) => {
+    console.log('DEBUG upgrade popup - handleSubscribe called with priceId:', priceId);
+    console.log('DEBUG upgrade popup - user:', user);
+    
     if (!user?.email) {
       console.error('No user email found');
       return;
     }
+
+    const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID;
+    const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID;
+    
+    console.log('DEBUG upgrade popup - proPriceId:', proPriceId);
+    console.log('DEBUG upgrade popup - businessPriceId:', businessPriceId);
+    console.log('DEBUG upgrade popup - calling openCheckout with:', {
+      priceId,
+      userEmail: user.email,
+      userId: user.id
+    });
 
     setLoading(true);
     try {

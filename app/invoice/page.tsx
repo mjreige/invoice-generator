@@ -532,14 +532,17 @@ export default function InvoicePage() {
               <button
                 type="button"
                 onClick={() => {
-                  setConfirmError(null);
+                  console.log("Button clicked - subscriptionLoading:", subscriptionLoading, "canGenerateInvoice:", canGenerateInvoice);
                   if (subscriptionLoading) {
-                    return; // Don't do anything while loading
-                  }
-                  if (canGenerateInvoice) {
-                    setConfirmOpen(true);
-                  } else {
+                    // Still loading - wait and show upgrade popup as safe default if count is already known to be over limit
                     setUpgradePopupOpen(true);
+                    return;
+                  }
+                  if (!canGenerateInvoice) {
+                    setUpgradePopupOpen(true);
+                  } else {
+                    setConfirmError(null);
+                    setConfirmOpen(true);
                   }
                 }}
                 className="h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px"

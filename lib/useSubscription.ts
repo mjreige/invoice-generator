@@ -25,6 +25,7 @@ export function useSubscription() {
       try {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser();
+        console.log("DEBUG subscription - user:", user?.id);
         
         if (!user) {
           if (mounted) {
@@ -45,13 +46,15 @@ export function useSubscription() {
           .select('*')
           .eq('user_id', user.id)
           .single();
+        console.log("DEBUG subscription - subscription data:", subscription);
 
         // Fetch invoice count
-        const { data: invoices, error: invoiceError } = await supabase
+        const { count: invoiceCount } = await supabase
           .from('invoices')
-          .select('id', { count: 'exact' });
-
-        const invoiceCount = invoiceError ? 0 : (invoices?.length || 0);
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        const count = invoiceCount ?? 0;
+        console.log("DEBUG subscription - invoice count:", count);
 
         // Determine plan and status
         let plan: 'free' | 'pro' | 'business' = 'free';
@@ -64,13 +67,14 @@ export function useSubscription() {
         }
 
         // Determine if user can generate invoices
-        const canGenerateInvoice = isActive || invoiceCount < 5;
+        const canGenerateInvoice = isActive || count < 5;
+        console.log("DEBUG subscription - canGenerateInvoice:", canGenerateInvoice, "isActive:", isActive, "count:", count);
 
         if (mounted) {
           setData({
             plan,
             isActive,
-            invoiceCount,
+            invoiceCount: count,
             canGenerateInvoice,
             loading: false,
           });
