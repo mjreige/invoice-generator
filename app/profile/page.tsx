@@ -58,7 +58,7 @@ function Toggle({
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { plan } = useSubscription();
+  const { plan, loading: subscriptionLoading } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -139,7 +139,7 @@ export default function ProfilePage() {
         : "border-slate-200 bg-slate-50 text-slate-900 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
     }`;
 
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center gap-4">
