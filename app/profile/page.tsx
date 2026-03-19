@@ -16,6 +16,7 @@ interface BusinessProfile {
   phone?: string;
   email?: string;
   website?: string;
+  logo_url?: string;
   show_header?: boolean;
   include_signature?: boolean;
   signature_name?: string;
@@ -223,117 +224,126 @@ export default function ProfilePage() {
               </label>
               <input
                 id="email"
-                type="email"
-                value={profile.email || ""}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+            </div>
+          )}
+
+          {/* Form Overlay for Free Users */}
+          {plan === 'free' && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+              <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">Upgrade to Pro Required</h3>
+                  <p className="text-sm text-slate-600 mb-6">
+                    Business Profile is a Pro feature. Upgrade to Pro to access all business profile settings including logo, business details, signature, and Arabic PDF support.
+                  </p>
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors"
+                  >
+                    Upgrade to Pro
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Business Information - Only show if not Free user */}
+          {plan !== 'free' && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="business_name"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+              >
+                Business Name
+              </label>
+              <input
+                id="business_name"
+                type="text"
+                value={profile.business_name || ""}
+                onChange={(e) => handleInputChange("business_name", e.target.value)}
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                placeholder="business@example.com"
+                placeholder="Your Business Name"
               />
             </div>
 
             <div className="space-y-1.5">
               <label
-                htmlFor="website"
+                htmlFor="phone"
                 className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
               >
-                Website
+                Phone
               </label>
               <input
-                id="website"
-                type="url"
-                value={profile.website || ""}
-                onChange={(e) => handleInputChange("website", e.target.value)}
+                id="phone"
+                type="tel"
+                value={profile.phone || ""}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                placeholder="https://yourwebsite.com"
+                placeholder="+1 234 567 8900"
               />
             </div>
+          </div>
 
-            {/* Address */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-slate-700">Address</h3>
-              
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="address1"
-                  className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
-                >
-                  Address Line 1
-                </label>
-                <input
-                  id="address1"
-                  type="text"
-                  value={profile.address1 || ""}
-                  onChange={(e) => handleInputChange("address1", e.target.value)}
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="123 Main Street"
-                />
-              </div>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="email"
+              className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={profile.email || ""}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+          )}
 
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="address2"
-                  className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
-                >
-                  Address Line 2
-                </label>
-                <input
-                  id="address2"
-                  type="text"
-                  value={profile.address2 || ""}
-                  onChange={(e) => handleInputChange("address2", e.target.value)}
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Suite 100"
-                />
-              </div>
+          {/* Logo Upload Section - Only show if not Free user */}
+          {plan !== 'free' && (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="logo_url"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+              >
+                Logo URL
+              </label>
+              <input
+                id="logo_url"
+                type="url"
+                value={profile.logo_url || ""}
+                onChange={(e) => handleInputChange("logo_url", e.target.value)}
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                placeholder="https://example.com/logo.png"
+              />
+            </div>
+          </div>
+          )}
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="city"
-                    className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
-                  >
-                    City
-                  </label>
-                  <input
-                    id="city"
-                    type="text"
-                    value={profile.city || ""}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="New York"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="country"
-                    className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
-                  >
-                    Country
-                  </label>
-                  <input
-                    id="country"
-                    type="text"
-                    value={profile.country || ""}
-                    onChange={(e) => handleInputChange("country", e.target.value)}
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="United States"
-                  />
-                </div>
+          {/* Invoice Options Section - Only show if not Free user */}
+          {plan !== 'free' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Invoice Options</h3>
               </div>
             </div>
 
-            {/* Invoice Settings */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-slate-700">Invoice Settings</h3>
-              
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div>
-                  <label htmlFor="show_header" className="text-sm font-medium text-slate-900">
-                    Show header on invoices
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <label
+                    htmlFor="show_header"
+                    className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+                  >
+                    Show Business Header in PDF
                   </label>
                   <p className="mt-1 text-xs text-slate-500">
-                    Display your business information at the top of PDF invoices
+                    Add your business name and email at the top of PDF invoices
                   </p>
                 </div>
                 <button
@@ -355,125 +365,126 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Signature */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-slate-700">Signature</h3>
-              
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div>
-                  <label htmlFor="include_signature" className="text-sm font-medium text-slate-900">
-                    Include signature on invoices
-                  </label>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Add a digital signature line to the bottom of PDF invoices
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={profile.include_signature}
-                  onClick={() => handleInputChange("include_signature", !profile.include_signature)}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    profile.include_signature ? "bg-blue-600" : "bg-slate-300"
-                  }`}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <label
+                  htmlFor="include_signature"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      profile.include_signature ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {profile.include_signature && (
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="signature_name"
-                    className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
-                  >
-                    Signature Name
-                  </label>
-                  <input
-                    id="signature_name"
-                    type="text"
-                    value={profile.signature_name || ""}
-                    onChange={(e) => handleInputChange("signature_name", e.target.value)}
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="Your full name as it will appear on invoices"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Arabic Support Section */}
-            <div className="space-y-4 border-t border-slate-200 pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-slate-900">Arabic Support</h3>
-                    {plan !== 'business' && <Lock className="w-4 h-4 text-slate-400" />}
-                  </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Enable Arabic PDF support with proper right-to-left text rendering
-                  </p>
-                  {plan !== 'business' && (
-                    <p className="mt-2 text-xs text-slate-400">
-                      Arabic PDF support is available on the Business plan.{" "}
-                      <Link href="/pricing" className="text-blue-600 hover:text-blue-700 font-medium">
-                        Upgrade
-                      </Link>
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={profile.enable_arabic}
-                  onClick={() => handleInputChange("enable_arabic", !profile.enable_arabic)}
-                  disabled={plan !== 'business'}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    plan !== 'business' 
-                      ? "bg-slate-200 cursor-not-allowed" 
-                      : profile.enable_arabic 
-                        ? "bg-blue-600" 
-                        : "bg-slate-300"
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      profile.enable_arabic ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-                <p className="text-sm text-rose-800">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
-                <p className="text-sm text-green-800">
-                  Profile saved successfully!
+                  Include Digital Signature
+                </label>
+                <p className="mt-1 text-xs text-slate-500">
+                  Add a digital signature line to the bottom of PDF invoices
                 </p>
               </div>
-            )}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={profile.include_signature}
+                onClick={() => handleInputChange("include_signature", !profile.include_signature)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  profile.include_signature ? "bg-blue-600" : "bg-slate-300"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    profile.include_signature ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={saving || plan === 'free'}
-              className="flex h-11 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {saving ? "Saving..." : plan === 'free' ? "Upgrade to Pro to Save" : "Save Profile"}
-            </button>
-          </form>
-        </div>
+          {/* Signature Name - Only show if not Free user */}
+          {plan !== 'free' && profile.include_signature && (
+            <div className="space-y-1.5">
+              <label
+                htmlFor="signature_name"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+              >
+                Signature Name
+              </label>
+              <input
+                id="signature_name"
+                type="text"
+                value={profile.signature_name || ""}
+                onChange={(e) => handleInputChange("signature_name", e.target.value)}
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                placeholder="Your full name as it will appear on invoices"
+              />
+            </div>
+          )}
+          )}
+
+          {/* Arabic Support Section */}
+          <div className="space-y-4 border-t border-slate-200 pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-slate-900">Arabic Support</h3>
+                  {plan !== 'business' && <Lock className="w-4 h-4 text-slate-400" />}
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  Enable Arabic PDF support with proper right-to-left text rendering
+                </p>
+                {plan !== 'business' && (
+                  <p className="mt-2 text-xs text-slate-400">
+                    Arabic PDF support is available on Business plan.{" "}
+                    <Link href="/pricing" className="text-blue-600 hover:text-blue-700 font-medium">
+                      Upgrade
+                    </Link>
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={profile.enable_arabic}
+                onClick={() => handleInputChange("enable_arabic", !profile.enable_arabic)}
+                disabled={plan !== 'business'}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  plan !== 'business' 
+                    ? "bg-slate-200 cursor-not-allowed" 
+                    : profile.enable_arabic 
+                      ? "bg-blue-600" 
+                      : "bg-slate-300"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    profile.enable_arabic ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+              <p className="text-sm text-rose-800">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+              <p className="text-sm text-green-800">
+                Profile saved successfully!
+              </p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={saving || plan === 'free'}
+            className="flex h-11 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {saving ? "Saving..." : plan === 'free' ? "Upgrade to Pro to Save" : "Save Profile"}
+          </button>
+        </form>
       </div>
-    </main>
-  );
-}
+    </div>
+  </main>
+);

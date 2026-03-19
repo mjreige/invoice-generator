@@ -11,9 +11,7 @@ export default function AuthHeader() {
   const [email, setEmail] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [invoiceCount, setInvoiceCount] = useState(0);
-  const [loadingInvoiceCount, setLoadingInvoiceCount] = useState(false);
-  const { plan, isActive, loading: subscriptionLoading } = useSubscription();
+  const { plan, isActive, invoiceCount, loading: subscriptionLoading } = useSubscription();
 
   useEffect(() => {
     const load = async () => {
@@ -43,27 +41,10 @@ export default function AuthHeader() {
 
   // Fetch invoice count when dropdown opens
   useEffect(() => {
-    if (dropdownOpen && email) {
-      fetchInvoiceCount();
+    if (dropdownOpen) {
+      // Invoice count is now handled by useSubscription hook
     }
-  }, [dropdownOpen, email]);
-
-  const fetchInvoiceCount = async () => {
-    setLoadingInvoiceCount(true);
-    try {
-      const { data, error } = await supabase
-        .from('invoices')
-        .select('id', { count: 'exact' });
-      
-      if (!error) {
-        setInvoiceCount(data?.length || 0);
-      }
-    } catch (err) {
-      console.error('Error fetching invoice count:', err);
-    } finally {
-      setLoadingInvoiceCount(false);
-    }
-  };
+  }, [dropdownOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

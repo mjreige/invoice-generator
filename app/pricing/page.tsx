@@ -200,22 +200,55 @@ export default function Pricing() {
                   {plan.buttonText}
                 </Link>
               ) : (
-                <button
-                  onClick={() => {
-                    console.log('DEBUG pricing page - Subscribe button clicked for', plan.name);
-                    const priceId = plan.name === "PRO" ? proPriceId : businessPriceId;
-                    console.log('DEBUG pricing page - using priceId:', priceId);
-                    handleSubscribe(priceId);
-                  }}
-                  disabled={loading}
-                  className={`block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors ${
-                    plan.popular
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {loading ? 'Opening...' : plan.buttonText}
-                </button>
+                <div className="text-center">
+                  <div className="mb-4">
+                    <span className="px-3 py-1 text-xs font-medium bg-green-500 text-white rounded-full">Current Plan</span>
+                  </div>
+                  {plan.name === "PRO" && (
+                    <div className="text-center">
+                      <div className="mb-4">
+                        <span className="px-3 py-1 text-xs font-medium bg-green-500 text-white rounded-full">Current Plan</span>
+                      </div>
+                      <button
+                        className="block w-full py-3 px-6 rounded-lg font-semibold text-center bg-slate-100 border border-slate-300 text-slate-700 cursor-not-allowed"
+                        disabled
+                      >
+                        Pro Plan Active
+                      </button>
+                      <Link
+                        href="/signup"
+                        className="mt-4 inline-flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-xl transition-colors"
+                      >
+                        Upgrade to Business
+                      </Link>
+                    </div>
+                  </div>
+                  )}
+                  {plan.name === "BUSINESS" && (
+                    <button
+                      className="block w-full py-3 px-6 rounded-lg font-semibold text-center bg-slate-100 text-slate-700 cursor-not-allowed"
+                      disabled
+                    >
+                      Business Plan Active
+                    </button>
+                  )}
+                  {plan.name === "FREE" && (
+                    <Link
+                      href="/signup"
+                      className="block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      Get Started Free
+                    </Link>
+                  )}
+                  {user && plan.name === "FREE" && (
+                    <Link
+                      href="/login?redirect=/pricing"
+                      className="mt-4 block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors bg-slate-100 border border-slate-300 text-slate-700"
+                    >
+                      Log In to View Plans
+                    </Link>
+                  )}
+                </div>
               )}
             </div>
           ))}
