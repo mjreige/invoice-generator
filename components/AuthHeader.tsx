@@ -194,7 +194,7 @@ export default function AuthHeader() {
                   {/* Invoice Usage Section - Only show for free users */}
                   {plan === 'free' && (
                     <div className="border-b border-white/5 px-4 py-3">
-                      {loadingInvoiceCount ? (
+                      {false ? (
                         <div className="text-xs text-slate-400">Loading usage...</div>
                       ) : (
                         <div>
