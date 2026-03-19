@@ -185,18 +185,25 @@ export default function AuthHeader() {
                       <div className="flex items-center gap-2">
                         {plan === 'free' ? (
                           <>
-                            <span className="text-xs font-medium text-slate-300">Free Plan</span>
+                            <span className="px-2 py-1 text-xs font-medium bg-slate-600 text-white rounded-full">Free</span>
                             <span className="text-xs text-slate-400">•</span>
                             <span className="text-xs text-slate-300">{Math.min(invoiceCount, 5)} / 5 invoices</span>
                           </>
-                        ) : (
+                        ) : plan === 'pro' ? (
                           <>
+                            <span className="px-2 py-1 text-xs font-medium bg-blue-500 text-white rounded-full">Pro</span>
                             <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="text-xs font-medium text-green-400 capitalize">
-                              {plan} Plan
-                            </span>
+                            <span className="text-xs font-medium text-green-400">Plan Active</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="px-2 py-1 text-xs font-medium bg-purple-500 text-white rounded-full">Business</span>
+                            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-xs font-medium text-green-400">Plan Active</span>
                           </>
                         )}
                       </div>

@@ -1,7 +1,6 @@
 import jsPDF from "jspdf";
 
 import type { LineItemForPdf } from "./types";
-import amiriBase64 from "./amiriFont";
 import ArabicReshaper from 'arabic-reshaper';
 
 // Helper function to detect Arabic text
@@ -19,17 +18,16 @@ function processArabicText(text: string): string {
 }
 
 // Helper function to render text with proper font handling
-function renderText(doc: jsPDF, text: string, x: number, y: number, options: { align?: "left" | "right" | "center", font?: string, fontSize?: number, fontStyle?: "normal" | "bold" | "italic", maxWidth?: number } = {}) {
-  const { align = "left", font = "helvetica", fontSize = 10, fontStyle = "normal", maxWidth } = options;
+function renderText(doc: jsPDF, text: string, x: number, y: number, options: { align?: "left" | "right" | "center", font?: string, fontSize?: number, fontStyle?: "normal" | "bold" | "italic", maxWidth?: number, enableArabic?: boolean } = {}) {
+  const { align = "left", font = "helvetica", fontSize = 10, fontStyle = "normal", maxWidth, enableArabic = false } = options;
   
-  if (containsArabic(text)) {
+  if (enableArabic && containsArabic(text)) {
     doc.setFont("Amiri", "normal");
     doc.setFontSize(fontSize);
     const reshaped = processArabicText(text);
     const textOptions: any = { align: "left" };
     if (maxWidth) textOptions.maxWidth = maxWidth;
     doc.text(reshaped, x, y, textOptions);
-    doc.setFont("helvetica", "normal");
   } else {
     doc.setFont(font, fontStyle);
     doc.setFontSize(fontSize);
@@ -52,19 +50,18 @@ export type BusinessProfileForPdf = {
   show_header?: boolean;
   include_signature?: boolean;
   signature_name?: string;
+  enable_arabic?: boolean;
 };
 
 export type InvoiceForPdf = {
-  senderName: string;
-  clientName: string;
-  dueDate: string;
   invoiceNumber: string;
+  dueDate: string;
+  clientName: string;
   lineItems: LineItemForPdf[];
-  total: number;
-  subtotal?: number;
-  discountAmount?: number;
-  grandTotal?: number;
+  discountMode?: "percent" | "fixed";
+  discountValue?: string;
   businessProfile?: BusinessProfileForPdf;
+  plan?: 'free' | 'pro' | 'business';
 };
 
 export async function generateInvoicePdf(invoice: InvoiceForPdf) {
@@ -74,9 +71,12 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     format: 'a4'
   });
 
-  // Embed Amiri font for Arabic text support
-  doc.addFileToVFS('Amiri-Regular.ttf', amiriBase64);
-  doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+  // Embed Amiri font for Arabic text support (only if enabled)
+  if (invoice.businessProfile?.enable_arabic) {
+    const amiriBase64 = await import("./amiriFont").then(m => m.default);
+    doc.addFileToVFS('Amiri-Regular.ttf', amiriBase64);
+    doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+  }
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -94,8 +94,8 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     doc.line(left, lineY, pageWidth - right, lineY);
   };
 
-  // Add business header if enabled
-  if (invoice.businessProfile?.show_header) {
+  // Add business header if enabled and user is Pro or Business
+  if (invoice.businessProfile?.show_header && invoice.plan !== 'free') {
     console.log("DEBUG PDF: Adding business header with profile:", invoice.businessProfile);
     
     // Text-only header: Company name (bold) and email on separate lines
@@ -323,8 +323,8 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     });
   }
 
-  // Add signature if enabled
-  if (invoice.businessProfile?.include_signature && invoice.businessProfile?.signature_name) {
+  // Add signature if enabled and user is Pro or Business
+  if (invoice.businessProfile?.include_signature && invoice.businessProfile?.signature_name && invoice.plan !== 'free') {
     y += 20; // Add 20mm spacing after totals
     
     // Draw signature line (60mm wide, ending at xTotalRight)

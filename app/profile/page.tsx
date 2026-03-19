@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useSubscription } from "@/lib/useSubscription";
+import { Lock, Crown, Star } from "lucide-react";
+import Link from "next/link";
 
 interface BusinessProfile {
   business_name?: string;
@@ -16,10 +19,12 @@ interface BusinessProfile {
   show_header?: boolean;
   include_signature?: boolean;
   signature_name?: string;
+  enable_arabic?: boolean;
 }
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { plan, loading: subscriptionLoading } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -155,6 +160,23 @@ export default function ProfilePage() {
             onSubmit={handleSubmit}
             className="space-y-6 px-6 py-6 sm:px-8 sm:py-8"
           >
+            {/* Plan Gating Banner */}
+            {plan === 'free' && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm text-amber-800">
+                    <strong>Business Profile is a Pro feature.</strong> Upgrade to Pro to save your logo, business details and signature on your invoices.
+                  </p>
+                </div>
+                <Link
+                  href="/pricing"
+                  className="ml-4 inline-flex items-center px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-colors"
+                >
+                  Upgrade
+                </Link>
+              </div>
+            )}
+
             {/* Business Information */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -384,6 +406,50 @@ export default function ProfilePage() {
               )}
             </div>
 
+            {/* Arabic Support Section */}
+            <div className="space-y-4 border-t border-slate-200 pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-slate-900">Arabic Support</h3>
+                    {plan !== 'business' && <Lock className="w-4 h-4 text-slate-400" />}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Enable Arabic PDF support with proper right-to-left text rendering
+                  </p>
+                  {plan !== 'business' && (
+                    <p className="mt-2 text-xs text-slate-400">
+                      Arabic PDF support is available on the Business plan.{" "}
+                      <Link href="/pricing" className="text-blue-600 hover:text-blue-700 font-medium">
+                        Upgrade
+                      </Link>
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={profile.enable_arabic}
+                  onClick={() => handleInputChange("enable_arabic", !profile.enable_arabic)}
+                  disabled={plan !== 'business'}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    plan !== 'business' 
+                      ? "bg-slate-200 cursor-not-allowed" 
+                      : profile.enable_arabic 
+                        ? "bg-blue-600" 
+                        : "bg-slate-300"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      profile.enable_arabic ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
             {error && (
               <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
                 <p className="text-sm text-rose-800">{error}</p>
@@ -400,10 +466,10 @@ export default function ProfilePage() {
 
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || plan === 'free'}
               className="flex h-11 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {saving ? "Saving..." : "Save Profile"}
+              {saving ? "Saving..." : plan === 'free' ? "Upgrade to Pro to Save" : "Save Profile"}
             </button>
           </form>
         </div>
