@@ -17,6 +17,13 @@ export async function initPaddle() {
       environment: environment,
       token: token,
       debug: environment === 'sandbox',
+      eventCallback: function(data: any) {
+        console.log('DEBUG paddle - event:', data.name, data);
+        if (data.name === 'checkout.completed') {
+          console.log('DEBUG paddle - checkout completed, redirecting...');
+          window.location.href = window.location.origin + '/invoice';
+        }
+      }
     });
 
     console.log('DEBUG paddle - initialized successfully');
