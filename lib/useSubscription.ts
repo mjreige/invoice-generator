@@ -9,66 +9,49 @@ interface SubscriptionData {
   loading: boolean;
 }
 
+const defaultData: SubscriptionData = {
+  plan: 'free',
+  isActive: false,
+  invoiceCount: 0,
+  canGenerateInvoice: true,
+  loading: true,
+};
+
 export function useSubscription() {
-  const [data, setData] = useState<SubscriptionData>({
-    plan: 'free',
-    isActive: false,
-    invoiceCount: 0,
-    canGenerateInvoice: true,
-    loading: true,
-  });
+  const [data, setData] = useState<SubscriptionData>(defaultData);
 
   useEffect(() => {
     let mounted = true;
 
-    const fetchSubscriptionData = async () => {
+    const fetchSubscriptionData = async (userId: string) => {
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        console.log("DEBUG subscription - user:", user?.id);
-        
-        if (!user) {
-          if (mounted) {
-            setData({
-              plan: 'free',
-              isActive: false,
-              invoiceCount: 0,
-              canGenerateInvoice: true,
-              loading: false,
-            });
-          }
-          return;
-        }
+        const [subResult, countResult] = await Promise.all([
+          supabase
+            .from('subscriptions')
+            .select('plan, status, current_period_end')
+            .eq('user_id', userId)
+            .single(),
+          supabase
+            .from('invoices')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId),
+        ]);
 
-        // Fetch subscription
-        const { data: subscription } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        console.log("DEBUG subscription - subscription data:", subscription);
+        const subscription = subResult.data;
+        const count = countResult.count ?? 0;
 
-        // Fetch invoice count
-        const { count: invoiceCount } = await supabase
-          .from('invoices')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-        const count = invoiceCount ?? 0;
-        console.log("DEBUG subscription - invoice count:", count);
-
-        // Determine plan and status
         let plan: 'free' | 'pro' | 'business' = 'free';
         let isActive = false;
 
         if (subscription) {
           plan = subscription.plan as 'free' | 'pro' | 'business';
-          isActive = subscription.status === 'active' && 
-                    (!subscription.current_period_end || new Date(subscription.current_period_end) > new Date());
+          isActive =
+            subscription.status === 'active' &&
+            (!subscription.current_period_end ||
+              new Date(subscription.current_period_end) > new Date());
         }
 
-        // Determine if user can generate invoices
         const canGenerateInvoice = isActive || count < 5;
-        console.log("DEBUG subscription - canGenerateInvoice:", canGenerateInvoice, "isActive:", isActive, "count:", count);
 
         if (mounted) {
           setData({
@@ -93,10 +76,37 @@ export function useSubscription() {
       }
     };
 
-    fetchSubscriptionData();
+    // Listen to auth state changes so we fetch immediately when user logs in
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+        if (session?.user) {
+          setData((prev) => ({ ...prev, loading: true }));
+          await fetchSubscriptionData(session.user.id);
+        } else {
+          setData({
+            plan: 'free',
+            isActive: false,
+            invoiceCount: 0,
+            canGenerateInvoice: true,
+            loading: false,
+          });
+        }
+      }
+    );
+
+    // Also fetch immediately on mount in case session already exists
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user && mounted) {
+        fetchSubscriptionData(session.user.id);
+      } else if (mounted) {
+        setData({ ...defaultData, loading: false });
+      }
+    });
 
     return () => {
       mounted = false;
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
