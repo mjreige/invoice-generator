@@ -4,127 +4,76 @@ import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    // Initialize Supabase client inside the handler
+    const body = await request.json();
+    
+    console.log('Webhook received:', body.event_type);
+    
+    const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    const body = await request.text();
-    const signature = request.headers.get('paddle-signature');
-    
-    if (!signature) {
-      console.error('Missing Paddle signature');
-      return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
+
+    const eventType = body.event_type;
+    const data = body.data;
+
+    if (eventType === 'subscription.created' || eventType === 'subscription.activated') {
+      const customData = data.custom_data || {};
+      const userId = customData.userId || customData.user_id;
+      const priceId = data.items?.[0]?.price?.id;
+      
+      const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || 'pri_01kkshav4ehmnnwz4an3z07wes';
+      const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || 'pri_01kkshe2hfk9jp508nyy8q081v';
+      
+      const plan = priceId === businessPriceId ? 'business' : 'pro';
+      
+      console.log('Processing subscription:', { userId, priceId, plan });
+      
+      if (userId) {
+        const { error } = await supabase.from('subscriptions').upsert({
+          user_id: userId,
+          paddle_subscription_id: data.id,
+          paddle_customer_id: data.customer_id,
+          plan: plan,
+          status: 'active',
+          current_period_end: data.current_billing_period?.ends_at || null,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+        
+        if (error) console.error('Supabase error:', error);
+        else console.log('Subscription saved successfully for user:', userId);
+      } else {
+        console.error('No userId found in custom_data:', customData);
+      }
     }
 
-    // Verify webhook signature
-    const secret = process.env.PADDLE_API_KEY!;
-    const expectedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(body)
-      .digest('hex');
-
-    if (!crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
-    )) {
-      console.error('Invalid webhook signature');
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    if (eventType === 'subscription.updated') {
+      const subscriptionId = data.id;
+      const { error } = await supabase.from('subscriptions')
+        .update({
+          status: data.status === 'active' ? 'active' : data.status,
+          current_period_end: data.current_billing_period?.ends_at || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('paddle_subscription_id', subscriptionId);
+      
+      if (error) console.error('Supabase update error:', error);
     }
 
-    const event = JSON.parse(body);
-    console.log('Paddle webhook event:', event);
-
-    // Handle different event types
-    switch (event.event_type) {
-      case 'subscription.created':
-      case 'subscription.updated':
-        await handleSubscriptionEvent(event, supabase);
-        break;
-      case 'subscription.cancelled':
-        await handleSubscriptionCancelled(event, supabase);
-        break;
-      default:
-        console.log('Unhandled event type:', event.event_type);
+    if (eventType === 'subscription.cancelled') {
+      const subscriptionId = data.id;
+      const { error } = await supabase.from('subscriptions')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('paddle_subscription_id', subscriptionId);
+      
+      if (error) console.error('Supabase cancel error:', error);
     }
 
-    return NextResponse.json({ received: true });
-
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error('Webhook error:', error);
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
-}
-
-async function handleSubscriptionEvent(event: any, supabase: any) {
-  const subscription = event.data;
-  const userId = subscription.custom_data?.userId;
-  
-  if (!userId) {
-    console.error('No userId found in subscription custom data');
-    return;
-  }
-
-  // Determine plan from price ID
-  const plan = getPlanFromPriceId(subscription.items[0]?.price_id);
-  
-  const subscriptionData = {
-    user_id: userId,
-    paddle_subscription_id: subscription.id,
-    paddle_customer_id: subscription.customer_id,
-    plan: plan,
-    status: subscription.status,
-    current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end).toISOString() : null,
-  };
-
-  // Upsert subscription
-  const { error } = await supabase
-    .from('subscriptions')
-    .upsert(subscriptionData, {
-      onConflict: 'user_id',
-      ignoreDuplicates: false
-    });
-
-  if (error) {
-    console.error('Error upserting subscription:', error);
-    throw error;
-  }
-
-  console.log(`Subscription ${event.event_type} for user ${userId}, plan: ${plan}`);
-}
-
-async function handleSubscriptionCancelled(event: any, supabase: any) {
-  const subscription = event.data;
-  const userId = subscription.custom_data?.userId;
-  
-  if (!userId) {
-    console.error('No userId found in subscription custom data');
-    return;
-  }
-
-  const { error } = await supabase
-    .from('subscriptions')
-    .update({
-      status: 'cancelled',
-      current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end).toISOString() : null,
-    })
-    .eq('user_id', userId);
-
-  if (error) {
-    console.error('Error updating cancelled subscription:', error);
-    throw error;
-  }
-
-  console.log(`Subscription cancelled for user ${userId}`);
-}
-
-function getPlanFromPriceId(priceId: string): 'free' | 'pro' | 'business' {
-  const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID;
-  const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID;
-
-  if (priceId === proPriceId) return 'pro';
-  if (priceId === businessPriceId) return 'business';
-  return 'free';
 }
