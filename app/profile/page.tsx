@@ -249,56 +249,58 @@ export default function ProfilePage() {
 
           {/* Business Information - Only show if not Free user */}
           {plan !== 'free' && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label
-                htmlFor="business_name"
-                className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
-              >
-                Business Name
-              </label>
-              <input
-                id="business_name"
-                type="text"
-                value={profile.business_name || ""}
-                onChange={(e) => handleInputChange("business_name", e.target.value)}
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                placeholder="Your Business Name"
-              />
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="business_name"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+                >
+                  Business Name
+                </label>
+                <input
+                  id="business_name"
+                  type="text"
+                  value={profile.business_name || ""}
+                  onChange={(e) => handleInputChange("business_name", e.target.value)}
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Your Business Name"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="phone"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+                >
+                  Phone
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  value={profile.phone || ""}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="+1 234 567 8900"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
               <label
-                htmlFor="phone"
+                htmlFor="email"
                 className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
               >
-                Phone
+                Email
               </label>
               <input
-                id="phone"
-                type="tel"
-                value={profile.phone || ""}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
+                id="email"
+                type="email"
+                value={profile.email || ""}
+                onChange={(e) => handleInputChange("email", e.target.value)}
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                placeholder="+1 234 567 8900"
               />
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="email"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={profile.email || ""}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-            />
           </div>
           )}
 
