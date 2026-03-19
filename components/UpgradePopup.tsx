@@ -12,6 +12,9 @@ interface UpgradePopupProps {
 export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  
+  const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || 'pri_01kkshav4ehmnnwz4an3z07wes';
+  const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || 'pri_01kkshe2hfk9jp508nyy8q081v';
 
   useEffect(() => {
     const loadUser = async () => {
@@ -25,25 +28,25 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
     console.log('DEBUG upgrade popup - handleSubscribe called with priceId:', priceId);
     console.log('DEBUG upgrade popup - user:', user);
     
+    console.log('DEBUG upgrade popup - proPriceId:', proPriceId);
+    console.log('DEBUG upgrade popup - businessPriceId:', businessPriceId);
+    
     if (!user?.email) {
       console.error('No user email found');
       return;
     }
 
-    const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID;
-    const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID;
-    
-    console.log('DEBUG upgrade popup - proPriceId:', proPriceId);
-    console.log('DEBUG upgrade popup - businessPriceId:', businessPriceId);
+    const finalPriceId = priceId === proPriceId ? proPriceId : (priceId === businessPriceId ? businessPriceId : priceId);
+    console.log('DEBUG upgrade popup - finalPriceId:', finalPriceId);
     console.log('DEBUG upgrade popup - calling openCheckout with:', {
-      priceId,
+      priceId: finalPriceId,
       userEmail: user.email,
       userId: user.id
     });
 
     setLoading(true);
     try {
-      await openCheckout(priceId, user.email, user.id);
+      await openCheckout(finalPriceId, user.email, user.id);
     } catch (error) {
       console.error('Error opening checkout:', error);
     } finally {
@@ -180,7 +183,9 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 <button
                   onClick={() => {
                     console.log('DEBUG upgrade popup - Subscribe button clicked for', plan.name);
-                    handleSubscribe(plan.name === "PRO" ? process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID!);
+                    const priceId = plan.name === "PRO" ? proPriceId : businessPriceId;
+                    console.log('DEBUG upgrade popup - using priceId:', priceId);
+                    handleSubscribe(priceId);
                   }}
                   disabled={loading}
                   className="block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors cursor-pointer ${

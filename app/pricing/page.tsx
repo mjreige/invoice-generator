@@ -25,6 +25,12 @@ export default function Pricing() {
     console.log('DEBUG pricing page - handleSubscribe called with priceId:', priceId);
     console.log('DEBUG pricing page - user:', user);
     
+    const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || 'pri_01kkshav4ehmnnwz4an3z07wes';
+    const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || 'pri_01kkshe2hfk9jp508nyy8q081v';
+    
+    console.log('DEBUG pricing page - proPriceId:', proPriceId);
+    console.log('DEBUG pricing page - businessPriceId:', businessPriceId);
+    
     if (!user?.email) {
       console.log('DEBUG pricing page - no user, redirecting to login');
       router.push('/login?redirect=/pricing');
@@ -197,7 +203,9 @@ export default function Pricing() {
                 <button
                   onClick={() => {
                     console.log('DEBUG pricing page - Subscribe button clicked for', plan.name);
-                    handleSubscribe(plan.name === "PRO" ? process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID!);
+                    const priceId = plan.name === "PRO" ? proPriceId : businessPriceId;
+                    console.log('DEBUG pricing page - using priceId:', priceId);
+                    handleSubscribe(priceId);
                   }}
                   disabled={loading}
                   className={`block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors ${
