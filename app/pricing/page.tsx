@@ -2,10 +2,50 @@
 
 import Link from "next/link";
 import { ArrowLeft, Check, Star, HelpCircle, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { openCheckout } from "@/lib/paddle";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function Pricing() {
+  const router = useRouter();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    loadUser();
+  }, []);
+
+  const handleSubscribe = async (priceId: string) => {
+    console.log('DEBUG pricing page - handleSubscribe called with priceId:', priceId);
+    console.log('DEBUG pricing page - user:', user);
+    
+    if (!user?.email) {
+      console.log('DEBUG pricing page - no user, redirecting to login');
+      router.push('/login?redirect=/pricing');
+      return;
+    }
+
+    console.log('DEBUG pricing page - calling openCheckout with:', {
+      priceId,
+      userEmail: user.email,
+      userId: user.id
+    });
+
+    setLoading(true);
+    try {
+      await openCheckout(priceId, user.email, user.id);
+    } catch (error) {
+      console.error('Error opening checkout:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const plans = [
     {
@@ -142,16 +182,33 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              <Link
-                href={plan.buttonLink}
-                className={`block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors ${
-                  plan.popular
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                    : 'bg-slate-700 hover:bg-slate-600 text-white'
-                }`}
-              >
-                {plan.buttonText}
-              </Link>
+              {plan.name === "FREE" ? (
+                <Link
+                  href={plan.buttonLink}
+                  className={`block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors ${
+                    plan.popular
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                      : 'bg-slate-700 hover:bg-slate-600 text-white'
+                  }`}
+                >
+                  {plan.buttonText}
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    console.log('DEBUG pricing page - Subscribe button clicked for', plan.name);
+                    handleSubscribe(plan.name === "PRO" ? process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID!);
+                  }}
+                  disabled={loading}
+                  className={`block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors ${
+                    plan.popular
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                      : 'bg-slate-700 hover:bg-slate-600 text-white'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {loading ? 'Opening...' : plan.buttonText}
+                </button>
+              )}
             </div>
           ))}
         </div>

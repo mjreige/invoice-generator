@@ -177,8 +177,12 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   ))}
                 </ul>
 
-                <a
-                  onClick={() => handleSubscribe(plan.name === "PRO" ? process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID!)}
+                <button
+                  onClick={() => {
+                    console.log('DEBUG upgrade popup - Subscribe button clicked for', plan.name);
+                    handleSubscribe(plan.name === "PRO" ? process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID!);
+                  }}
+                  disabled={loading}
                   className="block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors cursor-pointer ${
                     plan.popular
                       ? 'bg-blue-500 hover:bg-blue-600 text-white'
@@ -186,7 +190,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   } disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Opening...' : 'Subscribe'}
-                </a>
+                </button>
               </div>
             ))}
           </div>
