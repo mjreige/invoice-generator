@@ -12,6 +12,9 @@ export default function Pricing() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  
+  const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || 'pri_01kkshav4ehmnnwz4an3z07wes';
+  const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || 'pri_01kkshe2hfk9jp508nyy8q081v';
 
   useEffect(() => {
     const loadUser = async () => {
@@ -24,9 +27,6 @@ export default function Pricing() {
   const handleSubscribe = async (priceId: string) => {
     console.log('DEBUG pricing page - handleSubscribe called with priceId:', priceId);
     console.log('DEBUG pricing page - user:', user);
-    
-    const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || 'pri_01kkshav4ehmnnwz4an3z07wes';
-    const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || 'pri_01kkshe2hfk9jp508nyy8q081v';
     
     console.log('DEBUG pricing page - proPriceId:', proPriceId);
     console.log('DEBUG pricing page - businessPriceId:', businessPriceId);
