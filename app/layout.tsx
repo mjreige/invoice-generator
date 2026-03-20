@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AuthHeader from "@/components/AuthHeader";
-import SessionProvider from "@/components/SessionProvider";
 import { SubscriptionProvider } from "@/components/SubscriptionProvider";
 
 export const metadata: Metadata = {
@@ -17,7 +16,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SessionProvider />
         <SubscriptionProvider>
           <AuthHeader />
           {children}

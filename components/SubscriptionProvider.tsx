@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 interface SubscriptionData {
@@ -23,6 +24,8 @@ const defaultData: SubscriptionData = {
   loading: true,
 };
 
+const PROTECTED_PATHS = ["/invoice", "/history", "/profile", "/manage-subscription"];
+
 const SubscriptionContext = createContext<SubscriptionData>(defaultData);
 
 export function useSubscriptionContext() {
@@ -31,6 +34,13 @@ export function useSubscriptionContext() {
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<SubscriptionData>(defaultData);
+  const router = useRouter();
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     let mounted = true;
@@ -59,9 +69,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
         if (subscription) {
           plan = subscription.plan as "free" | "pro" | "business";
-
-          // Only treat as active subscription if paddle_subscription_id exists
-          // Credits users have status "active" but no paddle_subscription_id
           isActive =
             subscription.status === "active" &&
             !!subscription.paddle_subscription_id &&
@@ -88,26 +95,43 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+
       if (event === "SIGNED_OUT") {
         hasFetched = false;
         setData({ ...defaultData, loading: false });
+        const isProtected = PROTECTED_PATHS.some(p => pathnameRef.current?.startsWith(p));
+        if (isProtected) {
+          router.replace("/login");
+        }
         return;
       }
-      if (event === "SIGNED_IN" && session?.user && !hasFetched) {
-        setData((prev) => ({ ...prev, loading: true }));
-        await fetchData(session.user.id);
+
+      if (event === "SIGNED_IN" && session) {
+        // Handle redirect param
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectTo = urlParams.get("redirect");
+        if (redirectTo) {
+          router.replace(redirectTo);
+        }
+
+        // Only fetch if not already fetched
+        if (!hasFetched) {
+          setData((prev) => ({ ...prev, loading: true }));
+          fetchData(session.user.id);
+        }
       }
     });
 
-    // On slow mobile networks stop showing loading after 3s
+    // Fallback timeout for slow mobile networks
     const sessionTimeout = setTimeout(() => {
       if (mounted && !hasFetched) {
         setData({ ...defaultData, loading: false });
       }
     }, 3000);
 
+    // Fetch immediately if session already exists
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(sessionTimeout);
       if (session?.user && mounted) {
@@ -122,7 +146,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       clearTimeout(sessionTimeout);
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Single listener, never re-mounts
 
   return (
     <SubscriptionContext.Provider value={data}>
