@@ -1,7 +1,6 @@
 "use client";
 
 import { generateInvoicePdf } from "@/lib/pdf";
-
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -142,7 +141,6 @@ export default function HistoryPage() {
           ? fullInvoice.grand_total
           : Math.max(0, subtotal - discountAmount);
 
-      
       await generateInvoicePdf({
         senderName: fullInvoice.sender_name ?? "",
         clientName: fullInvoice.client_name ?? "",
@@ -229,9 +227,12 @@ export default function HistoryPage() {
                   <option value="total_low">Total low to high</option>
                   <option value="client_az">Client A to Z</option>
                 </select>
-                <a href="/" className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 min-h-[44px]">
+                <button
+                  onClick={() => router.push("/")}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 min-h-[44px]"
+                >
                   Back to home
-                </a>
+                </button>
               </div>
             </div>
           </div>
