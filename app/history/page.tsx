@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useSubscription } from "@/lib/useSubscription";
 import type { LineItemForPdf } from "@/lib/types";
 
 type InvoiceRow = {
@@ -24,10 +25,12 @@ type SortOption = "newest" | "oldest" | "total_high" | "total_low" | "client_az"
 
 export default function HistoryPage() {
   const router = useRouter();
+  const { plan } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [previewInvoice, setPreviewInvoice] = useState<InvoiceRow | null>(null);
-  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loadingPreviewId, setLoadingPreviewId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalInvoices, setTotalInvoices] = useState(0);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
@@ -35,209 +38,127 @@ export default function HistoryPage() {
 
   useEffect(() => {
     const load = async () => {
-      // Check and refresh session first
+      setLoading(true);
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
       if (sessionError || !session) {
         router.replace("/login?redirect=/history");
         return;
       }
-
       const user = session.user;
 
-      // Get total count first
       const { count } = await supabase
         .from("invoices")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id);
-      
       setTotalInvoices(count || 0);
 
-      // Determine sort order
       let orderByColumn = "created_at";
       let ascending = false;
-      
       switch (sortBy) {
-        case "oldest":
-          orderByColumn = "created_at";
-          ascending = true;
-          break;
-        case "total_high":
-          orderByColumn = "grand_total";
-          ascending = false;
-          break;
-        case "total_low":
-          orderByColumn = "grand_total";
-          ascending = true;
-          break;
-        case "client_az":
-          orderByColumn = "client_name";
-          ascending = true;
-          break;
-        case "newest":
-        default:
-          orderByColumn = "created_at";
-          ascending = false;
-          break;
+        case "oldest": orderByColumn = "created_at"; ascending = true; break;
+        case "total_high": orderByColumn = "grand_total"; ascending = false; break;
+        case "total_low": orderByColumn = "grand_total"; ascending = true; break;
+        case "client_az": orderByColumn = "client_name"; ascending = true; break;
+        default: orderByColumn = "created_at"; ascending = false; break;
       }
 
-      // Fetch paginated data - only fetch fields needed for list view
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
-      
+
       const { data, error } = await supabase
         .from("invoices")
-        .select("id, invoice_number, client_name, due_date, grand_total, created_at")
+        .select("id, invoice_number, client_name, due_date, grand_total, created_at, subtotal, discount_type, discount_value")
         .eq("user_id", user.id)
         .order(orderByColumn, { ascending })
         .range(from, to);
 
-      if (!error && data) {
-        setInvoices(data as InvoiceRow[]);
-      }
-
+      if (!error && data) setInvoices(data as InvoiceRow[]);
       setLoading(false);
     };
-
     void load();
   }, [router, currentPage, sortBy]);
 
   const totalPages = Math.ceil(totalInvoices / itemsPerPage);
-  
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handleSortChange = (newSort: SortOption) => {
-    setSortBy(newSort);
-    setCurrentPage(1); // Reset to first page when sorting changes
-  };
 
   const handleViewInvoice = async (invoiceId: string) => {
-    setLoadingPreview(true);
+    setLoadingPreviewId(invoiceId);
     try {
-      // Check and refresh session first
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) return;
-      
-      const user = session.user;
-
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
       const { data, error } = await supabase
         .from("invoices")
         .select("*")
         .eq("id", invoiceId)
-        .eq("user_id", user.id)
+        .eq("user_id", session.user.id)
         .single();
-
-      if (!error && data) {
-        setPreviewInvoice(data as InvoiceRow);
-      }
+      if (!error && data) setPreviewInvoice(data as InvoiceRow);
     } catch (err) {
-      console.error("Error fetching invoice details:", err);
+      console.error("Error fetching invoice:", err);
     } finally {
-      setLoadingPreview(false);
+      setLoadingPreviewId(null);
     }
   };
 
-  const hasInvoices = useMemo(
-    () => !loading && invoices.length > 0,
-    [loading, invoices.length]
-  );
-
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <div className="space-y-4">
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="animate-pulse">
-          <div className="rounded-lg bg-slate-200 p-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-              <div className="h-4 rounded bg-slate-300"></div>
-              <div className="h-4 rounded bg-slate-300"></div>
-              <div className="h-4 rounded bg-slate-300"></div>
-              <div className="h-4 rounded bg-slate-300"></div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
   const handleDownload = async (invoice: InvoiceRow) => {
-    // Check and refresh session first
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session) return;
-    
-    const user = session.user;
+    const invoiceId = invoice.id;
+    setDownloadingId(invoiceId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const user = session.user;
 
-    // Fetch full invoice details if needed
-    let fullInvoice = invoice;
-    if (!invoice.line_items) {
-      try {
+      let fullInvoice = invoice;
+      if (!invoice.line_items) {
         const { data, error } = await supabase
           .from("invoices")
           .select("*")
-          .eq("id", invoice.id)
+          .eq("id", invoiceId)
           .eq("user_id", user.id)
           .single();
-
-        if (!error && data) {
-          fullInvoice = data as InvoiceRow;
-        }
-      } catch (err) {
-        console.error("Error fetching invoice details for download:", err);
-        return;
+        if (!error && data) fullInvoice = data as InvoiceRow;
       }
-    }
 
-    // Fetch business profile for header
-    let businessProfile = null;
-    try {
+      if (!fullInvoice.line_items) return;
+
       const { data: profileData } = await supabase
         .from("business_profiles")
-        .select("business_name, email, show_header, include_signature, signature_name")
+        .select("*")
         .eq("user_id", user.id)
         .single();
-      
-      businessProfile = profileData;
+
+      const subtotal = fullInvoice.subtotal ?? fullInvoice.grand_total ?? 0;
+      const discountValue = fullInvoice.discount_value ?? 0;
+      const discountType = fullInvoice.discount_type ?? "percent";
+      const discountAmount =
+        discountValue > 0
+          ? discountType === "percent"
+            ? (subtotal * Math.min(discountValue, 100)) / 100
+            : Math.min(discountValue, subtotal)
+          : 0;
+      const grandTotal =
+        typeof fullInvoice.grand_total === "number"
+          ? fullInvoice.grand_total
+          : Math.max(0, subtotal - discountAmount);
+
+      const { generateInvoicePdf } = await import("@/lib/pdf");
+      await generateInvoicePdf({
+        senderName: fullInvoice.sender_name ?? "",
+        clientName: fullInvoice.client_name ?? "",
+        dueDate: fullInvoice.due_date ?? "",
+        invoiceNumber: fullInvoice.invoice_number ?? "",
+        lineItems: fullInvoice.line_items,
+        total: grandTotal,
+        subtotal,
+        discountAmount,
+        grandTotal,
+        businessProfile: profileData || undefined,
+        plan,
+      });
     } catch (err) {
-      console.error("Error fetching business profile for PDF:", err);
+      console.error("Download error:", err);
+    } finally {
+      setDownloadingId(null);
     }
-
-    if (!fullInvoice.line_items) return;
-
-    const subtotal = fullInvoice.subtotal ?? fullInvoice.grand_total ?? 0;
-    const discountValue = fullInvoice.discount_value ?? 0;
-    const discountType = fullInvoice.discount_type ?? "percent";
-
-    const discountAmount =
-      discountValue > 0
-        ? discountType === "percent"
-          ? (subtotal * Math.min(discountValue, 100)) / 100
-          : Math.min(discountValue, subtotal)
-        : 0;
-
-    const grandTotal =
-      typeof fullInvoice.grand_total === "number"
-        ? fullInvoice.grand_total
-        : Math.max(0, subtotal - discountAmount);
-
-    // Dynamic import PDF generation
-    const { generateInvoicePdf } = await import("@/lib/pdf");
-    await generateInvoicePdf({
-      clientName: fullInvoice.client_name ?? "",
-      dueDate: fullInvoice.due_date ?? "",
-      invoiceNumber: fullInvoice.invoice_number ?? "",
-      lineItems: fullInvoice.line_items || [],
-      discountMode: fullInvoice.discount_type as "percent" | "fixed" | undefined,
-      discountValue: fullInvoice.discount_value?.toString() ?? undefined,
-      businessProfile: businessProfile || undefined,
-      plan: 'free' // You may want to get this from subscription hook if needed
-      ,
-      senderName: "",
-      total: 0
-    });
   };
 
   const formatMoney = (value: number) => {
@@ -249,21 +170,40 @@ export default function HistoryPage() {
     const subtotal = invoice.subtotal ?? invoice.grand_total ?? 0;
     const discountValue = invoice.discount_value ?? 0;
     const discountType = invoice.discount_type ?? "percent";
-
     const discountAmount =
       discountValue > 0
         ? discountType === "percent"
           ? (subtotal * Math.min(discountValue, 100)) / 100
           : Math.min(discountValue, subtotal)
         : 0;
-
     const grandTotal =
       typeof invoice.grand_total === "number"
         ? invoice.grand_total
         : Math.max(0, subtotal - discountAmount);
-
     return { subtotal, discountAmount, grandTotal };
   };
+
+  const hasInvoices = useMemo(
+    () => !loading && invoices.length > 0,
+    [loading, invoices.length]
+  );
+
+  const LoadingSkeleton = () => (
+    <div className="space-y-4">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="animate-pulse">
+          <div className="rounded-lg bg-slate-200 p-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+              <div className="h-4 rounded bg-slate-300" />
+              <div className="h-4 rounded bg-slate-300" />
+              <div className="h-4 rounded bg-slate-300" />
+              <div className="h-4 rounded bg-slate-300" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-900">
@@ -272,18 +212,14 @@ export default function HistoryPage() {
           <div className="border-b border-slate-200/80 bg-gradient-to-b from-white to-slate-50 px-6 py-6 sm:px-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-                  Invoice history
-                </h1>
-                <p className="mt-1 text-sm text-slate-600">
-                  View and download invoices you have generated.
-                </p>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Invoice history</h1>
+                <p className="mt-1 text-sm text-slate-600">View and download invoices you have generated.</p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <select
                   value={sortBy}
-                  onChange={(e) => handleSortChange(e.target.value as SortOption)}
-                  className="h-11 min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  onChange={(e) => { setSortBy(e.target.value as SortOption); setCurrentPage(1); }}
+                  className="h-11 min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="newest">Newest first</option>
                   <option value="oldest">Oldest first</option>
@@ -291,10 +227,7 @@ export default function HistoryPage() {
                   <option value="total_low">Total low to high</option>
                   <option value="client_az">Client A to Z</option>
                 </select>
-                <a
-                  href="/"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 min-h-[44px]"
-                >
+                <a href="/" className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 min-h-[44px]">
                   Back to home
                 </a>
               </div>
@@ -305,15 +238,11 @@ export default function HistoryPage() {
             {loading && <LoadingSkeleton />}
 
             {!loading && !hasInvoices && (
-              <p className="text-sm text-slate-600">
-                You have not generated any invoices yet. Create one from the
-                generator and it will appear here.
-              </p>
+              <p className="text-sm text-slate-600">You have not generated any invoices yet.</p>
             )}
 
             {hasInvoices && (
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
-                {/* Desktop Header */}
                 <div className="hidden sm:grid grid-cols-12 gap-3 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
                   <div className="col-span-3">Invoice</div>
                   <div className="col-span-2">Client</div>
@@ -324,59 +253,34 @@ export default function HistoryPage() {
 
                 <div className="space-y-2 p-3">
                   {invoices.map((invoice) => (
-                    <div
-                      key={invoice.id}
-                      className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid sm:grid-cols-12 sm:items-center"
-                    >
+                    <div key={invoice.id} className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid sm:grid-cols-12 sm:items-center">
                       <div className="sm:col-span-3">
-                        <div className="sm:hidden text-xs font-semibold text-slate-600 mb-1">Invoice</div>
-                        <div className="text-sm font-semibold text-slate-900">
-                          {invoice.invoice_number || "Untitled invoice"}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {new Date(invoice.created_at).toLocaleDateString()}
-                        </div>
+                        <div className="text-sm font-semibold text-slate-900">{invoice.invoice_number || "Untitled"}</div>
+                        <div className="text-xs text-slate-500">{new Date(invoice.created_at).toLocaleDateString()}</div>
                       </div>
-                      <div className="sm:col-span-2">
-                        <div className="sm:hidden text-xs font-semibold text-slate-600 mb-1">Client</div>
-                        <div className="text-sm font-medium text-slate-900">
-                          {invoice.client_name || "—"}
-                        </div>
+                      <div className="sm:col-span-2 text-sm text-slate-900">{invoice.client_name || "—"}</div>
+                      <div className="sm:col-span-2 text-center text-sm text-slate-900">
+                        {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "—"}
                       </div>
-                      <div className="sm:col-span-2 text-center">
-                        <div className="sm:hidden text-xs font-semibold text-slate-600 mb-1">Due date</div>
-                        <div className="text-sm text-slate-900">
-                          {invoice.due_date
-                            ? new Date(invoice.due_date).toLocaleDateString()
-                            : "—"}
-                        </div>
-                      </div>
-                      <div className="sm:col-span-1 text-right">
-                        <div className="sm:hidden text-xs font-semibold text-slate-600 mb-1">Total</div>
-                        <div className="text-sm font-semibold text-slate-900">
-                          ${formatMoney(
-                            (() => {
-                              const { grandTotal } = getPreviewTotals(invoice);
-                              return grandTotal;
-                            })()
-                          )}
-                        </div>
+                      <div className="sm:col-span-1 text-right text-sm font-semibold text-slate-900">
+                        ${formatMoney(getPreviewTotals(invoice).grandTotal)}
                       </div>
                       <div className="flex items-center gap-2 sm:col-span-4 sm:justify-end">
                         <button
                           type="button"
                           onClick={() => handleViewInvoice(invoice.id)}
-                          disabled={loadingPreview}
-                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={loadingPreviewId === invoice.id}
+                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {loadingPreview ? "Loading..." : "View"}
+                          {loadingPreviewId === invoice.id ? "Loading..." : "View"}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDownload(invoice)}
-                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 active:translate-y-px"
+                          disabled={downloadingId === invoice.id}
+                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Download PDF
+                          {downloadingId === invoice.id ? "Generating..." : "Download PDF"}
                         </button>
                       </div>
                     </div>
@@ -385,27 +289,12 @@ export default function HistoryPage() {
               </div>
             )}
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-6">
-                <div className="text-sm text-slate-600">
-                  Page {currentPage} of {totalPages}
-                </div>
+                <div className="text-sm text-slate-600">Page {currentPage} of {totalPages}</div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="h-11 min-h-[44px] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="h-11 min-h-[44px] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  >
-                    Next
-                  </button>
+                  <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                  <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
                 </div>
               </div>
             )}
@@ -414,96 +303,44 @@ export default function HistoryPage() {
       </div>
 
       {previewInvoice && (
-        <div
-		  className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 px-4 py-4 overflow-y-auto"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 px-4 py-4 overflow-y-auto" role="dialog" aria-modal="true">
           <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl shadow-black/40 my-auto">
             <div className="border-b border-slate-200 bg-gradient-to-b from-white to-slate-50 px-6 py-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold tracking-tight text-slate-900">
-                    Invoice preview
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {previewInvoice?.invoice_number || "Untitled invoice"}
-                  </p>
+                  <h3 className="text-lg font-semibold tracking-tight text-slate-900">Invoice preview</h3>
+                  <p className="mt-1 text-sm text-slate-600">{previewInvoice.invoice_number || "Untitled invoice"}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setPreviewInvoice(null)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 active:translate-y-px"
-                  aria-label="Close preview"
-                >
-                  ×
-                </button>
+                <button type="button" onClick={() => setPreviewInvoice(null)} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50">×</button>
               </div>
             </div>
 
             <div className="space-y-6 px-6 py-5">
               <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Sender</span>
-                  <span className="font-semibold text-slate-900">
-                    {previewInvoice?.sender_name || "—"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Client</span>
-                  <span className="font-semibold text-slate-900">
-                    {previewInvoice?.client_name || "—"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Due date</span>
-                  <span className="font-semibold text-slate-900">
-                    {previewInvoice?.due_date
-                      ? new Date(previewInvoice.due_date).toLocaleDateString()
-                      : "—"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600">Created</span>
-                  <span className="font-semibold text-slate-900">
-                    {new Date(previewInvoice?.created_at).toLocaleString()}
-                  </span>
-                </div>
+                <div className="flex items-center justify-between"><span className="text-slate-600">Sender</span><span className="font-semibold text-slate-900">{previewInvoice.sender_name || "—"}</span></div>
+                <div className="flex items-center justify-between"><span className="text-slate-600">Client</span><span className="font-semibold text-slate-900">{previewInvoice.client_name || "—"}</span></div>
+                <div className="flex items-center justify-between"><span className="text-slate-600">Due date</span><span className="font-semibold text-slate-900">{previewInvoice.due_date ? new Date(previewInvoice.due_date).toLocaleDateString() : "—"}</span></div>
+                <div className="flex items-center justify-between"><span className="text-slate-600">Created</span><span className="font-semibold text-slate-900">{new Date(previewInvoice.created_at).toLocaleString()}</span></div>
               </div>
 
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
                 <div className="grid grid-cols-12 gap-1 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-3 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
-				  <div className="col-span-5">Description</div>
-				  <div className="col-span-2 text-center">Qty</div>
-				  <div className="col-span-2 text-right">Unit</div>
-				  <div className="col-span-3 text-right">Total</div>
-				</div>
+                  <div className="col-span-5">Description</div>
+                  <div className="col-span-2 text-center">Qty</div>
+                  <div className="col-span-2 text-right">Unit</div>
+                  <div className="col-span-3 text-right">Total</div>
+                </div>
                 <div className="space-y-2 p-3">
-                  {(previewInvoice?.line_items ?? []).map((li, idx) => {
+                  {(previewInvoice.line_items ?? []).map((li, idx) => {
                     const qty = Number(li.quantity || 0);
                     const unit = Number(li.unitPrice || 0);
-                    const rowTotal =
-                      Number.isFinite(qty) && Number.isFinite(unit)
-                        ? qty * unit
-                        : 0;
-
+                    const rowTotal = Number.isFinite(qty) && Number.isFinite(unit) ? qty * unit : 0;
                     return (
-                      <div
-						  key={`${previewInvoice?.id}-${idx}`}
-						  className="grid grid-cols-12 items-center gap-1 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200"
-						>
-						  <div className="col-span-5 text-sm font-medium text-slate-900">
-                          {li.description || "—"}
-                        </div>
-                        <div className="col-span-2 text-center text-sm text-slate-800">
-                          {li.quantity || "—"}
-                        </div>
-                        <div className="col-span-2 text-right text-sm text-slate-800">
-                          {li.unitPrice ? `$${formatMoney(unit)}` : "—"}
-                        </div>
-                        <div className="col-span-3 text-right text-sm font-semibold text-slate-900">
-                          ${formatMoney(rowTotal)}
-                        </div>
+                      <div key={`${previewInvoice.id}-${idx}`} className="grid grid-cols-12 items-center gap-1 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+                        <div className="col-span-5 text-sm font-medium text-slate-900">{li.description || "—"}</div>
+                        <div className="col-span-2 text-center text-sm text-slate-800">{li.quantity || "—"}</div>
+                        <div className="col-span-2 text-right text-sm text-slate-800">{li.unitPrice ? `$${formatMoney(unit)}` : "—"}</div>
+                        <div className="col-span-3 text-right text-sm font-semibold text-slate-900">${formatMoney(rowTotal)}</div>
                       </div>
                     );
                   })}
@@ -511,46 +348,21 @@ export default function HistoryPage() {
               </div>
 
               {(() => {
-                if (!previewInvoice) return null;
-                const { subtotal, discountAmount, grandTotal } =
-                  getPreviewTotals(previewInvoice);
+                const { subtotal, discountAmount, grandTotal } = getPreviewTotals(previewInvoice);
                 return (
                   <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-                    <div className="flex items-center justify-between text-sm text-slate-700">
-                      <span>Subtotal</span>
-                      <span className="font-semibold text-slate-900">
-                        ${formatMoney(subtotal)}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center justify-between text-sm text-slate-700">
-                      <span>Discount</span>
-                      <span className="font-semibold text-rose-600">
-                        -${formatMoney(discountAmount)}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
-                      <span>Grand total</span>
-                      <span>${formatMoney(grandTotal)}</span>
-                    </div>
+                    <div className="flex items-center justify-between text-sm text-slate-700"><span>Subtotal</span><span className="font-semibold text-slate-900">${formatMoney(subtotal)}</span></div>
+                    <div className="mt-1 flex items-center justify-between text-sm text-slate-700"><span>Discount</span><span className="font-semibold text-rose-600">-${formatMoney(discountAmount)}</span></div>
+                    <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900"><span>Grand total</span><span>${formatMoney(grandTotal)}</span></div>
                   </div>
                 );
               })()}
             </div>
 
             <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-6 py-4">
-              <button
-                type="button"
-                onClick={() => setPreviewInvoice(null)}
-                className="h-10 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:translate-y-px"
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={() => previewInvoice && handleDownload(previewInvoice)}
-                className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px"
-              >
-                Download
+              <button type="button" onClick={() => setPreviewInvoice(null)} className="h-10 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">Close</button>
+              <button type="button" onClick={() => previewInvoice && handleDownload(previewInvoice)} disabled={downloadingId === previewInvoice.id} className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg hover:brightness-105 disabled:opacity-70">
+                {downloadingId === previewInvoice.id ? "Generating..." : "Download"}
               </button>
             </div>
           </div>
@@ -559,4 +371,3 @@ export default function HistoryPage() {
     </main>
   );
 }
-
