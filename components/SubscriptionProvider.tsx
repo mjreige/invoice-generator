@@ -41,7 +41,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         const [subResult, countResult] = await Promise.all([
           supabase
             .from("subscriptions")
-            .select("plan, status, current_period_end, invoice_credits, credits_used")
+            .select("plan, status, current_period_end, invoice_credits, credits_used, paddle_subscription_id")
             .eq("user_id", userId)
             .single(),
           supabase
@@ -59,8 +59,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
         if (subscription) {
           plan = subscription.plan as "free" | "pro" | "business";
+
+          // Only treat as active subscription if paddle_subscription_id exists
+          // Credits users have status "active" but no paddle_subscription_id
           isActive =
             subscription.status === "active" &&
+            !!subscription.paddle_subscription_id &&
             (!subscription.current_period_end ||
               new Date(subscription.current_period_end) > new Date());
 
@@ -97,7 +101,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // On slow mobile networks stop showing loading spinner after 3s
+    // On slow mobile networks stop showing loading after 3s
     const sessionTimeout = setTimeout(() => {
       if (mounted && !hasFetched) {
         setData({ ...defaultData, loading: false });

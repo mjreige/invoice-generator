@@ -78,11 +78,14 @@ export default function ManageSubscriptionPage() {
         <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/95 shadow-2xl shadow-black/40 backdrop-blur">
           <div className="border-b border-slate-200/80 bg-gradient-to-b from-white to-slate-50 px-6 py-6 sm:px-8">
             <div className="flex items-center gap-3">
-              <a href="/" className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-600 hover:bg-slate-100">
+              <button
+                onClick={() => router.back()}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-600 hover:bg-slate-100"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                 </svg>
-              </a>
+              </button>
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">Manage Subscription</h1>
                 <p className="text-sm text-slate-500">View and manage your current plan</p>
@@ -147,7 +150,7 @@ export default function ManageSubscriptionPage() {
               </button>
             </div>
 
-            {/* Cancel Subscription */}
+            {/* Cancel Subscription — only for active monthly subscribers */}
             {isActive && subscription?.paddle_subscription_id && (
               <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5">
                 <h2 className="text-sm font-semibold text-rose-800 mb-1">Cancel Subscription</h2>
@@ -166,7 +169,7 @@ export default function ManageSubscriptionPage() {
         </div>
       </div>
 
-      {/* Cancel Modal - reordered: Buy Credits → Keep → Cancel */}
+      {/* Cancel Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowCancelModal(false)} />

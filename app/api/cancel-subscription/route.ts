@@ -16,12 +16,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Payment configuration error" }, { status: 500 });
     }
 
-    const isSandbox = process.env.NEXT_PUBLIC_PADDLE_ENV === "sandbox";
+    // NEXT_PUBLIC_ vars are not reliable in server-side API routes
+    // Use PADDLE_ENV (server-side only) with fallback
+    const paddleEnv = process.env.PADDLE_ENV || process.env.NEXT_PUBLIC_PADDLE_ENV || "sandbox";
+    const isSandbox = paddleEnv === "sandbox";
     const baseUrl = isSandbox
       ? "https://sandbox-api.paddle.com"
       : "https://api.paddle.com";
 
-    console.log("Cancelling subscription:", subscriptionId, "sandbox:", isSandbox);
+    console.log("Paddle env:", paddleEnv, "isSandbox:", isSandbox, "baseUrl:", baseUrl);
+    console.log("Cancelling subscription:", subscriptionId);
 
     const response = await fetch(`${baseUrl}/subscriptions/${subscriptionId}/cancel`, {
       method: "POST",
@@ -38,13 +42,12 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       console.error("Paddle cancel failed:", response.status, responseText);
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: `Paddle error: ${response.status}`,
-        details: responseText 
+        details: responseText
       }, { status: 500 });
     }
 
-    // Update Supabase status to cancelled
     const { createClient } = await import("@supabase/supabase-js");
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,15 +56,13 @@ export async function POST(request: Request) {
 
     const { error: dbError } = await supabase
       .from("subscriptions")
-      .update({ 
+      .update({
         status: "cancelled",
-        updated_at: new Date().toISOString() 
+        updated_at: new Date().toISOString()
       })
       .eq("paddle_subscription_id", subscriptionId);
 
-    if (dbError) {
-      console.error("DB update error:", dbError);
-    }
+    if (dbError) console.error("DB update error:", dbError);
 
     return NextResponse.json({ success: true });
   } catch (error) {
