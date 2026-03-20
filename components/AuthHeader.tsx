@@ -83,11 +83,14 @@ export default function AuthHeader() {
 
     if (isActive) {
       return (
-        <div className="flex items-center gap-2">
-          <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${plan === "business" ? "bg-purple-500 text-white" : "bg-blue-500 text-white"}`}>
-            {plan === "business" ? "Business" : "Pro"}
-          </span>
-          <span className="text-xs text-green-400 font-medium">● Active</span>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${plan === "business" ? "bg-purple-500 text-white" : "bg-blue-500 text-white"}`}>
+              {plan === "business" ? "Business" : "Pro"}
+            </span>
+            <span className="text-xs text-green-400 font-medium">● Active</span>
+          </div>
+          <p className="text-xs text-slate-400">{invoiceCount} invoices generated</p>
         </div>
       );
     }
@@ -113,7 +116,11 @@ export default function AuthHeader() {
             style={{ width: `${Math.min((Math.min(invoiceCount, 5) / 5) * 100, 100)}%` }}
           />
         </div>
-        {invoiceCount >= 5 && <p className="text-xs text-red-400 font-medium">Limit reached</p>}
+        {invoiceCount >= 5 && (
+          <a href="/pricing" className="text-xs text-blue-400 hover:text-blue-300 font-medium">
+            Upgrade to continue →
+          </a>
+        )}
       </div>
     );
   };

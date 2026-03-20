@@ -22,13 +22,11 @@ export default function ManageSubscriptionPage() {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push("/login"); return; }
-
       const { data } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", session.user.id)
         .single();
-
       setSubscription(data);
       setLoading(false);
     };
@@ -36,7 +34,10 @@ export default function ManageSubscriptionPage() {
   }, [router]);
 
   const handleCancelSubscription = async () => {
-    if (!subscription?.paddle_subscription_id) return;
+    if (!subscription?.paddle_subscription_id) {
+      setError("No subscription ID found.");
+      return;
+    }
     setCancelling(true);
     setError(null);
 
@@ -47,13 +48,17 @@ export default function ManageSubscriptionPage() {
         body: JSON.stringify({ subscriptionId: subscription.paddle_subscription_id }),
       });
 
-      if (!response.ok) throw new Error("Failed to cancel");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to cancel");
+      }
 
       setCancelSuccess(true);
       setShowCancelModal(false);
-      setTimeout(() => router.push("/"), 2000);
-    } catch {
-      setError("Failed to cancel subscription. Please try again or contact support.");
+      setTimeout(() => router.push("/"), 2500);
+    } catch (err: any) {
+      setError(err.message || "Failed to cancel subscription. Please contact support at app.invoicegenerator@gmail.com");
     } finally {
       setCancelling(false);
     }
@@ -88,7 +93,7 @@ export default function ManageSubscriptionPage() {
           <div className="px-6 py-6 sm:px-8 sm:py-8 space-y-6">
             {cancelSuccess && (
               <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-                Your subscription has been cancelled. Redirecting to home...
+                Your subscription has been cancelled. You will retain access until the end of your billing period. Redirecting...
               </div>
             )}
 
@@ -102,7 +107,7 @@ export default function ManageSubscriptionPage() {
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Current Plan</h2>
               <div className="flex items-center justify-between">
-                <div>
+                <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
                       plan === "business" ? "bg-purple-100 text-purple-700" :
@@ -111,17 +116,15 @@ export default function ManageSubscriptionPage() {
                     }`}>
                       {plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Business"}
                     </span>
-                    {isActive && (
-                      <span className="text-xs text-green-600 font-medium">● Active</span>
-                    )}
+                    {isActive && <span className="text-xs text-green-600 font-medium">● Active</span>}
                   </div>
                   {subscription?.current_period_end && (
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500">
                       Next billing: {new Date(subscription.current_period_end).toLocaleDateString()}
                     </p>
                   )}
                   {subscription?.invoice_credits > 0 && (
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500">
                       Credits remaining: {Math.max(0, (subscription.invoice_credits || 0) - (subscription.credits_used || 0))}
                     </p>
                   )}
@@ -133,9 +136,9 @@ export default function ManageSubscriptionPage() {
             </div>
 
             {/* Buy More Credits */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h2 className="text-sm font-semibold text-slate-900 mb-1">Need more invoices?</h2>
-              <p className="text-sm text-slate-500 mb-3">Buy invoice credits — one-time purchase, never expires.</p>
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+              <h2 className="text-sm font-semibold text-blue-900 mb-1">Buy Invoice Credits</h2>
+              <p className="text-sm text-blue-700 mb-3">One-time purchase — never expires. Top up whenever you need more invoices.</p>
               <button
                 onClick={() => setShowUpgradePopup(true)}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition"
@@ -149,7 +152,7 @@ export default function ManageSubscriptionPage() {
               <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5">
                 <h2 className="text-sm font-semibold text-rose-800 mb-1">Cancel Subscription</h2>
                 <p className="text-sm text-rose-600 mb-3">
-                  Your access will continue until the end of your current billing period.
+                  Your access continues until the end of your current billing period.
                 </p>
                 <button
                   onClick={() => setShowCancelModal(true)}
@@ -163,13 +166,13 @@ export default function ManageSubscriptionPage() {
         </div>
       </div>
 
-      {/* Cancel Confirmation Modal */}
+      {/* Cancel Modal - reordered: Buy Credits → Keep → Cancel */}
       {showCancelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowCancelModal(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Before you cancel...</h3>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-slate-600 mb-5">
               Did you know you can buy invoice credits instead? No monthly commitment — pay once and use whenever you need.
             </p>
             <div className="flex flex-col gap-3">
@@ -180,17 +183,17 @@ export default function ManageSubscriptionPage() {
                 Buy Credits Instead
               </button>
               <button
-                onClick={handleCancelSubscription}
-                disabled={cancelling}
-                className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition disabled:opacity-50"
+                onClick={() => setShowCancelModal(false)}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition"
               >
-                {cancelling ? "Cancelling..." : "Cancel Anyway"}
+                Keep My Subscription
               </button>
               <button
-                onClick={() => setShowCancelModal(false)}
-                className="text-sm text-slate-400 hover:text-slate-600 text-center"
+                onClick={handleCancelSubscription}
+                disabled={cancelling}
+                className="w-full py-2.5 rounded-xl border border-rose-200 text-rose-600 font-medium text-sm hover:bg-rose-50 transition disabled:opacity-50"
               >
-                Keep my subscription
+                {cancelling ? "Cancelling..." : "Cancel Anyway"}
               </button>
             </div>
           </div>

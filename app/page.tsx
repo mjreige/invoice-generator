@@ -2,29 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import Link from "next/link";
+import { useSubscription } from "@/lib/useSubscription";
+import UpgradePopup from "@/components/UpgradePopup";
 
 export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const { canGenerateInvoice, invoiceCount, isActive, hasCredits, loading } = useSubscription();
 
   useEffect(() => {
     const load = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       setIsLoggedIn(Boolean(user));
     };
-
     void load();
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(Boolean(session?.user));
     });
 
-    return () => {
-      sub.subscription.unsubscribe();
-    };
+    return () => sub.subscription.unsubscribe();
   }, []);
+
+  const handleGenerateClick = () => {
+    if (!isLoggedIn) {
+      window.location.href = "/login?redirect=/invoice";
+      return;
+    }
+    if (!loading && !canGenerateInvoice) {
+      setShowUpgrade(true);
+      return;
+    }
+    window.location.href = "/invoice";
+  };
+
+  const historyHref = isLoggedIn ? "/history" : "/login?redirect=/history";
 
   const features = [
     {
@@ -33,9 +45,9 @@ export default function LandingPage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
-      title: "Unlimited Invoices",
-      description: "Create as many invoices as you need with Pro and Business plans",
-      badge: "Pro & Business"
+      title: "Invoices Your Way",
+      description: "5 free invoices to start, then buy credit packs or subscribe monthly — no pressure",
+      badge: "All Plans"
     },
     {
       icon: (
@@ -44,7 +56,7 @@ export default function LandingPage() {
         </svg>
       ),
       title: "Arabic Language Support",
-      description: "Full Arabic language support with RTL text rendering",
+      description: "Full Arabic language support with RTL text rendering in PDF",
       badge: "Business"
     },
     {
@@ -54,7 +66,7 @@ export default function LandingPage() {
         </svg>
       ),
       title: "Business Profile",
-      description: "Add your logo, business details, and custom branding",
+      description: "Add your logo, business details, and custom branding to every invoice",
       badge: "Pro & Business"
     },
     {
@@ -84,35 +96,10 @@ export default function LandingPage() {
         </svg>
       ),
       title: "PDF Export",
-      description: "Download professional PDF invoices ready to send",
+      description: "Download professional PDF invoices ready to send to clients",
       badge: "All Plans"
     }
   ];
-
-  const pricingPlans = [
-    {
-      name: "FREE",
-      price: "$0",
-      description: "Perfect for getting started",
-      features: ["Up to 5 invoices", "Basic invoice generation", "PDF download", "Invoice history"]
-    },
-    {
-      name: "PRO",
-      price: "$7/month",
-      description: "Most popular for freelancers",
-      features: ["Unlimited invoices", "Business profile", "Digital signature", "Priority support"],
-      popular: true
-    },
-    {
-      name: "BUSINESS",
-      price: "$12/month",
-      description: "Perfect for growing businesses",
-      features: ["Everything in Pro", "Arabic support", "Priority support", "Advanced features"]
-    }
-  ];
-
-	const generateHref = isLoggedIn ? "/invoice" : "/login?redirect=/invoice";
-	const historyHref = isLoggedIn ? "/history" : "/login?redirect=/history";
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -123,17 +110,46 @@ export default function LandingPage() {
               Generate polished invoices in minutes
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-600 sm:text-base">
-              Fill out your details, add line items, apply a discount, and export a
-              clean PDF invoice.
+              Fill out your details, add line items, apply a discount, and export a clean PDF invoice. Start free — no credit card needed.
             </p>
 
+            {/* Usage indicator for logged in users */}
+            {isLoggedIn && !loading && (
+              <div className="mt-4">
+                {isActive && (
+                  <div className="inline-flex items-center gap-2 text-sm text-green-600">
+                    <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                    Active subscription — unlimited invoices
+                  </div>
+                )}
+                {!isActive && hasCredits && (
+                  <div className="inline-flex items-center gap-2 text-sm text-amber-600">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                    Invoice credits active
+                  </div>
+                )}
+                {!isActive && !hasCredits && invoiceCount >= 5 && (
+                  <div className="inline-flex items-center gap-2 text-sm text-red-600">
+                    <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+                    Free limit reached — upgrade to continue
+                  </div>
+                )}
+                {!isActive && !hasCredits && invoiceCount < 5 && (
+                  <div className="inline-flex items-center gap-2 text-sm text-slate-500">
+                    <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
+                    {5 - invoiceCount} free invoice{5 - invoiceCount !== 1 ? "s" : ""} remaining
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <a
-                href={generateHref}
+              <button
+                onClick={handleGenerateClick}
                 className="flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px"
               >
                 Generate Invoice
-              </a>
+              </button>
               <a
                 href={historyHref}
                 className="flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 active:translate-y-px"
@@ -143,7 +159,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Features Section */}
+          {/* Features */}
           <div className="mt-20">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-white sm:text-4xl">
@@ -153,126 +169,79 @@ export default function LandingPage() {
                 Powerful features designed for freelancers and businesses
               </p>
             </div>
-            
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((feature, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 hover:bg-slate-800/70 transition-colors"
-                >
+                <div key={index} className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 hover:bg-slate-800/70 transition-colors">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
-                      {feature.icon}
-                    </div>
-                    {feature.badge && (
-                      <span className="text-xs px-2 py-1 bg-slate-700 text-slate-300 rounded-full">
-                        {feature.badge}
-                      </span>
-                    )}
+                    <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">{feature.icon}</div>
+                    <span className="text-xs px-2 py-1 bg-slate-700 text-slate-300 rounded-full">{feature.badge}</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-slate-300 text-sm">
-                    {feature.description}
-                  </p>
+                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                  <p className="text-slate-300 text-sm">{feature.description}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Pricing Summary Section */}
+          {/* Pricing summary */}
           <div className="mt-20">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">
-                Simple, transparent pricing
-              </h2>
-              <p className="mt-4 text-lg text-slate-300">
-                Choose the perfect plan for your business
-              </p>
+              <h2 className="text-3xl font-bold text-white sm:text-4xl">Simple, flexible pricing</h2>
+              <p className="mt-4 text-lg text-slate-300">Pay only for what you need — no forced subscriptions</p>
             </div>
-            
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {pricingPlans.map((plan, index) => (
-                <div
-                  key={index}
-                  className={`bg-slate-800/50 backdrop-blur-sm rounded-xl border ${
-                    plan.popular 
-                      ? 'border-blue-500/50 ring-2 ring-blue-500/20' 
-                      : 'border-slate-700/50'
-                  } p-6 relative`}
-                >
+              {[
+                { name: "FREE", price: "$0", desc: "Get started", features: ["5 invoices total", "PDF download", "Invoice history"] },
+                { name: "CREDIT PACKS", price: "From $4.99", desc: "Pay once, use anytime", features: ["10, 25, or 50 invoices", "Never expires", "Pro features included"], popular: true },
+                { name: "MONTHLY", price: "From $7/mo", desc: "For frequent users", features: ["Unlimited invoices", "Business profile", "Arabic support on Business"] },
+              ].map((plan, i) => (
+                <div key={i} className={`bg-slate-800/50 rounded-xl border ${plan.popular ? "border-blue-500/50 ring-2 ring-blue-500/20" : "border-slate-700/50"} p-6 relative`}>
                   {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        Most Popular
-                      </span>
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Best Value</span>
                     </div>
                   )}
-                  
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
-                    <p className="text-2xl font-bold text-white mb-1">{plan.price}</p>
-                    <p className="text-slate-300 text-sm">{plan.description}</p>
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+                    <p className="text-2xl font-bold text-white mt-1">{plan.price}</p>
+                    <p className="text-slate-400 text-sm">{plan.desc}</p>
                   </div>
-                  
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center gap-2">
+                  <ul className="space-y-2">
+                    {plan.features.map((f, fi) => (
+                      <li key={fi} className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-slate-300 text-sm">{feature}</span>
+                        <span className="text-slate-300 text-sm">{f}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               ))}
             </div>
-            
             <div className="text-center">
-              <Link
-                href="/pricing"
-                className="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
-              >
-                See full pricing
-              </Link>
+              <a href="/pricing" className="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors">
+                See full pricing →
+              </a>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-white/10 bg-slate-950/50 backdrop-blur">
         <div className="mx-auto max-w-5xl px-4 py-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-slate-400">
-              © {new Date().getFullYear()} Invoice Generator. All rights reserved.
-            </p>
+            <p className="text-sm text-slate-400">© {new Date().getFullYear()} Invoice Generator. All rights reserved.</p>
             <div className="flex gap-6">
-              <a
-                href="/pricing"
-                className="text-sm text-slate-400 hover:text-white transition-colors"
-              >
-                Pricing
-              </a>
-              <a
-                href="/terms"
-                className="text-sm text-slate-400 hover:text-white transition-colors"
-              >
-                Terms of Service
-              </a>
-              <a
-                href="/privacy"
-                className="text-sm text-slate-400 hover:text-white transition-colors"
-              >
-                Privacy Policy
-              </a>
+              <a href="/pricing" className="text-sm text-slate-400 hover:text-white transition-colors">Pricing</a>
+              <a href="/terms" className="text-sm text-slate-400 hover:text-white transition-colors">Terms of Service</a>
+              <a href="/privacy" className="text-sm text-slate-400 hover:text-white transition-colors">Privacy Policy</a>
             </div>
           </div>
         </div>
       </footer>
+
+      <UpgradePopup show={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
 }
-
