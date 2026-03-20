@@ -41,7 +41,7 @@ export default function InvoicePage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
-  const { canGenerateInvoice, loading: subscriptionLoading } = useSubscription();
+  const { canGenerateInvoice, loading: subscriptionLoading, plan: currentPlan } = useSubscription();
   const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
 
   const [discountMode, setDiscountMode] = useState<"percent" | "fixed">(
@@ -72,7 +72,7 @@ export default function InvoicePage() {
       // Load business profile to pre-fill sender name
       const { data: businessProfileData } = await supabase
         .from("business_profiles")
-        .select("business_name, email, show_header, include_signature, signature_name")
+        .select("*")
         .eq("user_id", user.id)
         .single();
 
@@ -237,7 +237,7 @@ export default function InvoicePage() {
     // Fetch business profile to pass to PDF
     const { data: businessProfileForPdf } = await supabase
       .from("business_profiles")
-      .select("business_name, email, show_header, include_signature, signature_name")
+      .select("business_name, email, show_header, include_signature, signature_name, enable_arabic, logo_url, address1, address2, city, country, phone, website")
       .eq("user_id", user.id)
       .single();
 
@@ -255,7 +255,8 @@ export default function InvoicePage() {
       subtotal,
       discountAmount,
       grandTotal,
-      businessProfile: businessProfileForPdf || undefined
+      businessProfile: businessProfileForPdf || undefined,
+      plan: currentPlan
     });
 
     setConfirmOpen(false);

@@ -71,9 +71,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-      if (session?.user) {
+      if (event === 'SIGNED_OUT') {
+        setData({ plan: "free", isActive: false, invoiceCount: 0, canGenerateInvoice: true, loading: false });
+        return;
+      }
+      if (session?.user && event === 'SIGNED_IN') {
         setData((prev) => ({ ...prev, loading: true }));
         await fetchData(session.user.id);
       } else {

@@ -146,7 +146,7 @@ export default function AuthHeader() {
               </button>
               
               {dropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 before:content-none overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50">
+                <div className="absolute right-0 top-full mt-2 w-48 before:content-none rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50">
                   <div className="border-b border-white/5 px-4 py-3">
                     <p className="text-sm font-medium text-white truncate">
                       {getFullName()}
