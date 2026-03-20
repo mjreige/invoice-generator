@@ -2,6 +2,16 @@ import jsPDF from "jspdf";
 import type { LineItemForPdf } from "./types";
 import ArabicReshaper from "arabic-reshaper";
 
+// Cache the Amiri font base64 so it's only loaded once
+let amiriBase64Cache: string | null = null;
+
+async function getAmiriFont(): Promise<string> {
+  if (amiriBase64Cache) return amiriBase64Cache;
+  const mod = await import("./amiriFont");
+  amiriBase64Cache = mod.default;
+  return amiriBase64Cache;
+}
+
 function containsArabic(text: string): boolean {
   return /[\u0600-\u06FF]/.test(text);
 }
@@ -92,9 +102,13 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
   const enableArabic = !!invoice.businessProfile?.enable_arabic;
 
   if (enableArabic) {
-    const amiriBase64 = await import("./amiriFont").then((m) => m.default);
-    doc.addFileToVFS("Amiri-Regular.ttf", amiriBase64);
-    doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+    try {
+      const amiriBase64 = await getAmiriFont();
+      doc.addFileToVFS("Amiri-Regular.ttf", amiriBase64);
+      doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+    } catch (err) {
+      console.error("Failed to load Amiri font:", err);
+    }
   }
 
   const pageWidth = doc.internal.pageSize.getWidth();
