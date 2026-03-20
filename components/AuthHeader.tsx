@@ -78,7 +78,12 @@ export default function AuthHeader() {
 
   const renderPlanBadge = () => {
     if (subscriptionLoading) {
-      return <div className="h-4 w-24 animate-pulse rounded bg-slate-700" />;
+      return (
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-600 text-white">•••</span>
+          <div className="h-3 w-16 animate-pulse rounded bg-slate-700" />
+        </div>
+      );
     }
 
     if (isActive) {
@@ -97,9 +102,12 @@ export default function AuthHeader() {
 
     if (hasCredits) {
       return (
-        <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-500 text-white">Credits</span>
-          <span className="text-xs text-slate-300">{creditsRemaining} remaining</span>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-500 text-white">Credits</span>
+            <span className="text-xs text-slate-300">{creditsRemaining} remaining</span>
+          </div>
+          <p className="text-xs text-slate-400">{invoiceCount} invoices generated total</p>
         </div>
       );
     }
@@ -134,14 +142,9 @@ export default function AuthHeader() {
 
         <div className="flex items-center gap-4 flex-shrink-0">
           {!email ? (
-            <div className="flex items-center gap-3">
-              <a href="/pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-                Pricing
-              </a>
-              <a href="/login" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
-                Login
-              </a>
-            </div>
+            <a href="/login" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+              Login
+            </a>
           ) : (
             <div className="relative avatar-dropdown">
               <button
@@ -154,18 +157,15 @@ export default function AuthHeader() {
 
               {dropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50">
-                  {/* User info */}
                   <div className="border-b border-white/5 px-4 py-3">
                     <p className="text-sm font-medium text-white truncate">{getFullName()}</p>
                     {hasName() && email && <p className="text-xs text-slate-400 truncate">{email}</p>}
                   </div>
 
-                  {/* Plan status */}
                   <div className="border-b border-white/5 px-4 py-3">
                     {renderPlanBadge()}
                   </div>
 
-                  {/* Navigation */}
                   <div className="py-1">
                     <a href="/invoice" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       Generate Invoice
@@ -179,7 +179,7 @@ export default function AuthHeader() {
                     <a href="/pricing" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       Pricing
                     </a>
-                    {isActive && (
+                    {(isActive || hasCredits) && (
                       <a href="/manage-subscription" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                         Manage Subscription
                       </a>

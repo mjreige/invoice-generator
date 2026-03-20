@@ -74,15 +74,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
         if (mounted) {
           hasFetched = true;
-          setData({
-            plan,
-            isActive,
-            invoiceCount: count,
-            canGenerateInvoice,
-            creditsRemaining,
-            hasCredits,
-            loading: false,
-          });
+          setData({ plan, isActive, invoiceCount: count, canGenerateInvoice, creditsRemaining, hasCredits, loading: false });
         }
       } catch {
         if (mounted) {
@@ -94,29 +86,36 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-
       if (event === "SIGNED_OUT") {
         hasFetched = false;
         setData({ ...defaultData, loading: false });
         return;
       }
-
       if (event === "SIGNED_IN" && session?.user && !hasFetched) {
         setData((prev) => ({ ...prev, loading: true }));
         await fetchData(session.user.id);
       }
     });
 
+    // On slow mobile networks stop showing loading spinner after 3s
+    const sessionTimeout = setTimeout(() => {
+      if (mounted && !hasFetched) {
+        setData({ ...defaultData, loading: false });
+      }
+    }, 3000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(sessionTimeout);
       if (session?.user && mounted) {
         fetchData(session.user.id);
-      } else if (mounted) {
+      } else if (mounted && !hasFetched) {
         setData({ ...defaultData, loading: false });
       }
     });
 
     return () => {
       mounted = false;
+      clearTimeout(sessionTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);
