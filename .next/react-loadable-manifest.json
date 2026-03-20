@@ -1,10 +1,4 @@
 {
-  "app\\history\\page.tsx -> @/lib/pdf": {
-    "id": "app\\history\\page.tsx -> @/lib/pdf",
-    "files": [
-      "static/chunks/_app-pages-browser_lib_pdf_ts.js"
-    ]
-  },
   "lib\\pdf.ts -> ./amiriFont": {
     "id": "lib\\pdf.ts -> ./amiriFont",
     "files": [

@@ -1,5 +1,7 @@
 "use client";
 
+import { generateInvoicePdf } from "@/lib/pdf";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -140,7 +142,7 @@ export default function HistoryPage() {
           ? fullInvoice.grand_total
           : Math.max(0, subtotal - discountAmount);
 
-      const { generateInvoicePdf } = await import("@/lib/pdf");
+      
       await generateInvoicePdf({
         senderName: fullInvoice.sender_name ?? "",
         clientName: fullInvoice.client_name ?? "",
