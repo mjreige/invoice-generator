@@ -1,38 +1,36 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+
+const PROTECTED_PATHS = ["/invoice", "/history", "/profile", "/manage-subscription"];
 
 export default function SessionProvider() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
-      
-      if (event === 'SIGNED_OUT') {
-        // User signed out, redirect to login
-        router.replace("/login");
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Token was refreshed, keep user on current page
-        console.log("Token refreshed successfully");
-      } else if (event === 'SIGNED_IN' && session) {
-        // User signed in, check if there's a redirect parameter
+      if (event === "SIGNED_IN" && session) {
         const urlParams = new URLSearchParams(window.location.search);
-        const redirectTo = urlParams.get('redirect');
+        const redirectTo = urlParams.get("redirect");
         if (redirectTo) {
           router.replace(redirectTo);
         }
       }
+
+      if (event === "SIGNED_OUT") {
+        // Only redirect if on a protected page
+        const isProtected = PROTECTED_PATHS.some(p => pathname?.startsWith(p));
+        if (isProtected) {
+          router.replace("/login");
+        }
+      }
     });
 
-    // Cleanup subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router]);
+    return () => subscription.unsubscribe();
+  }, [router, pathname]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
-import { generateInvoicePdf } from "@/lib/pdf";
 import UpgradePopup from "@/components/UpgradePopup";
 
 type LineItem = {
@@ -205,6 +204,9 @@ export default function InvoicePage() {
       setConfirmError("Failed to save invoice. Please try again.");
       return;
     }
+
+    // Generate PDF
+    const { generateInvoicePdf } = await import("@/lib/pdf");
 
     // Increment credits_used if user is on credits (not subscription)
     if (!isActive && hasCredits) {
