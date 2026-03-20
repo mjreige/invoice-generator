@@ -1,5 +1,10 @@
-import { useState, useEffect } from 'react';
-import { supabase } from './supabaseClient';
+import { useSubscriptionContext } from "@/components/SubscriptionProvider";
+
+// This hook now reads from the global context instead of fetching independently
+export function useSubscription() {
+  return useSubscriptionContext();
+}
+
 
 interface SubscriptionData {
   plan: 'free' | 'pro' | 'business';
