@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
 
 export default function AuthHeader() {
   const router = useRouter();
-  const pathname = usePathname();
   const [email, setEmail] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -79,15 +78,13 @@ export default function AuthHeader() {
 
   const renderPlanBadge = () => {
     if (subscriptionLoading) {
-      return <div className="text-xs text-slate-400">Loading...</div>;
+      return <div className="h-4 w-24 animate-pulse rounded bg-slate-700" />;
     }
 
     if (isActive) {
       return (
         <div className="flex items-center gap-2">
-          <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-            plan === "business" ? "bg-purple-500 text-white" : "bg-blue-500 text-white"
-          }`}>
+          <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${plan === "business" ? "bg-purple-500 text-white" : "bg-blue-500 text-white"}`}>
             {plan === "business" ? "Business" : "Pro"}
           </span>
           <span className="text-xs text-green-400 font-medium">● Active</span>
@@ -104,7 +101,6 @@ export default function AuthHeader() {
       );
     }
 
-    // Free user
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2">
@@ -113,15 +109,11 @@ export default function AuthHeader() {
         </div>
         <div className="w-full bg-slate-700 rounded-full h-1.5">
           <div
-            className={`h-1.5 rounded-full transition-all ${
-              invoiceCount >= 5 ? "bg-red-500" : invoiceCount >= 3 ? "bg-yellow-500" : "bg-green-500"
-            }`}
+            className={`h-1.5 rounded-full transition-all ${invoiceCount >= 5 ? "bg-red-500" : invoiceCount >= 3 ? "bg-yellow-500" : "bg-green-500"}`}
             style={{ width: `${Math.min((Math.min(invoiceCount, 5) / 5) * 100, 100)}%` }}
           />
         </div>
-        {invoiceCount >= 5 && (
-          <p className="text-xs text-red-400 font-medium">Limit reached</p>
-        )}
+        {invoiceCount >= 5 && <p className="text-xs text-red-400 font-medium">Limit reached</p>}
       </div>
     );
   };
@@ -134,19 +126,15 @@ export default function AuthHeader() {
         </a>
 
         <div className="flex items-center gap-4 flex-shrink-0">
-          <a href="/pricing" className="hidden sm:block text-sm font-medium text-slate-300 hover:text-white transition-colors">
-            Pricing
-          </a>
-
           {!email ? (
-            <>
-              <a href="/pricing" className="sm:hidden text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            <div className="flex items-center gap-3">
+              <a href="/pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
                 Pricing
               </a>
               <a href="/login" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
                 Login
               </a>
-            </>
+            </div>
           ) : (
             <div className="relative avatar-dropdown">
               <button
@@ -158,13 +146,11 @@ export default function AuthHeader() {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50">
+                <div className="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50">
                   {/* User info */}
                   <div className="border-b border-white/5 px-4 py-3">
                     <p className="text-sm font-medium text-white truncate">{getFullName()}</p>
-                    {hasName() && email && (
-                      <p className="text-xs text-slate-400 truncate">{email}</p>
-                    )}
+                    {hasName() && email && <p className="text-xs text-slate-400 truncate">{email}</p>}
                   </div>
 
                   {/* Plan status */}
@@ -172,13 +158,19 @@ export default function AuthHeader() {
                     {renderPlanBadge()}
                   </div>
 
-                  {/* Navigation links */}
+                  {/* Navigation */}
                   <div className="py-1">
-                    <a href="/pricing" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Pricing
+                    <a href="/invoice" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                      Generate Invoice
+                    </a>
+                    <a href="/history" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                      Invoice History
                     </a>
                     <a href="/profile" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       Business Profile
+                    </a>
+                    <a href="/pricing" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                      Pricing
                     </a>
                     {isActive && (
                       <a href="/manage-subscription" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
