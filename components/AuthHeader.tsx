@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -136,9 +137,9 @@ export default function AuthHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur overflow-visible">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3 overflow-visible">
-        <a href="/" className="text-sm font-semibold text-white truncate">
-          Invoice Generator
-        </a>
+        <Link href="/" className="text-sm font-semibold text-white truncate">
+  Invoice Generator
+</Link>
 
         <div className="flex items-center gap-4 flex-shrink-0">
           {!email ? (
