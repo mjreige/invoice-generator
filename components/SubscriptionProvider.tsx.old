@@ -30,6 +30,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let hasFetched = false;
 
     const fetchData = async (userId: string) => {
       try {
@@ -62,29 +63,35 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         const canGenerateInvoice = isActive || count < 5;
 
         if (mounted) {
+          hasFetched = true;
           setData({ plan, isActive, invoiceCount: count, canGenerateInvoice, loading: false });
         }
       } catch {
         if (mounted) {
+          hasFetched = true;
           setData({ plan: "free", isActive: false, invoiceCount: 0, canGenerateInvoice: true, loading: false });
         }
       }
     };
 
+    // Only react to meaningful auth events
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-      if (event === 'SIGNED_OUT') {
+
+      if (event === "SIGNED_OUT") {
+        hasFetched = false;
         setData({ plan: "free", isActive: false, invoiceCount: 0, canGenerateInvoice: true, loading: false });
         return;
       }
-      if (session?.user && event === 'SIGNED_IN') {
+
+      // Only fetch on actual sign in, not on token refresh or other events
+      if (event === "SIGNED_IN" && session?.user && !hasFetched) {
         setData((prev) => ({ ...prev, loading: true }));
         await fetchData(session.user.id);
-      } else {
-        setData({ plan: "free", isActive: false, invoiceCount: 0, canGenerateInvoice: true, loading: false });
       }
     });
 
+    // Fetch immediately if session already exists
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user && mounted) {
         fetchData(session.user.id);

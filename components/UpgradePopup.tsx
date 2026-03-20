@@ -9,203 +9,202 @@ interface UpgradePopupProps {
   onClose: () => void;
 }
 
+const PRICES = {
+  pro: process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || "pri_01kkshav4ehmnnwz4an3z07wes",
+  business: process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || "pri_01kkshe2hfk9jp508nyy8q081v",
+  starter: process.env.NEXT_PUBLIC_PADDLE_STARTER_PRICE_ID || "pri_01km55j5sc439a0p5n2772egbp",
+  proPack: process.env.NEXT_PUBLIC_PADDLE_PRO_PACK_PRICE_ID || "pri_01km55kskn8sv6ea8hrg940h1p",
+  businessPack: process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PACK_PRICE_ID || "pri_01km55py4yxzgsgg13sec7h5z9",
+};
+
 export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  
-  const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || 'pri_01kkshav4ehmnnwz4an3z07wes';
-  const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || 'pri_01kkshe2hfk9jp508nyy8q081v';
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    loadUser();
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
   }, []);
 
-  const handleSubscribe = async (priceId: string) => {
-    console.log('DEBUG upgrade popup - handleSubscribe called with priceId:', priceId);
-    console.log('DEBUG upgrade popup - user:', user);
-    
-    console.log('DEBUG upgrade popup - proPriceId:', proPriceId);
-    console.log('DEBUG upgrade popup - businessPriceId:', businessPriceId);
-    
-    if (!user?.email) {
-      console.error('No user email found');
-      return;
-    }
-
-    const finalPriceId = priceId === proPriceId ? proPriceId : (priceId === businessPriceId ? businessPriceId : priceId);
-    console.log('DEBUG upgrade popup - finalPriceId:', finalPriceId);
-    console.log('DEBUG upgrade popup - calling openCheckout with:', {
-      priceId: finalPriceId,
-      userEmail: user.email,
-      userId: user.id
-    });
-
-    setLoading(true);
-    try {
-      await openCheckout(finalPriceId, user.email, user.id);
-    } catch (error) {
-      console.error('Error opening checkout:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  // Close on escape key
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (show) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
-
+    if (!show) return;
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
     };
   }, [show, onClose]);
 
-  if (!show) return null;
+  const handleBuy = async (priceId: string, id: string) => {
+    if (!user?.email) return;
+    setLoadingId(id);
+    try {
+      await openCheckout(priceId, user.email, user.id);
+    } catch (error) {
+      console.error("Checkout error:", error);
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
-  const plans = [
-    {
-      name: "PRO",
-      price: "$7",
-      period: "/month",
-      features: [
-        "Unlimited invoices",
-        "Business profile with logo",
-        "Digital signature support",
-        "Invoice history",
-        "Sorting and pagination",
-        "Priority email support",
-      ],
-      popular: true,
-    },
-    {
-      name: "BUSINESS",
-      price: "$12",
-      period: "/month",
-      features: [
-        "Everything in Pro",
-        "Arabic language support",
-        "Priority customer support",
-        "Advanced customization",
-        "Team collaboration (coming soon)",
-        "API access (coming soon)",
-      ],
-      popular: false,
-    },
-  ];
+  if (!show) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-10"
-        >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white z-10">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        {/* Content */}
-        <div className="p-8">
-          {/* Header */}
+        <div className="p-6 sm:p-8">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              You have reached your 5 free invoice limit
-            </h2>
-            <p className="text-slate-300">
-              Upgrade to unlock unlimited invoices and premium features
-            </p>
+            <h2 className="text-2xl font-bold text-white mb-2">You have reached your 5 free invoice limit</h2>
+            <p className="text-slate-300">Choose how you want to continue</p>
           </div>
 
-          {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {plans.map((plan, index) => (
-              <div
-                key={index}
-                className={`relative bg-slate-700/50 rounded-xl border ${
-                  plan.popular 
-                    ? 'border-blue-500/50 ring-2 ring-blue-500/20' 
-                    : 'border-slate-600/50'
-                } p-6`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      Most Popular
-                    </div>
-                  </div>
-                )}
+          {/* BUNDLES SECTION */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-slate-600" />
+              <span className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Buy Invoice Credits</span>
+              <div className="h-px flex-1 bg-slate-600" />
+            </div>
+            <p className="text-center text-sm text-slate-400 mb-5">One-time purchase · No subscription · Never expires</p>
 
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
-                  <div className="mb-2">
-                    <span className="text-3xl font-bold text-white">{plan.price}</span>
-                    <span className="text-slate-400">{plan.period}</span>
-                  </div>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {/* Starter */}
+              <div className="bg-slate-700/50 rounded-xl border border-slate-600 p-5">
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white">Starter</h3>
+                  <div className="text-3xl font-bold text-white mt-1">$4.99</div>
+                  <div className="text-blue-400 font-semibold mt-1">10 invoices</div>
+                  <div className="text-xs text-slate-400 mt-1">$0.50 per invoice</div>
                 </div>
-
-                <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-slate-300 text-sm">{feature}</span>
-                    </li>
-                  ))}
+                <ul className="space-y-2 mb-5 text-sm text-slate-300">
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Basic invoice generation</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>PDF download</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Invoice history</li>
                 </ul>
-
                 <button
-                  onClick={() => {
-                    console.log('DEBUG upgrade popup - Subscribe button clicked for', plan.name);
-                    const priceId = plan.name === "PRO" ? proPriceId : businessPriceId;
-                    console.log('DEBUG upgrade popup - using priceId:', priceId);
-                    handleSubscribe(priceId);
-                  }}
-                  disabled={loading}
-                  className="block w-full py-3 px-6 rounded-lg font-semibold text-center transition-colors cursor-pointer ${
-                    plan.popular
-                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                      : 'bg-slate-600 hover:bg-slate-500 text-white'
-                  } disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleBuy(PRICES.starter, "starter")}
+                  disabled={loadingId === "starter"}
+                  className="w-full py-2.5 rounded-lg bg-slate-600 hover:bg-slate-500 text-white font-semibold text-sm transition disabled:opacity-50"
                 >
-                  {loading ? 'Opening...' : 'Subscribe'}
+                  {loadingId === "starter" ? "Opening..." : "Buy Starter"}
                 </button>
               </div>
-            ))}
+
+              {/* Pro Pack */}
+              <div className="relative bg-slate-700/50 rounded-xl border border-blue-500/50 ring-2 ring-blue-500/20 p-5">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Best Value</span>
+                </div>
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white">Pro Pack</h3>
+                  <div className="text-3xl font-bold text-white mt-1">$9.99</div>
+                  <div className="text-blue-400 font-semibold mt-1">25 invoices</div>
+                  <div className="text-xs text-slate-400 mt-1">$0.40 per invoice</div>
+                </div>
+                <ul className="space-y-2 mb-5 text-sm text-slate-300">
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Starter</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile with logo</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Digital signature</li>
+                </ul>
+                <button
+                  onClick={() => handleBuy(PRICES.proPack, "proPack")}
+                  disabled={loadingId === "proPack"}
+                  className="w-full py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition disabled:opacity-50"
+                >
+                  {loadingId === "proPack" ? "Opening..." : "Buy Pro Pack"}
+                </button>
+              </div>
+
+              {/* Business Pack */}
+              <div className="bg-slate-700/50 rounded-xl border border-purple-500/30 p-5">
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white">Business Pack</h3>
+                  <div className="text-3xl font-bold text-white mt-1">$17.99</div>
+                  <div className="text-purple-400 font-semibold mt-1">50 invoices</div>
+                  <div className="text-xs text-slate-400 mt-1">$0.36 per invoice</div>
+                </div>
+                <ul className="space-y-2 mb-5 text-sm text-slate-300">
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Pro Pack</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Priority support</li>
+                </ul>
+                <button
+                  onClick={() => handleBuy(PRICES.businessPack, "businessPack")}
+                  disabled={loadingId === "businessPack"}
+                  className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition disabled:opacity-50"
+                >
+                  {loadingId === "businessPack" ? "Opening..." : "Buy Business Pack"}
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Maybe later button */}
+          {/* SUBSCRIPTION SECTION */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-slate-600" />
+              <span className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Monthly Subscription</span>
+              <div className="h-px flex-1 bg-slate-600" />
+            </div>
+            <p className="text-center text-sm text-slate-400 mb-5">Unlimited invoices · Cancel anytime</p>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Pro Monthly */}
+              <div className="relative bg-slate-700/50 rounded-xl border border-blue-500/50 ring-2 ring-blue-500/20 p-5">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Most Popular</span>
+                </div>
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white">Pro</h3>
+                  <div><span className="text-3xl font-bold text-white">$7</span><span className="text-slate-400">/month</span></div>
+                </div>
+                <ul className="space-y-2 mb-5 text-sm text-slate-300">
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Unlimited invoices</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile with logo</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Digital signature</li>
+                </ul>
+                <button
+                  onClick={() => handleBuy(PRICES.pro, "pro")}
+                  disabled={loadingId === "pro"}
+                  className="w-full py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition disabled:opacity-50"
+                >
+                  {loadingId === "pro" ? "Opening..." : "Subscribe to Pro"}
+                </button>
+              </div>
+
+              {/* Business Monthly */}
+              <div className="bg-slate-700/50 rounded-xl border border-purple-500/30 p-5">
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white">Business</h3>
+                  <div><span className="text-3xl font-bold text-white">$12</span><span className="text-slate-400">/month</span></div>
+                </div>
+                <ul className="space-y-2 mb-5 text-sm text-slate-300">
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Pro</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Priority support</li>
+                </ul>
+                <button
+                  onClick={() => handleBuy(PRICES.business, "business")}
+                  disabled={loadingId === "business"}
+                  className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition disabled:opacity-50"
+                >
+                  {loadingId === "business" ? "Opening..." : "Subscribe to Business"}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="text-center">
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-white transition-colors text-sm"
-            >
+            <button onClick={onClose} className="text-slate-400 hover:text-white transition text-sm">
               Maybe later
             </button>
           </div>
