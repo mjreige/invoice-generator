@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -9,6 +9,12 @@ const PROTECTED_PATHS = ["/invoice", "/history", "/profile", "/manage-subscripti
 export default function SessionProvider() {
   const router = useRouter();
   const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+
+  // Keep ref in sync with current pathname without re-running the effect
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -21,8 +27,7 @@ export default function SessionProvider() {
       }
 
       if (event === "SIGNED_OUT") {
-        // Only redirect if on a protected page
-        const isProtected = PROTECTED_PATHS.some(p => pathname?.startsWith(p));
+        const isProtected = PROTECTED_PATHS.some(p => pathnameRef.current?.startsWith(p));
         if (isProtected) {
           router.replace("/login");
         }
@@ -30,7 +35,8 @@ export default function SessionProvider() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router, pathname]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps — only run once, use pathnameRef for current path
 
   return null;
 }
