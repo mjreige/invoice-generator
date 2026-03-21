@@ -62,10 +62,6 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
         </button>
 
         <div className="p-6 sm:p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">You have reached your 5 free invoice limit</h2>
-            <p className="text-slate-300">Choose how you want to continue</p>
-          </div>
 
           {/* BUNDLES SECTION */}
           <div className="mb-8">

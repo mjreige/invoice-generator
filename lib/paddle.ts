@@ -6,7 +6,7 @@ export async function initPaddle() {
   if (paddle) return paddle;
 
   const environment = (process.env.NEXT_PUBLIC_PADDLE_ENV || 'sandbox').trim() as 'sandbox' | 'production';
-  const token = (process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '').trim();
+  const token = (process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || 'test_3251d959f441592a6abb85e50b6').trim();
 
   paddle = await initializePaddle({
     environment,
@@ -14,7 +14,6 @@ export async function initPaddle() {
     debug: false,
     eventCallback: function(data: any) {
       if (data.name === 'checkout.completed') {
-        // Redirect to home with welcome flag — use Next.js router to avoid full reload
         window.location.href = window.location.origin + '/?welcome=true';
       }
     }
