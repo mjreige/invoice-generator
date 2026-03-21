@@ -69,11 +69,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
         if (subscription) {
           plan = subscription.plan as "free" | "pro" | "business";
+
+          // Consider active if has paddle ID AND either:
+          // 1. Status is active, OR
+          // 2. Status is cancelled but still within billing period
           isActive =
-            subscription.status === "active" &&
             !!subscription.paddle_subscription_id &&
-            (!subscription.current_period_end ||
-              new Date(subscription.current_period_end) > new Date());
+            (
+              (subscription.status === "active" && (!subscription.current_period_end || new Date(subscription.current_period_end) > new Date())) ||
+              (subscription.status === "cancelled" && !!subscription.current_period_end && new Date(subscription.current_period_end) > new Date())
+            );
 
           const credits = subscription.invoice_credits || 0;
           const used = subscription.credits_used || 0;
