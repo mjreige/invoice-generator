@@ -46,7 +46,7 @@ export default function InvoicePage() {
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
-  const { canGenerateInvoice, isActive, hasCredits, loading: subscriptionLoading, plan: currentPlan } = useSubscription();
+  const { canGenerateInvoice, isActive, hasCredits, loading: subscriptionLoading, effectivePlan, refresh } = useSubscription();
   const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
 
   const [discountMode, setDiscountMode] = useState<"percent" | "fixed">("percent");
@@ -240,11 +240,12 @@ export default function InvoicePage() {
       discountAmount,
       grandTotal,
       businessProfile: businessProfileForPdf || undefined,
-      plan: currentPlan,
+      plan: effectivePlan,
     });
 
     setConfirmOpen(false);
-router.push("/");
+    refresh();
+    router.push("/");
   };
 
   const handleGenerateClick = () => {
