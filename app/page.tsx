@@ -275,7 +275,7 @@ function LandingPageInner() {
                 onClick={() => { setShowWelcome(false); router.push("/invoice"); }}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold transition hover:brightness-105"
               >
-                Generate My First Invoice
+                Generate an Invoice
               </button>
               <button
                 onClick={() => setShowWelcome(false)}

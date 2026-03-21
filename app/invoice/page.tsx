@@ -244,9 +244,7 @@ export default function InvoicePage() {
     });
 
     setConfirmOpen(false);
-    setSuccessMessage("Invoice generated and downloaded successfully!");
-    setTimeout(() => setSuccessMessage(null), 4000);
-    await resetForm();
+router.push("/");
   };
 
   const handleGenerateClick = () => {
