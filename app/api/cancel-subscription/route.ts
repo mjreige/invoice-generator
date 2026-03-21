@@ -12,20 +12,12 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.PADDLE_API_KEY;
     if (!apiKey) {
-      console.error("PADDLE_API_KEY not set");
       return NextResponse.json({ error: "Payment configuration error" }, { status: 500 });
     }
 
-    // NEXT_PUBLIC_ vars are not reliable in server-side API routes
-    // Use PADDLE_ENV (server-side only) with fallback
     const paddleEnv = process.env.PADDLE_ENV || process.env.NEXT_PUBLIC_PADDLE_ENV || "sandbox";
     const isSandbox = paddleEnv === "sandbox";
-    const baseUrl = isSandbox
-      ? "https://sandbox-api.paddle.com"
-      : "https://api.paddle.com";
-
-    console.log("Paddle env:", paddleEnv, "isSandbox:", isSandbox, "baseUrl:", baseUrl);
-    console.log("Cancelling subscription:", subscriptionId);
+    const baseUrl = isSandbox ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
 
     const response = await fetch(`${baseUrl}/subscriptions/${subscriptionId}/cancel`, {
       method: "POST",
@@ -37,32 +29,24 @@ export async function POST(request: Request) {
     });
 
     const responseText = await response.text();
-    console.log("Paddle response status:", response.status);
-    console.log("Paddle response body:", responseText);
+    console.log("Paddle cancel status:", response.status, responseText);
 
-    if (!response.ok) {
-      console.error("Paddle cancel failed:", response.status, responseText);
-      return NextResponse.json({
-        error: `Paddle error: ${response.status}`,
-        details: responseText
-      }, { status: 500 });
+    // If already cancelled (400) or success (200), both are fine — update DB
+    if (!response.ok && response.status !== 400) {
+      return NextResponse.json({ error: `Paddle error: ${response.status}` }, { status: 500 });
     }
 
+    // Update Supabase status to cancelled regardless
     const { createClient } = await import("@supabase/supabase-js");
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { error: dbError } = await supabase
+    await supabase
       .from("subscriptions")
-      .update({
-        status: "cancelled",
-        updated_at: new Date().toISOString()
-      })
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .eq("paddle_subscription_id", subscriptionId);
-
-    if (dbError) console.error("DB update error:", dbError);
 
     return NextResponse.json({ success: true });
   } catch (error) {

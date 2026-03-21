@@ -7,15 +7,17 @@ import { useSubscription } from "@/lib/useSubscription";
 import UpgradePopup from "@/components/UpgradePopup";
 import Link from "next/link";
 
+type SubStatus = "loading" | "none" | "active" | "cancelled_active" | "cancelled_expired" | "credits_only";
+
 export default function ManageSubscriptionPage() {
   const router = useRouter();
-  const { plan, isActive, hasCredits, creditsRemaining } = useSubscription();
+  const { plan } = useSubscription();
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
-  const [cancelSuccess, setCancelSuccess] = useState(false);
+  const [justCancelled, setJustCancelled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,6 +35,26 @@ export default function ManageSubscriptionPage() {
     load();
   }, [router]);
 
+  // Determine the exact state of the user's subscription
+  const getSubStatus = (): SubStatus => {
+    if (!subscription) return "none";
+
+    const hasPaddleId = !!subscription.paddle_subscription_id;
+    const status = subscription.status;
+    const periodEnd = subscription.current_period_end;
+    const hasCredits = (subscription.invoice_credits || 0) - (subscription.credits_used || 0) > 0;
+    const isInPeriod = periodEnd ? new Date(periodEnd) > new Date() : false;
+
+    if (!hasPaddleId && hasCredits) return "credits_only";
+    if (!hasPaddleId) return "none";
+
+    if (status === "active") return "active";
+    if (status === "cancelled" && isInPeriod) return "cancelled_active";
+    if (status === "cancelled" && !isInPeriod) return "cancelled_expired";
+
+    return "none";
+  };
+
   const handleCancelSubscription = async () => {
     if (!subscription?.paddle_subscription_id) {
       setError("No subscription ID found.");
@@ -48,8 +70,10 @@ export default function ManageSubscriptionPage() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to cancel");
-      setCancelSuccess(true);
+      setJustCancelled(true);
       setShowCancelModal(false);
+      // Update local subscription state
+      setSubscription((prev: any) => ({ ...prev, status: "cancelled" }));
     } catch (err: any) {
       setError(err.message || "Failed to cancel. Please contact support at sales@ncgmgroup.com");
     } finally {
@@ -65,9 +89,13 @@ export default function ManageSubscriptionPage() {
     );
   }
 
+  const subStatus = getSubStatus();
   const periodEnd = subscription?.current_period_end
     ? new Date(subscription.current_period_end).toLocaleDateString()
     : null;
+  const creditsRemaining = subscription
+    ? Math.max(0, (subscription.invoice_credits || 0) - (subscription.credits_used || 0))
+    : 0;
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10">
@@ -93,34 +121,26 @@ export default function ManageSubscriptionPage() {
               <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</div>
             )}
 
-            {/* Post-cancellation success state */}
-            {cancelSuccess && (
-              <div className="rounded-2xl border border-green-200 bg-green-50 p-5 space-y-3">
+            {/* Just cancelled success banner */}
+            {justCancelled && (
+              <div className="rounded-2xl border border-green-200 bg-green-50 p-5 space-y-2">
                 <div className="flex items-center gap-2 text-green-800">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="font-semibold">Subscription cancelled</span>
+                  <span className="font-semibold">Subscription cancelled successfully</span>
                 </div>
-                {periodEnd && (
-                  <p className="text-sm text-green-700">You will retain full access until <strong>{periodEnd}</strong>.</p>
-                )}
-                <p className="text-sm text-green-700">After that, you can buy invoice credits to continue without a monthly commitment.</p>
-                <button
-                  onClick={() => setShowUpgradePopup(true)}
-                  className="inline-flex items-center px-4 py-2 bg-green-700 hover:bg-green-800 text-white text-sm font-medium rounded-xl transition"
-                >
-                  Buy Credits for After Expiry
-                </button>
+                {periodEnd && <p className="text-sm text-green-700">You retain full access until <strong>{periodEnd}</strong>.</p>}
+                <p className="text-sm text-green-700">After expiry, buy credits to continue without a monthly commitment.</p>
               </div>
             )}
 
-            {/* Current Plan */}
+            {/* Current Plan Card */}
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Current Plan</h2>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
                       plan === "business" ? "bg-purple-100 text-purple-700" :
                       plan === "pro" ? "bg-blue-100 text-blue-700" :
@@ -128,31 +148,25 @@ export default function ManageSubscriptionPage() {
                     }`}>
                       {plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Business"}
                     </span>
-                    {isActive && <span className="text-xs text-green-600 font-medium">● Active</span>}
-                    {cancelSuccess && <span className="text-xs text-amber-600 font-medium">● Cancelled</span>}
+                    {subStatus === "active" && <span className="text-xs text-green-600 font-medium">● Active</span>}
+                    {(subStatus === "cancelled_active" || justCancelled) && <span className="text-xs text-amber-600 font-medium">● Cancelled</span>}
+                    {subStatus === "cancelled_expired" && <span className="text-xs text-slate-500 font-medium">● Expired</span>}
+                    {subStatus === "credits_only" && <span className="text-xs text-amber-600 font-medium">● Credits</span>}
                   </div>
-                  {periodEnd && isActive && (
-                    <p className="text-sm text-slate-500">Next billing: {periodEnd}</p>
-                  )}
-                  {periodEnd && cancelSuccess && (
-                    <p className="text-sm text-slate-500">Access until: {periodEnd}</p>
-                  )}
-                  {/* Show credits info for credits users */}
-                  {!isActive && hasCredits && (
-                    <p className="text-sm text-slate-500">Credits remaining: {creditsRemaining}</p>
-                  )}
+                  {subStatus === "active" && periodEnd && <p className="text-sm text-slate-500">Next billing: {periodEnd}</p>}
+                  {(subStatus === "cancelled_active" || justCancelled) && periodEnd && <p className="text-sm text-slate-500">Access until: {periodEnd}</p>}
+                  {subStatus === "cancelled_expired" && <p className="text-sm text-slate-500">Subscription expired</p>}
+                  {subStatus === "credits_only" && <p className="text-sm text-slate-500">{creditsRemaining} credits remaining</p>}
                 </div>
-                <Link href="/pricing" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                  View plans →
-                </Link>
+                <Link href="/pricing" className="text-sm font-medium text-blue-600 hover:text-blue-700">View plans →</Link>
               </div>
             </div>
 
-            {/* Buy Credits — only for NON-active subscribers */}
-            {!isActive && !cancelSuccess && (
+            {/* Buy Credits — show for non-active states */}
+            {(subStatus === "credits_only" || subStatus === "cancelled_active" || subStatus === "cancelled_expired" || subStatus === "none" || justCancelled) && (
               <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
                 <h2 className="text-sm font-semibold text-blue-900 mb-1">Buy Invoice Credits</h2>
-                <p className="text-sm text-blue-700 mb-3">One-time purchase — never expires. Top up whenever you need more invoices.</p>
+                <p className="text-sm text-blue-700 mb-3">One-time purchase — never expires. Top up whenever you need.</p>
                 <button
                   onClick={() => setShowUpgradePopup(true)}
                   className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition"
@@ -162,8 +176,18 @@ export default function ManageSubscriptionPage() {
               </div>
             )}
 
-            {/* Cancel — only for active subscribers who haven't cancelled yet */}
-            {isActive && !cancelSuccess && subscription?.paddle_subscription_id && (
+            {/* Already cancelled info */}
+            {subStatus === "cancelled_active" && !justCancelled && (
+              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5">
+                <h2 className="text-sm font-semibold text-amber-800 mb-1">Subscription Already Cancelled</h2>
+                <p className="text-sm text-amber-700">
+                  Your subscription was cancelled and will expire on <strong>{periodEnd}</strong>. You still have full access until then.
+                </p>
+              </div>
+            )}
+
+            {/* Cancel button — only for truly active, non-cancelled subscribers */}
+            {subStatus === "active" && !justCancelled && subscription?.paddle_subscription_id && (
               <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5">
                 <h2 className="text-sm font-semibold text-rose-800 mb-1">Cancel Subscription</h2>
                 <p className="text-sm text-rose-600 mb-3">Your access continues until the end of your current billing period.</p>
