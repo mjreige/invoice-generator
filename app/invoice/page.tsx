@@ -441,7 +441,7 @@ export default function InvoicePage() {
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{confirmError}</div>
               )}
 
-              {businessProfile?.show_header && (
+              {businessProfile?.show_header && effectivePlan !== "free" && (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-3">Header Preview</div>
                   <div className="flex items-start gap-3">
@@ -480,7 +480,7 @@ export default function InvoicePage() {
                 </div>
               </div>
 
-              {businessProfile?.include_signature && businessProfile?.signature_name && (
+              {businessProfile?.include_signature && businessProfile?.signature_name && effectivePlan !== "free" && (
                 <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
                   <div className="flex items-center gap-2 text-blue-700">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
