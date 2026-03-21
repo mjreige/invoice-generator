@@ -61,7 +61,7 @@ export default function Pricing() {
     },
     {
       question: "Do you offer refunds?",
-      answer: "We offer a 30-day refund policy. Contact us at app.invoicegenerator@gmail.com for a full refund, no questions asked.",
+      answer: "We offer a 30-day refund policy. Contact us at sales@ncgmgroup.com for a full refund, no questions asked.",
     },
   ];
 

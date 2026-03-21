@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-white mb-4">Introduction</h2>
               <p className="text-slate-300 leading-relaxed">
-                Invoice Generator is owned and operated by Michel Jreige. This Privacy Policy explains how we collect, use, store, and protect your information when you use our invoice generation SaaS platform. We are committed to protecting your privacy and ensuring the security of your personal data.
+                Invoice Generator is owned and operated by NCGM Group. This Privacy Policy explains how we collect, use, store, and protect your information when you use our invoice generation SaaS platform. We are committed to protecting your privacy and ensuring the security of your personal data.
               </p>
             </section>
 
@@ -110,15 +110,15 @@ export default function PrivacyPolicy() {
                 <li>Restriction: Limit processing of your personal data</li>
                 <li>Objection: Object to processing of your personal data</li>
               </ul>
-              <p className="text-slate-300 leading-relaxed mt-4">To exercise these rights, contact us at app.invoicegenerator@gmail.com.</p>
+              <p className="text-slate-300 leading-relaxed mt-4">To exercise these rights, contact us at sales@ncgmgroup.com.</p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-white mb-4">Contact Information</h2>
               <div className="bg-slate-700/30 rounded-lg p-4 mt-4">
                 <p className="text-slate-300">
-                  <strong>Business Owner:</strong> Michel Jreige<br />
-                  <strong>Email:</strong> app.invoicegenerator@gmail.com<br />
+                  <strong>Business Owner:</strong> NCGM Group<br />
+                  <strong>Email:</strong> sales@ncgmgroup.com<br />
                   <strong>Service:</strong> Invoice Generator
                 </p>
               </div>

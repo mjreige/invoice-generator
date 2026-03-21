@@ -19,7 +19,7 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-white mb-4">Introduction</h2>
               <p className="text-slate-300 leading-relaxed">
-                Welcome to Invoice Generator, owned and operated by Michel Jreige. These Terms of Service govern your use of our invoice generation SaaS platform. By accessing or using our service, you agree to be bound by these Terms.
+                Welcome to Invoice Generator, owned and operated by NCGM Group. These Terms of Service govern your use of our invoice generation SaaS platform. By accessing or using our service, you agree to be bound by these Terms.
               </p>
             </section>
 
@@ -74,7 +74,7 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-white mb-4">Refund Policy</h2>
               <p className="text-slate-300 leading-relaxed">
-                We offer a 30-day refund policy. If you are not satisfied within 30 days of purchase, contact us at app.invoicegenerator@gmail.com for a full refund, no questions asked.
+                We offer a 30-day refund policy. If you are not satisfied within 30 days of purchase, contact us at sales@ncgmgroup.com for a full refund, no questions asked.
               </p>
             </section>
 
@@ -96,8 +96,8 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-white mb-4">Contact Information</h2>
               <div className="bg-slate-700/30 rounded-lg p-4 mt-4">
                 <p className="text-slate-300">
-                  <strong>Business Owner:</strong> Michel Jreige<br />
-                  <strong>Email:</strong> app.invoicegenerator@gmail.com<br />
+                  <strong>Business Owner:</strong> NCGM Group<br />
+                  <strong>Email:</strong> sales@ncgmgroup.com<br />
                   <strong>Service:</strong> Invoice Generator
                 </p>
               </div>

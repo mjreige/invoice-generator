@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
 import UpgradePopup from "@/components/UpgradePopup";
 
-export default function LandingPage() {
+function LandingPageInner() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const { canGenerateInvoice, invoiceCount, isActive, hasCredits, loading } = useSubscription();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
@@ -23,6 +27,15 @@ export default function LandingPage() {
 
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // Show welcome modal after purchase
+  useEffect(() => {
+    if (searchParams.get("welcome") === "true") {
+      setShowWelcome(true);
+      // Clean up URL without reload
+      router.replace("/", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const handleGenerateClick = () => {
     if (!isLoggedIn) {
@@ -242,6 +255,46 @@ export default function LandingPage() {
       </footer>
 
       <UpgradePopup show={showUpgrade} onClose={() => setShowUpgrade(false)} />
+
+      {/* Welcome modal after purchase */}
+      {showWelcome && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowWelcome(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">You're all set! 🎉</h2>
+            <p className="text-slate-600 mb-6">
+              Your purchase was successful. You can now generate invoices and access all your plan features.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => { setShowWelcome(false); router.push("/invoice"); }}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold transition hover:brightness-105"
+              >
+                Generate My First Invoice
+              </button>
+              <button
+                onClick={() => setShowWelcome(false)}
+                className="w-full py-2.5 rounded-xl text-slate-500 text-sm hover:text-slate-700 transition"
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <Suspense>
+      <LandingPageInner />
+    </Suspense>
   );
 }

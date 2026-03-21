@@ -77,7 +77,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
           const credits = subscription.invoice_credits || 0;
           const used = subscription.credits_used || 0;
-          creditsRemaining = Math.max(0, credits - used);
+
+          // Credits only count when no active subscription
+          // This ensures credits are preserved while subscription is active
+          creditsRemaining = isActive ? 0 : Math.max(0, credits - used);
         }
 
         const hasCredits = creditsRemaining > 0;
@@ -102,21 +105,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         hasFetched = false;
         setData({ ...defaultData, loading: false });
         const isProtected = PROTECTED_PATHS.some(p => pathnameRef.current?.startsWith(p));
-        if (isProtected) {
-          router.replace("/login");
-        }
+        if (isProtected) router.replace("/login");
         return;
       }
 
       if (event === "SIGNED_IN" && session) {
-        // Handle redirect param
         const urlParams = new URLSearchParams(window.location.search);
         const redirectTo = urlParams.get("redirect");
-        if (redirectTo) {
-          router.replace(redirectTo);
-        }
-
-        // Only fetch if not already fetched
+        if (redirectTo) router.replace(redirectTo);
         if (!hasFetched) {
           setData((prev) => ({ ...prev, loading: true }));
           fetchData(session.user.id);
@@ -124,14 +120,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Fallback timeout for slow mobile networks
     const sessionTimeout = setTimeout(() => {
       if (mounted && !hasFetched) {
         setData({ ...defaultData, loading: false });
       }
     }, 3000);
 
-    // Fetch immediately if session already exists
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(sessionTimeout);
       if (session?.user && mounted) {
@@ -147,7 +141,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       authListener.subscription.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Single listener, never re-mounts
+  }, []);
 
   return (
     <SubscriptionContext.Provider value={data}>
