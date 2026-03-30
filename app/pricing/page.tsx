@@ -14,10 +14,13 @@ export default function Pricing() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [annual, setAnnual] = useState(false);
 
   const PRICES = {
     pro: process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || "pri_01kkshav4ehmnnwz4an3z07wes",
     business: process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || "pri_01kkshe2hfk9jp508nyy8q081v",
+    proYearly: process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID || "pri_01kmynz4249ptch5zbyqsr1bfz",
+    businessYearly: process.env.NEXT_PUBLIC_PADDLE_BUSINESS_YEARLY_PRICE_ID || "pri_01kmyp16vek5zsqjrx6fbhtdnd",
     starter: process.env.NEXT_PUBLIC_PADDLE_STARTER_PRICE_ID || "pri_01km55j5sc439a0p5n2772egbp",
     proPack: process.env.NEXT_PUBLIC_PADDLE_PRO_PACK_PRICE_ID || "pri_01km55kskn8sv6ea8hrg940h1p",
     businessPack: process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PACK_PRICE_ID || "pri_01km55py4yxzgsgg13sec7h5z9",
@@ -66,8 +69,10 @@ export default function Pricing() {
   ];
 
   const renderSubscribeButton = (planName: "PRO" | "BUSINESS") => {
-    const id = planName === "PRO" ? "pro" : "business";
-    const priceId = planName === "PRO" ? PRICES.pro : PRICES.business;
+    const id = planName === "PRO" ? (annual ? "proYearly" : "pro") : (annual ? "businessYearly" : "business");
+    const priceId = planName === "PRO"
+      ? (annual ? PRICES.proYearly : PRICES.pro)
+      : (annual ? PRICES.businessYearly : PRICES.business);
     const isCurrentPlan = (planName === "PRO" && currentPlan === "pro") || (planName === "BUSINESS" && currentPlan === "business");
     const isLower = planName === "PRO" && currentPlan === "business";
 
@@ -190,11 +195,25 @@ export default function Pricing() {
           </div>
         </div>
 
-        {/* MONTHLY SUBSCRIPTIONS */}
+        {/* SUBSCRIPTIONS */}
         <div className="mb-20">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-white">Monthly Subscriptions</h2>
+            <h2 className="text-2xl font-bold text-white">Subscriptions</h2>
             <p className="text-slate-400 mt-2">Unlimited invoices · Cancel anytime</p>
+            <div className="flex items-center justify-center gap-3 mt-5">
+              <span className={`text-sm font-medium ${!annual ? "text-white" : "text-slate-400"}`}>Monthly</span>
+              <button
+                type="button"
+                onClick={() => setAnnual(!annual)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${annual ? "bg-green-500" : "bg-slate-600"}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${annual ? "translate-x-5" : "translate-x-0"}`} />
+              </button>
+              <span className={`text-sm font-medium ${annual ? "text-white" : "text-slate-400"}`}>
+                Annual
+                <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-green-500 text-white rounded-full">Save 10%</span>
+              </span>
+            </div>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {/* FREE */}
@@ -228,7 +247,15 @@ export default function Pricing() {
               </div>
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-white mb-2">PRO</h3>
-                <div><span className="text-4xl font-bold text-white">$7</span><span className="text-slate-400">/month</span></div>
+                {annual ? (
+                  <div>
+                    <span className="text-4xl font-bold text-white">$75</span>
+                    <span className="text-slate-400">/year</span>
+                    <div className="text-xs text-green-400 font-medium mt-1">$6.25/month · Save $9</div>
+                  </div>
+                ) : (
+                  <div><span className="text-4xl font-bold text-white">$7</span><span className="text-slate-400">/month</span></div>
+                )}
                 <p className="text-slate-300 mt-2">For freelancers</p>
               </div>
               <ul className="space-y-4 mb-8">
@@ -243,7 +270,15 @@ export default function Pricing() {
             <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-8">
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-white mb-2">BUSINESS</h3>
-                <div><span className="text-4xl font-bold text-white">$12</span><span className="text-slate-400">/month</span></div>
+                {annual ? (
+                  <div>
+                    <span className="text-4xl font-bold text-white">$129</span>
+                    <span className="text-slate-400">/year</span>
+                    <div className="text-xs text-green-400 font-medium mt-1">$10.75/month · Save $15</div>
+                  </div>
+                ) : (
+                  <div><span className="text-4xl font-bold text-white">$12</span><span className="text-slate-400">/month</span></div>
+                )}
                 <p className="text-slate-300 mt-2">For growing businesses</p>
               </div>
               <ul className="space-y-4 mb-8">
