@@ -188,6 +188,9 @@ export default function AuthHeader() {
                     <a href="/change-password" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       Change Password
                     </a>
+                    <a href="/support" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                      Contact Support
+                    </a>
                     <div className="border-t border-white/5 mt-1 pt-1">
                       <button
                         type="button"
