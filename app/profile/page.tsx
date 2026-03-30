@@ -16,7 +16,6 @@ interface BusinessProfile {
   phone?: string;
   email?: string;
   website?: string;
-  logo_url?: string;
   show_header?: boolean;
   include_signature?: boolean;
   signature_name?: string;
@@ -58,14 +57,14 @@ function Toggle({
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { plan } = useSubscription();
+  const { effectivePlan } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isFree = plan === "free";
-  const isBusiness = plan === "business";
+  const isFree = effectivePlan === "free";
+  const isBusiness = effectivePlan === "business";
 
   const [profile, setProfile] = useState<BusinessProfile>({
     business_name: "",
@@ -193,7 +192,7 @@ export default function ProfilePage() {
               <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <p className="text-sm text-amber-800">
                   <strong>Business Profile is a Pro feature.</strong> Upgrade to
-                  Pro to save your logo, business details and signature.
+                  Pro to save your business details and signature.
                 </p>
                 <Link
                   href="/pricing"
@@ -317,20 +316,6 @@ export default function ProfilePage() {
                   placeholder="Country"
                 />
               </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                Logo URL
-              </label>
-              <input
-                type="url"
-                value={profile.logo_url || ""}
-                onChange={(e) => set("logo_url", e.target.value)}
-                disabled={isFree}
-                className={inputClass(isFree)}
-                placeholder="https://example.com/logo.png"
-              />
             </div>
 
             <div className="space-y-4 border-t border-slate-200 pt-4">

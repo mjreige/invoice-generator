@@ -153,7 +153,7 @@ export default function Pricing() {
                 <div className="text-xs text-slate-400">$0.40 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
-                {["Everything in Starter", "Business profile with logo", "Digital signature"].map(f => (
+                {["Everything in Starter", "Business profile", "Digital signature"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300 text-sm">{f}</span></li>
                 ))}
               </ul>
@@ -232,7 +232,7 @@ export default function Pricing() {
                 <p className="text-slate-300 mt-2">For freelancers</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {["Unlimited invoices", "Business profile with logo", "Digital signature", "Invoice history", "Priority email support"].map(f => (
+                {["Unlimited invoices", "Business profile", "Digital signature", "Invoice history", "Priority email support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300">{f}</span></li>
                 ))}
               </ul>

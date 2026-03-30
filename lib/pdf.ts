@@ -73,7 +73,6 @@ export type BusinessProfileForPdf = {
   phone?: string;
   email?: string;
   website?: string;
-  logo_url?: string;
   show_header?: boolean;
   include_signature?: boolean;
   signature_name?: string;

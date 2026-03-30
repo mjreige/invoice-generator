@@ -445,7 +445,6 @@ export default function InvoicePage() {
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-3">Header Preview</div>
                   <div className="flex items-start gap-3">
-                    {businessProfile.logo_url && <img src={businessProfile.logo_url} alt="Logo" className="h-12 w-auto max-w-[60px] object-contain flex-shrink-0" />}
                     <div className="flex-1 min-w-0">
                       {businessProfile.business_name && <div className="text-sm font-semibold text-slate-900 truncate">{businessProfile.business_name}</div>}
                       {(businessProfile.address1 || businessProfile.city) && (

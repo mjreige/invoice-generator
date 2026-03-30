@@ -38,7 +38,6 @@ export default function PrivacyPolicy() {
                 <h3 className="font-semibold text-white mb-2">Business Information</h3>
                 <ul className="list-disc list-inside text-slate-300 space-y-2">
                   <li>Business name and contact details</li>
-                  <li>Business logo and branding elements</li>
                   <li>Business address and phone number</li>
                 </ul>
               </div>

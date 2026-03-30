@@ -108,7 +108,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Starter</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile with logo</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Digital signature</li>
                 </ul>
                 <button
@@ -165,7 +165,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Unlimited invoices</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile with logo</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Digital signature</li>
                 </ul>
                 <button

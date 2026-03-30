@@ -79,7 +79,7 @@ function LandingPageInner() {
         </svg>
       ),
       title: "Business Profile",
-      description: "Add your logo, business details, and custom branding to every invoice",
+      description: "Add your business details and custom branding to every invoice",
       badge: "Pro & Business"
     },
     {
