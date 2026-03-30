@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     }
 
     await resend.emails.send({
-      from: "Invoice Generator Support <noreply@invoices.ncgmgroup.com>",
+      from: "Invoice Generator Support <noreply@ncgmgroup.com>",
       to: "sales@ncgmgroup.com",
       replyTo: email,
       subject: `[Support] ${subject}`,
