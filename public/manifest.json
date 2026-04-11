@@ -1,6 +1,6 @@
 {
   "name": "Invoice Generator",
-  "short_name": "Invoices",
+  "short_name": "Invoice Generator",
   "description": "Create and download professional PDF invoices",
   "start_url": "/",
   "display": "standalone",

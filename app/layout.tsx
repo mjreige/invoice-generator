@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Invoices",
+    title: "Invoice Generator",
   },
   icons: {
     icon: "/favicon.ico",
@@ -38,7 +38,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Invoices" />
+        <meta name="apple-mobile-web-app-title" content="Invoice Generator" />
       </head>
       <body>
         <SubscriptionProvider>
