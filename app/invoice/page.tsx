@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
@@ -35,7 +35,7 @@ function getTodayDate() {
   return new Date().toISOString().split("T")[0];
 }
 
-export default function InvoicePage() {
+function InvoicePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
@@ -616,5 +616,13 @@ export default function InvoicePage() {
 
       <UpgradePopup show={upgradePopupOpen} onClose={() => setUpgradePopupOpen(false)} />
     </main>
+  );
+}
+
+export default function InvoicePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <InvoicePageInner />
+    </Suspense>
   );
 }
