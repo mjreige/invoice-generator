@@ -138,7 +138,7 @@ export default function ManageSubscriptionPage() {
             {/* Current Plan Card */}
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Current Plan</h2>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${

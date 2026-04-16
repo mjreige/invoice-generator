@@ -22,13 +22,17 @@ export async function initPaddle() {
   return paddle;
 }
 
-export async function openCheckout(priceId: string, userEmail: string, userId: string) {
+export async function openCheckout(priceId: string, userEmail: string, userId: string, discountCode?: string) {
   const paddleInstance = await initPaddle();
-  await paddleInstance.Checkout.open({
+  const options: any = {
     items: [{ priceId, quantity: 1 }],
     customer: { email: userEmail },
     customData: { userId },
-  });
+  };
+  if (discountCode) {
+    options.discountCode = discountCode;
+  }
+  await paddleInstance.Checkout.open(options);
 }
 
 export async function closeCheckout() {

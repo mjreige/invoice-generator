@@ -279,11 +279,18 @@ export default function HistoryPage() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => router.push(`/invoice?edit=${invoice.id}`)}
+                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-semibold text-amber-700 shadow-sm transition hover:bg-amber-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleDownload(invoice)}
                           disabled={downloadingId === invoice.id}
                           className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {downloadingId === invoice.id ? "Generating..." : "Download PDF"}
+                          {downloadingId === invoice.id ? "Generating..." : <><span className="sm:hidden">Download</span><span className="hidden sm:inline">Download PDF</span></>}
                         </button>
                       </div>
                     </div>

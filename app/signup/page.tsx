@@ -22,6 +22,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [referralSource, setReferralSource] = useState("");
 
   const passwordRules: PasswordRule[] = [
     { text: "At least 8 characters", test: (pwd) => pwd.length >= 8 },
@@ -80,7 +81,8 @@ export default function SignupPage() {
         data: {
           first_name: firstName.trim(),
           last_name: lastName.trim(),
-          full_name: `${firstName.trim()} ${lastName.trim()}`
+          full_name: `${firstName.trim()} ${lastName.trim()}`,
+          referral_source: referralSource || null
         }
       }
     });
@@ -365,6 +367,29 @@ export default function SignupPage() {
               {fieldErrors.confirmPassword && (
                 <p className="text-xs text-rose-600">{fieldErrors.confirmPassword}</p>
               )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="referralSource"
+                className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+              >
+                How did you hear about us? <span className="text-slate-400 normal-case font-normal">(optional)</span>
+              </label>
+              <select
+                id="referralSource"
+                value={referralSource}
+                onChange={(e) => setReferralSource(e.target.value)}
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="">Select an option</option>
+                <option value="google">Google Search</option>
+                <option value="social_media">Social Media</option>
+                <option value="friend">Friend or Colleague</option>
+                <option value="youtube">YouTube</option>
+                <option value="blog">Blog or Article</option>
+                <option value="other">Other</option>
+              </select>
             </div>
 
             {error && (

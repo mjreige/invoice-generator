@@ -65,6 +65,11 @@ export default function ProfilePage() {
 
   const isFree = effectivePlan === "free";
   const isBusiness = effectivePlan === "business";
+  const hasSavedItems = effectivePlan === "pro" || effectivePlan === "business";
+
+  const [savedItems, setSavedItems] = useState<{ description: string; unitPrice: string }[]>([]);
+  const [newItemDesc, setNewItemDesc] = useState("");
+  const [newItemPrice, setNewItemPrice] = useState("");
 
   const [profile, setProfile] = useState<BusinessProfile>({
     business_name: "",
@@ -95,7 +100,10 @@ export default function ProfilePage() {
         .select("*")
         .eq("user_id", user.id)
         .single();
-      if (data) setProfile(data);
+      if (data) {
+        setProfile(data);
+        if (data.saved_items?.length) setSavedItems(data.saved_items);
+      }
       setLoading(false);
     };
     load();
@@ -403,6 +411,70 @@ export default function ProfilePage() {
                   disabled={!isBusiness}
                 />
               </div>
+            </div>
+
+            {/* Saved Line Items — Pro/Business only */}
+            <div className="space-y-4 border-t border-slate-200 pt-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-900">Saved Line Items</h3>
+                {!hasSavedItems && <Lock className="w-4 h-4 text-slate-400" />}
+              </div>
+              {!hasSavedItems ? (
+                <p className="text-xs text-slate-400">Available on <Link href="/pricing" className="text-blue-600 hover:underline">Pro or Business plan</Link>. Preset your commonly used items with prices.</p>
+              ) : (
+                <div className="space-y-3">
+                  {savedItems.length > 0 && (
+                    <div className="space-y-2">
+                      {savedItems.map((item, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                          <span className="flex-1 text-sm text-slate-900 truncate">{item.description}</span>
+                          {item.unitPrice && <span className="text-sm text-slate-500 flex-shrink-0">${item.unitPrice}</span>}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const updated = savedItems.filter((_, idx) => idx !== i);
+                              setSavedItems(updated);
+                              const { data: { user } } = await supabase.auth.getUser();
+                              if (user) await supabase.from("business_profiles").update({ saved_items: updated }).eq("user_id", user.id);
+                            }}
+                            className="text-slate-400 hover:text-rose-600 transition-colors text-lg leading-none ml-1"
+                          >×</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newItemDesc}
+                      onChange={(e) => setNewItemDesc(e.target.value)}
+                      placeholder="Item description"
+                      className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <input
+                      type="text"
+                      value={newItemPrice}
+                      onChange={(e) => setNewItemPrice(e.target.value)}
+                      placeholder="Price"
+                      className="h-10 w-24 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!newItemDesc.trim()) return;
+                        const newItem = { description: newItemDesc.trim(), unitPrice: newItemPrice.trim() };
+                        const updated = [...savedItems, newItem];
+                        setSavedItems(updated);
+                        setNewItemDesc("");
+                        setNewItemPrice("");
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (user) await supabase.from("business_profiles").update({ saved_items: updated }).eq("user_id", user.id);
+                      }}
+                      className="h-10 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
+                    >Add</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {error && (

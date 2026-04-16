@@ -15,6 +15,8 @@ export default function Pricing() {
   const [user, setUser] = useState<any>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [annual, setAnnual] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
 
   const PRICES = {
     pro: process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || "pri_01kkshav4ehmnnwz4an3z07wes",
@@ -37,7 +39,7 @@ export default function Pricing() {
     }
     setLoadingId(id);
     try {
-      await openCheckout(priceId, user.email, user.id);
+      await openCheckout(priceId, user.email, user.id, promoCode.trim() || undefined);
     } catch (error) {
       console.error("Checkout error:", error);
     } finally {
@@ -109,8 +111,8 @@ export default function Pricing() {
         </Link>
 
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Simple, Transparent Pricing</h1>
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-4">Simple, Transparent Pricing</h1>
+          <p className="text-base sm:text-xl text-slate-300 max-w-2xl mx-auto">
             Start free. Buy credits when you need them, or subscribe for unlimited access.
           </p>
         </div>
@@ -194,6 +196,31 @@ export default function Pricing() {
             </div>
           </div>
         </div>
+
+        {/* PROMO CODE */}
+        {user && (
+          <div className="mb-10 flex justify-center">
+            <div className="flex w-full max-w-sm items-center gap-2">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoApplied(false); }}
+                placeholder="Promo code"
+                className="h-10 flex-1 rounded-xl border border-slate-600 bg-slate-800 px-4 text-sm text-white placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+              <button
+                type="button"
+                onClick={() => { if (promoCode.trim()) setPromoApplied(true); }}
+                className="h-10 rounded-xl bg-slate-700 px-4 text-sm font-semibold text-white transition hover:bg-slate-600"
+              >
+                Apply
+              </button>
+            </div>
+            {promoApplied && promoCode && (
+              <p className="absolute mt-11 text-xs text-green-400 font-medium">✓ Code "{promoCode}" will be applied at checkout</p>
+            )}
+          </div>
+        )}
 
         {/* SUBSCRIPTIONS */}
         <div className="mb-20">
