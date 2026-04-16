@@ -419,7 +419,7 @@ function InvoicePageInner() {
 
             <section className="space-y-4">
               <h2 className="text-sm font-semibold text-slate-900">Line items</h2>
-              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
+              <div className="overflow-visible rounded-3xl border border-slate-200 bg-slate-50">
                 <div className="grid grid-cols-12 gap-3 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
                   <div className="col-span-12 sm:col-span-5">Description</div>
                   <div className="col-span-4 sm:col-span-2 sm:text-center">Qty</div>

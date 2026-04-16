@@ -127,7 +127,7 @@ export default function ProfilePage() {
     }
     const { error: err } = await supabase
       .from("business_profiles")
-      .upsert({ user_id: user.id, ...profile }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, ...profile, saved_items: savedItems }, { onConflict: "user_id" });
     setSaving(false);
     if (err) {
       setError("Failed to save. Please try again.");
