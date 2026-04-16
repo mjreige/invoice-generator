@@ -66,6 +66,7 @@ export default function ProfilePage() {
   const isFree = effectivePlan === "free";
   const isBusiness = effectivePlan === "business";
   const hasSavedItems = effectivePlan === "pro" || effectivePlan === "business";
+  const [savedItemsOpen, setSavedItemsOpen] = useState(true);
 
   const [savedItems, setSavedItems] = useState<{ description: string; unitPrice: string }[]>([]);
   const [newItemDesc, setNewItemDesc] = useState("");
@@ -414,31 +415,54 @@ export default function ProfilePage() {
             </div>
 
             {/* Saved Line Items — Pro/Business only */}
-            <div className="space-y-4 border-t border-slate-200 pt-4">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-slate-900">Saved Line Items</h3>
-                {!hasSavedItems && <Lock className="w-4 h-4 text-slate-400" />}
-              </div>
+            <div className="border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                onClick={() => hasSavedItems && setSavedItemsOpen(o => !o)}
+                className="flex w-full items-center justify-between gap-2 text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-slate-900">Saved Line Items</h3>
+                  {!hasSavedItems && <Lock className="w-4 h-4 text-slate-400" />}
+                </div>
+                {hasSavedItems && (
+                  <svg
+                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${savedItemsOpen ? "rotate-180" : ""}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                )}
+              </button>
+
               {!hasSavedItems ? (
-                <p className="text-xs text-slate-400">Available on <Link href="/pricing" className="text-blue-600 hover:underline">Pro or Business plan</Link>. Preset your commonly used items with prices.</p>
-              ) : (
-                <div className="space-y-3">
+                <p className="mt-2 text-xs text-slate-400">Available on <Link href="/pricing" className="text-blue-600 hover:underline">Pro or Business plan</Link>. Preset your commonly used items with prices.</p>
+              ) : savedItemsOpen ? (
+                <div className="mt-3 space-y-3">
                   {savedItems.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="overflow-hidden rounded-xl border border-slate-200">
+                      {/* Header row */}
+                      <div className="grid grid-cols-12 gap-2 bg-slate-100 px-3 py-2">
+                        <span className="col-span-7 text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</span>
+                        <span className="col-span-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Price</span>
+                        <span className="col-span-2" />
+                      </div>
                       {savedItems.map((item, i) => (
-                        <div key={i} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                          <span className="flex-1 text-sm text-slate-900 truncate">{item.description}</span>
-                          {item.unitPrice && <span className="text-sm text-slate-500 flex-shrink-0">${item.unitPrice}</span>}
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const updated = savedItems.filter((_, idx) => idx !== i);
-                              setSavedItems(updated);
-                              const { data: { user } } = await supabase.auth.getUser();
-                              if (user) await supabase.from("business_profiles").update({ saved_items: updated }).eq("user_id", user.id);
-                            }}
-                            className="text-slate-400 hover:text-rose-600 transition-colors text-lg leading-none ml-1"
-                          >×</button>
+                        <div key={i} className="grid grid-cols-12 items-center gap-2 border-t border-slate-100 bg-white px-3 py-2">
+                          <span className="col-span-7 text-sm text-slate-900 truncate">{item.description}</span>
+                          <span className="col-span-3 text-sm text-slate-500">{item.unitPrice ? `$${item.unitPrice}` : <span className="text-slate-300">—</span>}</span>
+                          <div className="col-span-2 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const updated = savedItems.filter((_, idx) => idx !== i);
+                                setSavedItems(updated);
+                                const { data: { user } } = await supabase.auth.getUser();
+                                if (user) await supabase.from("business_profiles").update({ saved_items: updated }).eq("user_id", user.id);
+                              }}
+                              className="text-slate-400 hover:text-rose-600 transition-colors text-lg leading-none"
+                            >×</button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -474,7 +498,7 @@ export default function ProfilePage() {
                     >Add</button>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {error && (
