@@ -62,6 +62,7 @@ function InvoicePageInner() {
 
   const [lastAddedId, setLastAddedId] = useState<string | null>(null);
   const descriptionRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const quantityRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [invalid, setInvalid] = useState<Record<string, boolean>>({});
   const [savedItems, setSavedItems] = useState<{ description: string; unitPrice: string }[]>([]);
   const [suggestions, setSuggestions] = useState<{ itemId: string; matches: { description: string; unitPrice: string }[] }>({ itemId: "", matches: [] });
@@ -196,6 +197,7 @@ function InvoicePageInner() {
   const applySuggestion = (itemId: string, suggestion: { description: string; unitPrice: string }) => {
     updateLine(itemId, { description: suggestion.description, unitPrice: suggestion.unitPrice });
     setSuggestions({ itemId: "", matches: [] });
+    setTimeout(() => quantityRefs.current[itemId]?.focus(), 50);
   };
 
   const autoSaveItem = async (description: string, unitPrice: string) => {
@@ -439,6 +441,12 @@ function InvoicePageInner() {
                             showSuggestions(item.id, e.target.value);
                           }}
                           onFocus={(e) => showSuggestions(item.id, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Tab" && suggestions.itemId === item.id && suggestions.matches.length > 0) {
+                              e.preventDefault();
+                              applySuggestion(item.id, suggestions.matches[0]);
+                            }
+                          }}
                           onBlur={(e) => {
                             setTimeout(() => setSuggestions({ itemId: "", matches: [] }), 150);
                             autoSaveItem(e.target.value, item.unitPrice);
@@ -449,21 +457,23 @@ function InvoicePageInner() {
                         {suggestions.itemId === item.id && suggestions.matches.length > 0 && (
                           <div className="absolute left-0 top-full z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
                             {/* Header */}
-                            <div className="grid grid-cols-12 gap-2 border-b border-slate-100 bg-slate-50 px-3 py-1.5">
+                            <div className="grid grid-cols-12 gap-2 border-b border-slate-100 bg-slate-50 px-3 py-1.5 sticky top-0">
                               <span className="col-span-8 text-xs font-semibold text-slate-400 uppercase tracking-wide">Description</span>
                               <span className="col-span-4 text-xs font-semibold text-slate-400 uppercase tracking-wide">Price</span>
                             </div>
-                            {suggestions.matches.slice(0, 6).map((s, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                onMouseDown={() => applySuggestion(item.id, s)}
-                                className="grid grid-cols-12 w-full items-center gap-2 px-3 py-2 text-sm hover:bg-blue-50 transition-colors text-left"
-                              >
-                                <span className="col-span-8 text-slate-900 truncate">{s.description}</span>
-                                <span className="col-span-4 text-slate-500">{s.unitPrice ? `$${s.unitPrice}` : <span className="text-slate-300">—</span>}</span>
-                              </button>
-                            ))}
+                            <div className="max-h-40 overflow-y-auto overscroll-contain">
+                              {suggestions.matches.map((s, i) => (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onMouseDown={() => applySuggestion(item.id, s)}
+                                  className={`grid grid-cols-12 w-full items-center gap-2 px-3 py-2 text-sm transition-colors text-left ${i === 0 ? "bg-blue-50 hover:bg-blue-100" : "hover:bg-slate-50"}`}
+                                >
+                                  <span className="col-span-8 text-slate-900 truncate">{s.description}</span>
+                                  <span className="col-span-4 text-slate-500">{s.unitPrice ? `$${s.unitPrice}` : <span className="text-slate-300">—</span>}</span>
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -472,6 +482,7 @@ function InvoicePageInner() {
                           inputMode="decimal"
                           className={`h-10 w-full rounded-xl border bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-center ${invalid[`qty-${item.id}`] ? "border-rose-300" : "border-slate-200"}`}
                           value={item.quantity}
+                          ref={(el) => { quantityRefs.current[item.id] = el; }}
                           onChange={(e) => handleNumberChange(`qty-${item.id}`, e.target.value, (v) => updateLine(item.id, { quantity: v }))}
                         />
                       </div>

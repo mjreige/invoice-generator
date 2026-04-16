@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
@@ -67,6 +67,7 @@ export default function ProfilePage() {
   const isBusiness = effectivePlan === "business";
   const hasSavedItems = effectivePlan === "pro" || effectivePlan === "business";
   const [savedItemsOpen, setSavedItemsOpen] = useState(true);
+  const newItemDescRef = useRef<HTMLInputElement>(null);
 
   const [savedItems, setSavedItems] = useState<{ description: string; unitPrice: string }[]>([]);
   const [newItemDesc, setNewItemDesc] = useState("");
@@ -470,8 +471,10 @@ export default function ProfilePage() {
                   <div className="flex gap-2">
                     <input
                       type="text"
+                      ref={newItemDescRef}
                       value={newItemDesc}
                       onChange={(e) => setNewItemDesc(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLInputElement)?.focus(); } }}
                       placeholder="Item description"
                       className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
@@ -493,6 +496,7 @@ export default function ProfilePage() {
                         setNewItemPrice("");
                         const { data: { user } } = await supabase.auth.getUser();
                         if (user) await supabase.from("business_profiles").update({ saved_items: updated }).eq("user_id", user.id);
+                        setTimeout(() => newItemDescRef.current?.focus(), 50);
                       }}
                       className="h-10 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
                     >Add</button>
