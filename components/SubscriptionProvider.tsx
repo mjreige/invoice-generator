@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface SubscriptionData {
   plan: "free" | "pro" | "business";
@@ -42,6 +43,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
   const userIdRef = useRef<string | null>(null);
+  // Use a ref so concurrent auth events and getSession() share the same flag
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
     pathnameRef.current = pathname;
@@ -112,7 +115,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         loading: false,
       }));
     } catch {
-      setData(prev => ({ ...prev, ...defaultData, loading: false, refresh: prev.refresh }));
+      // On error, keep existing invoiceCount — only reset subscription/plan status
+      setData(prev => ({
+        ...prev,
+        plan: "free",
+        effectivePlan: "free",
+        isActive: false,
+        creditsRemaining: 0,
+        hasCredits: false,
+        canGenerateInvoice: prev.invoiceCount < 5,
+        loading: false,
+      }));
     }
   }, []);
 
@@ -124,19 +137,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let hasFetched = false;
 
-    const fetchAndStore = async (userId: string) => {
-      userIdRef.current = userId;
-      await fetchData(userId);
-      if (mounted) hasFetched = true;
-    };
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const handleAuthSession = (event: AuthChangeEvent, session: Session | null) => {
       if (!mounted) return;
 
       if (event === "SIGNED_OUT") {
-        hasFetched = false;
+        hasFetchedRef.current = false;
         userIdRef.current = null;
         setData({ ...defaultData, loading: false, refresh });
         const isProtected = PROTECTED_PATHS.some(p => pathnameRef.current?.startsWith(p));
@@ -144,28 +150,44 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (event === "SIGNED_IN" && session) {
+      // INITIAL_SESSION fires on supabase v2 onAuthStateChange subscription;
+      // SIGNED_IN fires on actual login or token refresh
+      if ((event === "INITIAL_SESSION" || event === "SIGNED_IN") && session) {
         const urlParams = new URLSearchParams(window.location.search);
         const redirectTo = urlParams.get("redirect");
         if (redirectTo) router.replace(redirectTo);
-        if (!hasFetched) {
+
+        if (!hasFetchedRef.current) {
+          // First fetch: mark as fetched immediately to prevent duplicate calls
+          hasFetchedRef.current = true;
+          userIdRef.current = session.user.id;
           setData((prev) => ({ ...prev, loading: true }));
-          fetchAndStore(session.user.id);
+          fetchData(session.user.id);
+        } else if (event === "SIGNED_IN") {
+          // Token refresh or re-auth: silent background refresh, no loading flash
+          userIdRef.current = session.user.id;
+          fetchData(session.user.id);
         }
       }
-    });
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthSession);
 
     const sessionTimeout = setTimeout(() => {
-      if (mounted && !hasFetched) {
+      if (mounted && !hasFetchedRef.current) {
         setData({ ...defaultData, loading: false, refresh });
       }
     }, 3000);
 
+    // getSession() as a fallback in case onAuthStateChange fires INITIAL_SESSION
+    // before the listener is attached (rare race condition)
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(sessionTimeout);
-      if (session?.user && mounted) {
-        fetchAndStore(session.user.id);
-      } else if (mounted && !hasFetched) {
+      if (session?.user && mounted && !hasFetchedRef.current) {
+        hasFetchedRef.current = true;
+        userIdRef.current = session.user.id;
+        fetchData(session.user.id);
+      } else if (mounted && !hasFetchedRef.current) {
         setData({ ...defaultData, loading: false, refresh });
       }
     });

@@ -23,6 +23,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [referralSource, setReferralSource] = useState("");
+  const [referralEmail, setReferralEmail] = useState("");
 
   const passwordRules: PasswordRule[] = [
     { text: "At least 8 characters", test: (pwd) => pwd.length >= 8 },
@@ -82,7 +83,8 @@ export default function SignupPage() {
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           full_name: `${firstName.trim()} ${lastName.trim()}`,
-          referral_source: referralSource || null
+          referral_source: referralSource || null,
+          referral_email: (referralSource === "friend" && referralEmail.trim()) ? referralEmail.trim() : null,
         }
       }
     });
@@ -379,7 +381,7 @@ export default function SignupPage() {
               <select
                 id="referralSource"
                 value={referralSource}
-                onChange={(e) => setReferralSource(e.target.value)}
+                onChange={(e) => { setReferralSource(e.target.value); setReferralEmail(""); }}
                 className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               >
                 <option value="">Select an option</option>
@@ -391,6 +393,26 @@ export default function SignupPage() {
                 <option value="other">Other</option>
               </select>
             </div>
+
+            {referralSource === "friend" && (
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="referralEmail"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+                >
+                  Their email address <span className="text-slate-400 normal-case font-normal">(optional)</span>
+                </label>
+                <input
+                  id="referralEmail"
+                  type="email"
+                  autoComplete="off"
+                  value={referralEmail}
+                  onChange={(e) => setReferralEmail(e.target.value)}
+                  placeholder="friend@example.com"
+                  className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+            )}
 
             {error && (
               <p className="text-sm text-rose-600" role="alert">
