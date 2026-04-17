@@ -48,6 +48,7 @@ function InvoicePageInner() {
   const [invoiceNumberTouched, setInvoiceNumberTouched] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [lineItemsExpanded, setLineItemsExpanded] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const { canGenerateInvoice, isActive, hasCredits, loading: subscriptionLoading, effectivePlan, refresh } = useSubscription();
@@ -86,6 +87,11 @@ function InvoicePageInner() {
       setBusinessProfile(businessProfileData);
       if (businessProfileData?.saved_items?.length) {
         setSavedItems(businessProfileData.saved_items);
+      } else {
+        // Free users: load from localStorage for cross-invoice persistence
+        const key = `free_invoice_items_${user.id}`;
+        const stored = JSON.parse(localStorage.getItem(key) || "[]");
+        if (stored.length) setSavedItems(stored);
       }
 
       // If editing, load the existing invoice
@@ -219,18 +225,29 @@ function InvoicePageInner() {
   };
 
   const autoSaveItem = async (description: string, unitPrice: string) => {
-    if (!hasSavedItems || !description.trim()) return;
-    const exists = savedItems.some(s => s.description.toLowerCase() === description.toLowerCase());
-    if (exists) return;
-    const newItem = { description: description.trim(), unitPrice: unitPrice || "" };
-    const updated = [...savedItems, newItem];
-    setSavedItems(updated);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    await supabase
-      .from("business_profiles")
-      .update({ saved_items: updated })
-      .eq("user_id", session.user.id);
+    if (!description.trim()) return;
+
+    if (hasSavedItems) {
+      // Pro/Business: only save if new item — prices are managed from /saved-items page
+      const exists = savedItems.some(s => s.description.toLowerCase() === description.trim().toLowerCase());
+      if (exists) return;
+      const updated = [...savedItems, { description: description.trim(), unitPrice: unitPrice || "" }];
+      setSavedItems(updated);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      await supabase.from("business_profiles").update({ saved_items: updated }).eq("user_id", session.user.id);
+    } else {
+      // Free: persist to localStorage so items survive across invoices — only save new items
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const key = `free_invoice_items_${session.user.id}`;
+      const stored: { description: string; unitPrice: string }[] = JSON.parse(localStorage.getItem(key) || "[]");
+      const exists = stored.some(s => s.description.toLowerCase() === description.trim().toLowerCase());
+      if (exists) return;
+      stored.push({ description: description.trim(), unitPrice: unitPrice || "" });
+      localStorage.setItem(key, JSON.stringify(stored));
+      setSavedItems(stored);
+    }
   };
 
   const resetForm = async () => {
@@ -473,7 +490,7 @@ function InvoicePageInner() {
                           ref={(el) => { descriptionRefs.current[item.id] = el; }}
                         />
                         {suggestions.itemId === item.id && suggestions.matches.length > 0 && (
-                          <div className="absolute left-0 top-full z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                          <div className="absolute left-0 top-full z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg" style={{overflow: "visible"}}>
                             {/* Header */}
                             <div className="grid grid-cols-12 gap-2 border-b border-slate-100 bg-slate-50 px-3 py-1.5 sticky top-0">
                               <span className="col-span-8 text-xs font-semibold text-slate-400 uppercase tracking-wide">Description</span>
@@ -620,7 +637,44 @@ function InvoicePageInner() {
                 <div className="text-slate-600">Sender Name</div><div className="text-right font-semibold text-slate-900">{senderName || "—"}</div>
                 <div className="text-slate-600">Client Name</div><div className="text-right font-semibold text-slate-900">{clientName || "—"}</div>
                 <div className="text-slate-600">Due Date</div><div className="text-right font-semibold text-slate-900">{dueDate || "—"}</div>
-                <div className="text-slate-600">Line Items</div><div className="text-right font-semibold text-slate-900">{lineItems.filter(li => li.description || li.quantity || li.unitPrice).length}</div>
+              </div>
+
+              {/* Collapsible line items */}
+              <div className="rounded-2xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setLineItemsExpanded(e => !e)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-sm"
+                >
+                  <span className="font-medium text-slate-700">
+                    Line Items <span className="ml-1 text-slate-400 font-normal">({lineItems.filter(li => li.description || li.unitPrice).length})</span>
+                  </span>
+                  <svg className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${lineItemsExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {lineItemsExpanded && (
+                  <div className="border-t border-slate-100">
+                    <div className="grid grid-cols-12 gap-1 bg-slate-50 px-4 py-2">
+                      <span className="col-span-5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Description</span>
+                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">Qty</span>
+                      <span className="col-span-3 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Unit</span>
+                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Total</span>
+                    </div>
+                    {lineItems.filter(li => li.description || li.unitPrice).map((li, i) => {
+                      const qty = parseNumber(li.quantity) || 1;
+                      const unit = parseNumber(li.unitPrice);
+                      return (
+                        <div key={i} className="grid grid-cols-12 gap-1 border-t border-slate-100 px-4 py-2">
+                          <span className="col-span-5 text-sm text-slate-800 truncate">{li.description || "—"}</span>
+                          <span className="col-span-2 text-sm text-slate-600 text-center">{li.quantity}</span>
+                          <span className="col-span-3 text-sm text-slate-600 text-right">${formatMoney(unit)}</span>
+                          <span className="col-span-2 text-sm font-semibold text-slate-800 text-right">${formatMoney(qty * unit)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm">
