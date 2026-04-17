@@ -177,6 +177,9 @@ export default function AuthHeader() {
                     <a href="/profile" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       Business Profile
                     </a>
+                    <a href="/saved-items" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                      Saved Line Items
+                    </a>
                     <a href="/pricing" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       Pricing
                     </a>

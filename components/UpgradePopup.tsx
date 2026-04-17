@@ -20,6 +20,8 @@ const PRICES = {
 export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
   const [user, setUser] = useState<any>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
@@ -40,7 +42,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
     if (!user?.email) return;
     setLoadingId(id);
     try {
-      await openCheckout(priceId, user.email, user.id);
+      await openCheckout(priceId, user.email, user.id, promoCode.trim() || undefined);
     } catch (error) {
       console.error("Checkout error:", error);
     } finally {
@@ -110,6 +112,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Starter</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Digital signature</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved line items</li>
                 </ul>
                 <button
                   onClick={() => handleBuy(PRICES.proPack, "proPack")}
@@ -167,6 +170,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Unlimited invoices</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Digital signature</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved line items</li>
                 </ul>
                 <button
                   onClick={() => handleBuy(PRICES.pro, "pro")}
@@ -197,6 +201,27 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Promo code */}
+          <div className="mb-4 flex flex-col items-center gap-2">
+            <div className="flex w-full max-w-sm items-center gap-2">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoApplied(false); }}
+                placeholder="Promo code"
+                className="h-10 flex-1 rounded-xl border border-slate-600 bg-slate-800 px-4 text-sm text-white placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+              <button
+                type="button"
+                onClick={() => { if (promoCode.trim()) setPromoApplied(true); }}
+                className="h-10 rounded-xl bg-slate-700 px-4 text-sm font-semibold text-white transition hover:bg-slate-600"
+              >Apply</button>
+            </div>
+            {promoApplied && promoCode && (
+              <p className="text-xs text-green-400 font-medium">✓ Code "{promoCode}" will be applied at checkout</p>
+            )}
           </div>
 
           <div className="text-center">

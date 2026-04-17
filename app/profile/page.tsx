@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
@@ -65,13 +65,6 @@ export default function ProfilePage() {
 
   const isFree = effectivePlan === "free";
   const isBusiness = effectivePlan === "business";
-  const hasSavedItems = effectivePlan === "pro" || effectivePlan === "business";
-  const [savedItemsOpen, setSavedItemsOpen] = useState(true);
-  const newItemDescRef = useRef<HTMLInputElement>(null);
-
-  const [savedItems, setSavedItems] = useState<{ description: string; unitPrice: string }[]>([]);
-  const [newItemDesc, setNewItemDesc] = useState("");
-  const [newItemPrice, setNewItemPrice] = useState("");
 
   const [profile, setProfile] = useState<BusinessProfile>({
     business_name: "",
@@ -104,7 +97,7 @@ export default function ProfilePage() {
         .single();
       if (data) {
         setProfile(data);
-        if (data.saved_items?.length) setSavedItems(data.saved_items);
+        // saved_items managed on /saved-items page
       }
       setLoading(false);
     };
@@ -128,7 +121,7 @@ export default function ProfilePage() {
     }
     const { error: err } = await supabase
       .from("business_profiles")
-      .upsert({ user_id: user.id, ...profile, saved_items: savedItems }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, ...profile }, { onConflict: "user_id" });
     setSaving(false);
     if (err) {
       setError("Failed to save. Please try again.");
@@ -413,96 +406,6 @@ export default function ProfilePage() {
                   disabled={!isBusiness}
                 />
               </div>
-            </div>
-
-            {/* Saved Line Items — Pro/Business only */}
-            <div className="border-t border-slate-200 pt-4">
-              <button
-                type="button"
-                onClick={() => hasSavedItems && setSavedItemsOpen(o => !o)}
-                className="flex w-full items-center justify-between gap-2 text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-slate-900">Saved Line Items</h3>
-                  {!hasSavedItems && <Lock className="w-4 h-4 text-slate-400" />}
-                </div>
-                {hasSavedItems && (
-                  <svg
-                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${savedItemsOpen ? "rotate-180" : ""}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                )}
-              </button>
-
-              {!hasSavedItems ? (
-                <p className="mt-2 text-xs text-slate-400">Available on <Link href="/pricing" className="text-blue-600 hover:underline">Pro or Business plan</Link>. Preset your commonly used items with prices.</p>
-              ) : savedItemsOpen ? (
-                <div className="mt-3 space-y-3">
-                  {savedItems.length > 0 && (
-                    <div className="overflow-hidden rounded-xl border border-slate-200">
-                      {/* Header row */}
-                      <div className="grid grid-cols-12 gap-2 bg-slate-100 px-3 py-2">
-                        <span className="col-span-7 text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</span>
-                        <span className="col-span-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Price</span>
-                        <span className="col-span-2" />
-                      </div>
-                      {savedItems.map((item, i) => (
-                        <div key={i} className="grid grid-cols-12 items-center gap-2 border-t border-slate-100 bg-white px-3 py-2">
-                          <span className="col-span-7 text-sm text-slate-900 truncate">{item.description}</span>
-                          <span className="col-span-3 text-sm text-slate-500">{item.unitPrice ? `$${item.unitPrice}` : <span className="text-slate-300">—</span>}</span>
-                          <div className="col-span-2 flex justify-end">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const updated = savedItems.filter((_, idx) => idx !== i);
-                                setSavedItems(updated);
-                                const { data: { user } } = await supabase.auth.getUser();
-                                if (user) await supabase.from("business_profiles").update({ saved_items: updated }).eq("user_id", user.id);
-                              }}
-                              className="text-slate-400 hover:text-rose-600 transition-colors text-lg leading-none"
-                            >×</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      ref={newItemDescRef}
-                      value={newItemDesc}
-                      onChange={(e) => setNewItemDesc(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLInputElement)?.focus(); } }}
-                      placeholder="Item description"
-                      className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                    />
-                    <input
-                      type="text"
-                      value={newItemPrice}
-                      onChange={(e) => setNewItemPrice(e.target.value)}
-                      placeholder="Price"
-                      className="h-10 w-24 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!newItemDesc.trim()) return;
-                        const newItem = { description: newItemDesc.trim(), unitPrice: newItemPrice.trim() };
-                        const updated = [...savedItems, newItem];
-                        setSavedItems(updated);
-                        setNewItemDesc("");
-                        setNewItemPrice("");
-                        const { data: { user } } = await supabase.auth.getUser();
-                        if (user) await supabase.from("business_profiles").update({ saved_items: updated }).eq("user_id", user.id);
-                        setTimeout(() => newItemDescRef.current?.focus(), 50);
-                      }}
-                      className="h-10 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
-                    >Add</button>
-                  </div>
-                </div>
-              ) : null}
             </div>
 
             {error && (

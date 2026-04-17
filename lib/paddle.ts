@@ -14,7 +14,14 @@ export async function initPaddle() {
     debug: false,
     eventCallback: function(data: any) {
       if (data.name === 'checkout.completed') {
-        window.location.href = window.location.origin + '/?welcome=true';
+        const priceId = data.data?.items?.[0]?.price_id || '';
+        const businessIds = [
+          process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID,
+          process.env.NEXT_PUBLIC_PADDLE_BUSINESS_YEARLY_PRICE_ID,
+          process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PACK_PRICE_ID,
+        ];
+        const plan = businessIds.includes(priceId) ? 'business' : 'pro';
+        window.location.href = `${window.location.origin}/?welcome=true&plan=${plan}`;
       }
     }
   });

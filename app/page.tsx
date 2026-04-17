@@ -10,6 +10,7 @@ function LandingPageInner() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomePlan, setWelcomePlan] = useState<"pro" | "business" | "credits">("pro");
   const { canGenerateInvoice, invoiceCount, isActive, hasCredits, loading } = useSubscription();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -31,8 +32,9 @@ function LandingPageInner() {
   // Show welcome modal after purchase
   useEffect(() => {
     if (searchParams.get("welcome") === "true") {
+      const plan = searchParams.get("plan");
+      setWelcomePlan(plan === "business" ? "business" : plan === "credits" ? "credits" : "pro");
       setShowWelcome(true);
-      // Clean up URL without reload
       router.replace("/", { scroll: false });
     }
   }, [searchParams, router]);
@@ -98,9 +100,19 @@ function LandingPageInner() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      title: "Invoice History",
-      description: "Track and manage all your invoices in one place",
+      title: "Invoice History & Editing",
+      description: "Track all your invoices and edit any past invoice to re-download an updated PDF",
       badge: "All Plans"
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      ),
+      title: "Saved Line Items",
+      description: "Save your most-used services with preset prices — they auto-fill when creating new invoices",
+      badge: "Pro & Business"
     },
     {
       icon: (
@@ -260,26 +272,49 @@ function LandingPageInner() {
       {showWelcome && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowWelcome(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${welcomePlan === "business" ? "bg-purple-100" : "bg-blue-100"}`}>
+              <svg className={`w-8 h-8 ${welcomePlan === "business" ? "text-purple-600" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">You're all set! 🎉</h2>
-            <p className="text-slate-600 mb-6">
-              Your purchase was successful. You can now generate invoices and access all your plan features.
-            </p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-1 text-center">
+              {welcomePlan === "business" ? "Welcome to Business! 🎉" : welcomePlan === "credits" ? "Credits Added! 🎉" : "Welcome to Pro! 🎉"}
+            </h2>
+            <p className="text-slate-500 text-sm text-center mb-5">Here's what you now have access to:</p>
+            <ul className="space-y-2 mb-6">
+              {(welcomePlan === "credits"
+                ? ["Unlimited invoice generation until credits run out", "Business profile & branding", "Digital signature", "Invoice history & editing", "Saved line items"]
+                : welcomePlan === "pro"
+                ? ["Unlimited invoices", "Business profile & branding", "Digital signature", "Invoice editing", "Saved line items (auto-fill when creating)"]
+                : ["Everything in Pro", "Arabic PDF support (RTL)", "Priority support", "Saved line items (auto-fill when creating)"]
+              ).map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                  <svg className={`w-4 h-4 flex-shrink-0 mt-0.5 ${welcomePlan === "business" ? "text-purple-500" : "text-blue-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => { setShowWelcome(false); router.push("/invoice"); }}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold transition hover:brightness-105"
+                className={`w-full py-3 rounded-xl text-white font-semibold transition hover:brightness-105 ${welcomePlan === "business" ? "bg-gradient-to-r from-purple-600 to-indigo-600" : "bg-gradient-to-r from-blue-600 to-indigo-600"}`}
               >
                 Generate an Invoice
               </button>
+              {(welcomePlan === "pro" || welcomePlan === "business") && (
+                <button
+                  onClick={() => { setShowWelcome(false); router.push("/saved-items"); }}
+                  className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition"
+                >
+                  Set up Saved Line Items →
+                </button>
+              )}
               <button
                 onClick={() => setShowWelcome(false)}
-                className="w-full py-2.5 rounded-xl text-slate-500 text-sm hover:text-slate-700 transition"
+                className="w-full py-2 text-slate-400 text-sm hover:text-slate-600 transition"
               >
                 Maybe later
               </button>
