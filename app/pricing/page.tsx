@@ -110,12 +110,37 @@ export default function Pricing() {
           <ArrowLeft className="w-4 h-4" />Back to Home
         </Link>
 
-        <div className="text-center mb-16">
+        <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-4">Simple, Transparent Pricing</h1>
           <p className="text-base sm:text-xl text-slate-300 max-w-2xl mx-auto">
             Start free. Buy credits when you need them, or subscribe for unlimited access.
           </p>
         </div>
+
+        {/* PROMO CODE — top of page */}
+        {user && (
+          <div className="mb-12 flex flex-col items-center gap-2">
+            <div className="flex w-full max-w-sm items-center gap-2">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoApplied(false); }}
+                placeholder="Have a promo code?"
+                className="h-10 flex-1 rounded-xl border border-slate-600 bg-slate-800 px-4 text-sm text-white placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+              <button
+                type="button"
+                onClick={() => { if (promoCode.trim()) setPromoApplied(true); }}
+                className="h-10 rounded-xl bg-slate-700 px-4 text-sm font-semibold text-white transition hover:bg-slate-600"
+              >
+                Apply
+              </button>
+            </div>
+            {promoApplied && promoCode && (
+              <p className="text-xs text-green-400 font-medium">✓ Code "{promoCode}" will be applied at checkout</p>
+            )}
+          </div>
+        )}
 
         {/* CREDIT PACKS */}
         <div className="mb-16">
@@ -160,7 +185,7 @@ export default function Pricing() {
                 <div className="text-xs text-slate-400">$0.40 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
-                {["Everything in Starter", "Business profile", "Digital signature"].map(f => (
+                {["Everything in Starter", "Business profile", "Digital signature", "Saved line items", "Edit invoices"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300 text-sm">{f}</span></li>
                 ))}
               </ul>
@@ -182,7 +207,7 @@ export default function Pricing() {
                 <div className="text-xs text-slate-400">$0.36 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
-                {["Everything in Pro Pack", "Arabic PDF support", "Priority support"].map(f => (
+                {["Everything in Pro Pack", "Arabic PDF support", "Priority support", "Saved line items"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300 text-sm">{f}</span></li>
                 ))}
               </ul>
@@ -197,30 +222,6 @@ export default function Pricing() {
           </div>
         </div>
 
-        {/* PROMO CODE */}
-        {user && (
-          <div className="mb-10 flex justify-center">
-            <div className="flex w-full max-w-sm items-center gap-2">
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoApplied(false); }}
-                placeholder="Promo code"
-                className="h-10 flex-1 rounded-xl border border-slate-600 bg-slate-800 px-4 text-sm text-white placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              />
-              <button
-                type="button"
-                onClick={() => { if (promoCode.trim()) setPromoApplied(true); }}
-                className="h-10 rounded-xl bg-slate-700 px-4 text-sm font-semibold text-white transition hover:bg-slate-600"
-              >
-                Apply
-              </button>
-            </div>
-            {promoApplied && promoCode && (
-              <p className="absolute mt-11 text-xs text-green-400 font-medium">✓ Code "{promoCode}" will be applied at checkout</p>
-            )}
-          </div>
-        )}
 
         {/* SUBSCRIPTIONS */}
         <div className="mb-20">
@@ -286,7 +287,7 @@ export default function Pricing() {
                 <p className="text-slate-300 mt-2">For freelancers</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {["Unlimited invoices", "Business profile", "Digital signature", "Invoice history", "Priority email support"].map(f => (
+                {["Unlimited invoices", "Business profile", "Digital signature", "Saved line items", "Edit invoices", "Priority email support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300">{f}</span></li>
                 ))}
               </ul>
@@ -309,7 +310,7 @@ export default function Pricing() {
                 <p className="text-slate-300 mt-2">For growing businesses</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {["Everything in Pro", "Arabic language support", "Priority customer support", "Advanced customization"].map(f => (
+                {["Everything in Pro", "Arabic language support", "Priority customer support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300">{f}</span></li>
                 ))}
               </ul>
