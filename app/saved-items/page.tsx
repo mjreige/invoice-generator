@@ -104,15 +104,21 @@ export default function SavedItemsPage() {
         <div className="overflow-visible rounded-3xl border border-white/10 bg-white/95 shadow-2xl shadow-black/40 backdrop-blur">
           <div className="border-b border-slate-200/80 bg-gradient-to-b from-white to-slate-50 px-6 py-6 sm:px-8">
             <div className="flex items-center gap-3">
-              <button onClick={() => router.push("/profile")} className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-600 hover:bg-slate-100">
+              <button onClick={() => router.push("/profile")} className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-600 hover:bg-slate-100" title="Back to Business Profile">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-xl font-semibold text-slate-900">Saved Line Items</h1>
                 <p className="text-sm text-slate-500">Pre-saved items auto-fill in your invoices</p>
               </div>
+              <button onClick={() => router.push("/")} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Home
+              </button>
             </div>
           </div>
 
@@ -145,26 +151,27 @@ export default function SavedItemsPage() {
                     {items.map((item, i) => (
                       <div key={i} className="border-t border-slate-100">
                         {editingIndex === i ? (
-                          <div className="grid grid-cols-12 items-center gap-2 bg-blue-50 px-3 py-2">
+                          <div className="flex flex-col gap-2 bg-blue-50 px-3 py-3 sm:flex-row sm:items-center">
                             <input
                               autoFocus
-                              className="col-span-6 h-9 rounded-lg border border-blue-300 bg-white px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
+                              className="h-9 flex-1 rounded-lg border border-blue-300 bg-white px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
                               value={editDesc}
                               onChange={(e) => setEditDesc(e.target.value)}
                               onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }}
+                              placeholder="Description"
                             />
-                            <input
-                              className="col-span-3 h-9 rounded-lg border border-blue-300 bg-white px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
-                              value={editPrice}
-                              onChange={(e) => setEditPrice(e.target.value)}
-                              placeholder="Price"
-                              onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }}
-                            />
-                            <div className="col-span-3 flex items-center justify-end gap-1">
-                              <button onClick={saveEdit} disabled={saving} className="h-8 rounded-lg bg-blue-600 px-2.5 text-xs font-semibold text-white hover:bg-blue-700 transition disabled:opacity-50">
+                            <div className="flex gap-2">
+                              <input
+                                className="h-9 w-28 rounded-lg border border-blue-300 bg-white px-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
+                                value={editPrice}
+                                onChange={(e) => setEditPrice(e.target.value)}
+                                placeholder="Price"
+                                onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }}
+                              />
+                              <button onClick={saveEdit} disabled={saving} className="h-9 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-700 transition disabled:opacity-50 whitespace-nowrap">
                                 {saving ? "…" : "Save"}
                               </button>
-                              <button onClick={cancelEdit} className="h-8 rounded-lg border border-slate-200 px-2.5 text-xs text-slate-600 hover:bg-slate-100 transition">
+                              <button onClick={cancelEdit} className="h-9 rounded-lg border border-slate-200 px-3 text-xs text-slate-600 hover:bg-slate-100 transition">
                                 ✕
                               </button>
                             </div>
@@ -199,31 +206,33 @@ export default function SavedItemsPage() {
                 {/* Add new item */}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Add New Item</p>
-                  <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex flex-col gap-2">
                     <input
                       type="text"
                       value={newDesc}
                       onChange={(e) => setNewDesc(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") (e.currentTarget.nextElementSibling as HTMLInputElement)?.focus(); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
                       placeholder="Item description"
-                      className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
-                    <input
-                      type="text"
-                      value={newPrice}
-                      onChange={(e) => setNewPrice(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
-                      placeholder="Price (optional)"
-                      className="h-10 w-full sm:w-32 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAdd}
-                      disabled={saving || !newDesc.trim()}
-                      className="h-10 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
-                    >
-                      {saving ? "Adding…" : "Add Item"}
-                    </button>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newPrice}
+                        onChange={(e) => setNewPrice(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+                        placeholder="Price (optional)"
+                        className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAdd}
+                        disabled={saving || !newDesc.trim()}
+                        className="h-10 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {saving ? "Adding…" : "Add Item"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>

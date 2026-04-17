@@ -49,6 +49,8 @@ function InvoicePageInner() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [lineItemsExpanded, setLineItemsExpanded] = useState(false);
+  const [useHeader, setUseHeader] = useState(true);
+  const [useSignature, setUseSignature] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const { canGenerateInvoice, isActive, hasCredits, loading: subscriptionLoading, effectivePlan, refresh } = useSubscription();
@@ -85,6 +87,10 @@ function InvoicePageInner() {
         .single();
 
       setBusinessProfile(businessProfileData);
+      if (businessProfileData) {
+        setUseHeader(!!businessProfileData.show_header);
+        setUseSignature(!!(businessProfileData.include_signature && businessProfileData.signature_name));
+      }
       if (businessProfileData?.saved_items?.length) {
         setSavedItems(businessProfileData.saved_items);
       } else {
@@ -198,17 +204,16 @@ function InvoicePageInner() {
         : savedItems;
       setSuggestions({ itemId, matches });
     } else {
-      // Free: use descriptions already typed in other line items on this invoice
+      // Free: combine localStorage saved items + other rows in current invoice
       const otherLines = lineItems
         .filter(l => l.id !== itemId && l.description.trim())
         .map(l => ({ description: l.description.trim(), unitPrice: l.unitPrice }));
-      // Deduplicate by description
+      // Merge with savedItems (localStorage), deduplicate by description
       const seen = new Set<string>();
-      const pool = otherLines.filter(l => {
+      const pool: { description: string; unitPrice: string }[] = [];
+      [...savedItems, ...otherLines].forEach(l => {
         const key = l.description.toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
+        if (!seen.has(key)) { seen.add(key); pool.push(l); }
       });
       if (pool.length === 0) { setSuggestions({ itemId: "", matches: [] }); return; }
       const matches = lower
@@ -362,6 +367,13 @@ function InvoicePageInner() {
       .eq("user_id", user.id)
       .single();
 
+    // Apply per-invoice overrides
+    const profileForPdf = businessProfileForPdf ? {
+      ...businessProfileForPdf,
+      show_header: businessProfileForPdf.show_header && useHeader,
+      include_signature: businessProfileForPdf.include_signature && useSignature,
+    } : undefined;
+
     await generateInvoicePdf({
       senderName,
       clientName,
@@ -372,7 +384,7 @@ function InvoicePageInner() {
       subtotal,
       discountAmount,
       grandTotal,
-      businessProfile: businessProfileForPdf || undefined,
+      businessProfile: profileForPdf,
       plan: effectivePlan,
     });
 
@@ -529,6 +541,7 @@ function InvoicePageInner() {
                             className={`h-10 w-full rounded-xl border bg-white pl-7 pr-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-right ${invalid[`unit-${item.id}`] ? "border-rose-300" : "border-slate-200"}`}
                             value={item.unitPrice}
                             onChange={(e) => handleNumberChange(`unit-${item.id}`, e.target.value, (v) => updateLine(item.id, { unitPrice: v }))}
+                            onBlur={(e) => { if (item.description.trim()) autoSaveItem(item.description, e.target.value); }}
                             placeholder="0.00"
                           />
                         </div>
@@ -600,35 +613,35 @@ function InvoicePageInner() {
 
       {confirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl shadow-black/40">
-            <div className="border-b border-slate-200 bg-gradient-to-b from-white to-slate-50 px-6 py-5">
+          <div className="flex w-full max-w-lg flex-col rounded-3xl border border-white/10 bg-white shadow-2xl shadow-black/40" style={{maxHeight: "90vh"}}>
+            <div className="flex-shrink-0 border-b border-slate-200 bg-gradient-to-b from-white to-slate-50 px-6 py-5">
               <h3 className="text-lg font-semibold tracking-tight text-slate-900">{isEditing ? "Confirm update" : "Confirm invoice"}</h3>
               <p className="mt-1 text-sm text-slate-600">{isEditing ? "Review the changes before updating and downloading the PDF." : "Review the details before generating the PDF."}</p>
             </div>
 
+            <div className="flex-1 overflow-y-auto">
             <div className="space-y-4 px-6 py-5">
               {confirmError && (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{confirmError}</div>
               )}
 
-              {businessProfile?.show_header && effectivePlan !== "free" && (
+              {effectivePlan !== "free" && businessProfile?.show_header && (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-3">Header Preview</div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Header</span>
+                    <button type="button" onClick={() => setUseHeader(h => !h)}
+                      className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${useHeader ? "bg-blue-600" : "bg-slate-300"}`}>
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${useHeader ? "translate-x-4" : "translate-x-0"}`} />
+                    </button>
+                  </div>
+                  {useHeader && (
+                    <div className="flex-1 min-w-0 mt-1">
                       {businessProfile.business_name && <div className="text-sm font-semibold text-slate-900 truncate">{businessProfile.business_name}</div>}
                       {(businessProfile.address1 || businessProfile.city) && (
-                        <div className="text-xs text-slate-600 truncate mt-1">
-                          {[businessProfile.address1, businessProfile.city, businessProfile.country].filter(Boolean).join(", ")}
-                        </div>
-                      )}
-                      {(businessProfile.phone || businessProfile.email) && (
-                        <div className="text-xs text-slate-600 truncate mt-1">
-                          {[businessProfile.phone && `Phone: ${businessProfile.phone}`, businessProfile.email && `Email: ${businessProfile.email}`].filter(Boolean).join(" | ")}
-                        </div>
+                        <div className="text-xs text-slate-500 truncate mt-0.5">{[businessProfile.address1, businessProfile.city, businessProfile.country].filter(Boolean).join(", ")}</div>
                       )}
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -686,17 +699,25 @@ function InvoicePageInner() {
                 </div>
               </div>
 
-              {businessProfile?.include_signature && businessProfile?.signature_name && effectivePlan !== "free" && (
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
-                  <div className="flex items-center gap-2 text-blue-700">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span className="font-medium">Signature will be included</span>
+              {effectivePlan !== "free" && businessProfile?.include_signature && businessProfile?.signature_name && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-slate-700">
+                      <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                      <span className="font-medium">Signature</span>
+                      <span className="text-slate-400">({businessProfile.signature_name})</span>
+                    </div>
+                    <button type="button" onClick={() => setUseSignature(s => !s)}
+                      className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${useSignature ? "bg-blue-600" : "bg-slate-300"}`}>
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${useSignature ? "translate-x-4" : "translate-x-0"}`} />
+                    </button>
                   </div>
                 </div>
               )}
             </div>
+            </div>{/* end scrollable area */}
 
-            <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-6 py-4">
+            <div className="flex-shrink-0 flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-6 py-4">
               <button type="button" onClick={() => setConfirmOpen(false)} className="h-10 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Cancel</button>
               <button type="button" onClick={confirmAndGenerate} className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg transition hover:brightness-105">
                 {isEditing ? "Update & Download" : "Confirm & Generate"}
