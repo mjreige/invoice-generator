@@ -20,7 +20,12 @@ export async function initPaddle() {
           process.env.NEXT_PUBLIC_PADDLE_BUSINESS_YEARLY_PRICE_ID,
           process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PACK_PRICE_ID,
         ];
-        const plan = businessIds.includes(priceId) ? 'business' : 'pro';
+        const proIds = [
+          process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID,
+          process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID,
+          process.env.NEXT_PUBLIC_PADDLE_PRO_PACK_PRICE_ID,
+        ];
+        const plan = businessIds.includes(priceId) ? 'business' : proIds.includes(priceId) ? 'pro' : 'credits';
         window.location.href = `${window.location.origin}/?welcome=true&plan=${plan}`;
       }
     }

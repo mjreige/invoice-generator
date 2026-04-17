@@ -204,35 +204,33 @@ export default function SavedItemsPage() {
                 )}
 
                 {/* Add new item */}
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Add New Item</p>
-                  <div className="flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={newDesc}
+                    onChange={(e) => setNewDesc(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                    placeholder="Item description"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  <div className="flex w-full gap-2">
                     <input
                       type="text"
-                      value={newDesc}
-                      onChange={(e) => setNewDesc(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
-                      placeholder="Item description"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      value={newPrice}
+                      onChange={(e) => setNewPrice(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+                      placeholder="Price (optional)"
+                      className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newPrice}
-                        onChange={(e) => setNewPrice(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
-                        placeholder="Price (optional)"
-                        className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAdd}
-                        disabled={saving || !newDesc.trim()}
-                        className="h-10 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
-                      >
-                        {saving ? "Adding…" : "Add Item"}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAdd}
+                      disabled={saving || !newDesc.trim()}
+                      className="h-10 flex-shrink-0 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {saving ? "Adding…" : "Add Item"}
+                    </button>
                   </div>
                 </div>
               </>
