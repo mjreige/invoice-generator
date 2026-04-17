@@ -182,16 +182,34 @@ function InvoicePageInner() {
   };
 
   const showSuggestions = (itemId: string, value: string) => {
-    if (!hasSavedItems || savedItems.length === 0) {
-      setSuggestions({ itemId: "", matches: [] });
-      return;
-    }
     const lower = value.trim().toLowerCase();
-    // If empty, show all saved items; otherwise filter by input
-    const matches = lower
-      ? savedItems.filter(s => s.description.toLowerCase().includes(lower))
-      : savedItems;
-    setSuggestions({ itemId, matches });
+
+    if (hasSavedItems) {
+      // Pro/Business: use saved items from profile
+      if (savedItems.length === 0) { setSuggestions({ itemId: "", matches: [] }); return; }
+      const matches = lower
+        ? savedItems.filter(s => s.description.toLowerCase().includes(lower))
+        : savedItems;
+      setSuggestions({ itemId, matches });
+    } else {
+      // Free: use descriptions already typed in other line items on this invoice
+      const otherLines = lineItems
+        .filter(l => l.id !== itemId && l.description.trim())
+        .map(l => ({ description: l.description.trim(), unitPrice: l.unitPrice }));
+      // Deduplicate by description
+      const seen = new Set<string>();
+      const pool = otherLines.filter(l => {
+        const key = l.description.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (pool.length === 0) { setSuggestions({ itemId: "", matches: [] }); return; }
+      const matches = lower
+        ? pool.filter(s => s.description.toLowerCase().includes(lower))
+        : pool;
+      setSuggestions({ itemId, matches });
+    }
   };
 
   const applySuggestion = (itemId: string, suggestion: { description: string; unitPrice: string }) => {
