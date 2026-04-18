@@ -59,6 +59,7 @@ function InvoicePageInner() {
   const [clientCity, setClientCity] = useState("");
   const [clientCountry, setClientCountry] = useState("");
   const [clientTaxId, setClientTaxId] = useState("");
+  const [clientDetailsOpen, setClientDetailsOpen] = useState(false);
   const [savedCustomers, setSavedCustomers] = useState<SavedCustomer[]>([]);
   const [customerSuggestions, setCustomerSuggestions] = useState<SavedCustomer[]>([]);
   const [dueDate, setDueDate] = useState(getTodayDate());
@@ -150,6 +151,9 @@ function InvoicePageInner() {
           setClientCity(existingInvoice.client_city || "");
           setClientCountry(existingInvoice.client_country || "");
           setClientTaxId(existingInvoice.client_tax_id || "");
+          if (existingInvoice.client_email || existingInvoice.client_phone || existingInvoice.client_address || existingInvoice.client_city || existingInvoice.client_country || existingInvoice.client_tax_id) {
+            setClientDetailsOpen(true);
+          }
           setDiscountMode(existingInvoice.discount_type || "percent");
           setDiscountValue(existingInvoice.discount_value || "0");
           setUseTax((existingInvoice.tax_rate ?? 0) > 0);
@@ -320,6 +324,9 @@ function InvoicePageInner() {
     setClientCountry(c.country || "");
     setClientTaxId(c.tax_id || "");
     setCustomerSuggestions([]);
+    if (c.email || c.phone || c.address || c.city || c.country || c.tax_id) {
+      setClientDetailsOpen(true);
+    }
   };
 
   const autoSaveCustomer = async () => {
@@ -598,38 +605,55 @@ function InvoicePageInner() {
                 </div>
               </div>
 
-              {/* Client details */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client email</label>
-                  <input type="email" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="client@example.com" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client phone</label>
-                  <input type="tel" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+1 234 567 8900" />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client address</label>
-                  <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="Street address" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client city</label>
-                  <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    value={clientCity} onChange={(e) => setClientCity(e.target.value)} placeholder="City" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client country</label>
-                  <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    value={clientCountry} onChange={(e) => setClientCountry(e.target.value)} placeholder="Country" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Tax ID / VAT No.</label>
-                  <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                    value={clientTaxId} onChange={(e) => setClientTaxId(e.target.value)} placeholder="e.g. VAT123456" />
-                </div>
+              {/* Client details — collapsible */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setClientDetailsOpen(o => !o)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <span>Customer Details</span>
+                  <svg
+                    className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${clientDetailsOpen ? "rotate-180" : ""}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {clientDetailsOpen && (
+                  <div className="grid gap-3 sm:grid-cols-2 border-t border-slate-200 px-4 py-4">
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client email</label>
+                      <input type="email" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                        value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="client@example.com" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client phone</label>
+                      <input type="tel" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                        value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+1 234 567 8900" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client address</label>
+                      <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                        value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="Street address" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client city</label>
+                      <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                        value={clientCity} onChange={(e) => setClientCity(e.target.value)} placeholder="City" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client country</label>
+                      <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                        value={clientCountry} onChange={(e) => setClientCountry(e.target.value)} placeholder="Country" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Tax ID / VAT No.</label>
+                      <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                        value={clientTaxId} onChange={(e) => setClientTaxId(e.target.value)} placeholder="e.g. VAT123456" />
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 
