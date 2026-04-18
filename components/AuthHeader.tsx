@@ -183,6 +183,9 @@ export default function AuthHeader() {
                     <a href="/customers" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       Customers
                     </a>
+                    <a href="/units" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                      Preset Units
+                    </a>
                     <a href="/pricing" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       Pricing
                     </a>

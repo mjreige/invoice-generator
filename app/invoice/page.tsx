@@ -60,6 +60,7 @@ function InvoicePageInner() {
   const [clientCity, setClientCity] = useState("");
   const [clientCountry, setClientCountry] = useState("");
   const [clientTaxId, setClientTaxId] = useState("");
+  const [presetUnits, setPresetUnits] = useState<string[]>([]);
   const [clientDetailsOpen, setClientDetailsOpen] = useState(false);
   const [savedCustomers, setSavedCustomers] = useState<SavedCustomer[]>([]);
   const [customerSuggestions, setCustomerSuggestions] = useState<SavedCustomer[]>([]);
@@ -120,6 +121,11 @@ function InvoicePageInner() {
         const key = `free_invoice_items_${user.id}`;
         const stored = JSON.parse(localStorage.getItem(key) || "[]");
         if (stored.length) setSavedItems(stored);
+      }
+
+      // Load preset units (all plans)
+      if (businessProfileData?.custom_units?.length) {
+        setPresetUnits(businessProfileData.custom_units);
       }
 
       // Load saved customers (Pro/Business: DB, free: localStorage)
@@ -727,13 +733,16 @@ function InvoicePageInner() {
                         />
                       </div>
                       <div className="col-span-3 sm:col-span-2">
-                        <input
-                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-center"
+                        <select
+                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-center"
                           value={item.unit}
                           onChange={(e) => updateLine(item.id, { unit: e.target.value })}
-                          placeholder="hrs"
-                          maxLength={12}
-                        />
+                        >
+                          <option value="">—</option>
+                          {presetUnits.map((u) => (
+                            <option key={u} value={u}>{u}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="col-span-6 sm:col-span-2">
                         <div className="relative">
@@ -889,19 +898,20 @@ function InvoicePageInner() {
                   <div className="border-t border-slate-100">
                     <div className="grid grid-cols-12 gap-1 bg-slate-50 px-4 py-2">
                       <span className="col-span-5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Description</span>
-                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">Qty</span>
-                      <span className="col-span-3 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Unit</span>
+                      <span className="col-span-3 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">Qty</span>
+                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Price</span>
                       <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Total</span>
                     </div>
                     {lineItems.filter(li => li.description || li.unitPrice).map((li, i) => {
                       const qty = parseNumber(li.quantity) || 1;
-                      const unit = parseNumber(li.unitPrice);
+                      const unitPrice = parseNumber(li.unitPrice);
+                      const qtyLabel = li.unit ? `${li.quantity} ${li.unit}` : li.quantity;
                       return (
                         <div key={i} className="grid grid-cols-12 gap-1 border-t border-slate-100 px-4 py-2">
                           <span className="col-span-5 text-sm text-slate-800 truncate">{li.description || "—"}</span>
-                          <span className="col-span-2 text-sm text-slate-600 text-center">{li.quantity}</span>
-                          <span className="col-span-3 text-sm text-slate-600 text-right">${formatMoney(unit)}</span>
-                          <span className="col-span-2 text-sm font-semibold text-slate-800 text-right">${formatMoney(qty * unit)}</span>
+                          <span className="col-span-3 text-sm text-slate-600 text-center">{qtyLabel}</span>
+                          <span className="col-span-2 text-sm text-slate-600 text-right">${formatMoney(unitPrice)}</span>
+                          <span className="col-span-2 text-sm font-semibold text-slate-800 text-right">${formatMoney(qty * unitPrice)}</span>
                         </div>
                       );
                     })}
