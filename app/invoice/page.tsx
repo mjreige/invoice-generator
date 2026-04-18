@@ -13,6 +13,16 @@ type LineItem = {
   unitPrice: string;
 };
 
+type SavedCustomer = {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  tax_id: string;
+};
+
 function formatMoney(value: number) {
   if (!isFinite(value)) return "0.00";
   return value.toFixed(2);
@@ -43,6 +53,14 @@ function InvoicePageInner() {
 
   const [senderName, setSenderName] = useState("");
   const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+  const [clientCity, setClientCity] = useState("");
+  const [clientCountry, setClientCountry] = useState("");
+  const [clientTaxId, setClientTaxId] = useState("");
+  const [savedCustomers, setSavedCustomers] = useState<SavedCustomer[]>([]);
+  const [customerSuggestions, setCustomerSuggestions] = useState<SavedCustomer[]>([]);
   const [dueDate, setDueDate] = useState(getTodayDate());
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceNumberTouched, setInvoiceNumberTouched] = useState(false);
@@ -102,6 +120,15 @@ function InvoicePageInner() {
         if (stored.length) setSavedItems(stored);
       }
 
+      // Load saved customers (Pro/Business: DB, free: localStorage)
+      if (businessProfileData?.saved_customers?.length) {
+        setSavedCustomers(businessProfileData.saved_customers);
+      } else {
+        const key = `free_customers_${user.id}`;
+        const stored = JSON.parse(localStorage.getItem(key) || "[]");
+        if (stored.length) setSavedCustomers(stored);
+      }
+
       // If editing, load the existing invoice
       if (editId) {
         const { data: existingInvoice } = await supabase
@@ -117,6 +144,12 @@ function InvoicePageInner() {
           setDueDate(existingInvoice.due_date || getTodayDate());
           setInvoiceNumber(existingInvoice.invoice_number || "");
           setInvoiceNumberTouched(true);
+          setClientEmail(existingInvoice.client_email || "");
+          setClientPhone(existingInvoice.client_phone || "");
+          setClientAddress(existingInvoice.client_address || "");
+          setClientCity(existingInvoice.client_city || "");
+          setClientCountry(existingInvoice.client_country || "");
+          setClientTaxId(existingInvoice.client_tax_id || "");
           setDiscountMode(existingInvoice.discount_type || "percent");
           setDiscountValue(existingInvoice.discount_value || "0");
           setUseTax((existingInvoice.tax_rate ?? 0) > 0);
@@ -269,6 +302,47 @@ function InvoicePageInner() {
     }
   };
 
+  const showCustomerSuggestions = (value: string) => {
+    if (!savedCustomers.length) { setCustomerSuggestions([]); return; }
+    const lower = value.trim().toLowerCase();
+    const matches = lower
+      ? savedCustomers.filter(c => c.name.toLowerCase().includes(lower))
+      : savedCustomers;
+    setCustomerSuggestions(matches);
+  };
+
+  const applyCustomer = (c: SavedCustomer) => {
+    setClientName(c.name);
+    setClientEmail(c.email || "");
+    setClientPhone(c.phone || "");
+    setClientAddress(c.address || "");
+    setClientCity(c.city || "");
+    setClientCountry(c.country || "");
+    setClientTaxId(c.tax_id || "");
+    setCustomerSuggestions([]);
+  };
+
+  const autoSaveCustomer = async () => {
+    if (!clientName.trim()) return;
+    const exists = savedCustomers.some(c => c.name.toLowerCase() === clientName.trim().toLowerCase());
+    if (exists) return;
+    const newCust: SavedCustomer = {
+      name: clientName.trim(), email: clientEmail.trim(),
+      phone: clientPhone.trim(), address: clientAddress.trim(),
+      city: clientCity.trim(), country: clientCountry.trim(),
+      tax_id: clientTaxId.trim(),
+    };
+    const updated = [...savedCustomers, newCust];
+    setSavedCustomers(updated);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    if (hasSavedItems) {
+      await supabase.from("business_profiles").update({ saved_customers: updated }).eq("user_id", session.user.id);
+    } else {
+      localStorage.setItem(`free_customers_${session.user.id}`, JSON.stringify(updated));
+    }
+  };
+
   const resetForm = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
@@ -309,6 +383,12 @@ function InvoicePageInner() {
           invoice_number: inv,
           sender_name: senderName,
           client_name: clientName,
+          client_email: clientEmail,
+          client_phone: clientPhone,
+          client_address: clientAddress,
+          client_city: clientCity,
+          client_country: clientCountry,
+          client_tax_id: clientTaxId,
           due_date: dueDate,
           line_items: lineItems,
           subtotal,
@@ -345,6 +425,12 @@ function InvoicePageInner() {
         invoice_number: inv,
         sender_name: senderName,
         client_name: clientName,
+        client_email: clientEmail,
+        client_phone: clientPhone,
+        client_address: clientAddress,
+        client_city: clientCity,
+        client_country: clientCountry,
+        client_tax_id: clientTaxId,
         due_date: dueDate,
         line_items: lineItems,
         subtotal,
@@ -395,6 +481,12 @@ function InvoicePageInner() {
     await generateInvoicePdf({
       senderName,
       clientName,
+      clientEmail,
+      clientPhone,
+      clientAddress,
+      clientCity,
+      clientCountry,
+      clientTaxId,
       dueDate,
       invoiceNumber: inv,
       lineItems,
@@ -410,6 +502,7 @@ function InvoicePageInner() {
     });
 
     setConfirmOpen(false);
+    autoSaveCustomer();
     refresh();
     router.push(isEditing ? "/history" : "/");
   };
@@ -475,14 +568,67 @@ function InvoicePageInner() {
                     placeholder="Acme Studio"
                   />
                 </div>
-                <div>
+                {/* Client name with customer autocomplete */}
+                <div className="relative">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client name</label>
                   <input
                     className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
                     value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
+                    onChange={(e) => { setClientName(e.target.value); showCustomerSuggestions(e.target.value); }}
+                    onFocus={(e) => showCustomerSuggestions(e.target.value)}
+                    onBlur={() => setTimeout(() => setCustomerSuggestions([]), 150)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Tab" && customerSuggestions.length > 0) { e.preventDefault(); applyCustomer(customerSuggestions[0]); }
+                    }}
                     placeholder="Client Company"
                   />
+                  {customerSuggestions.length > 0 && (
+                    <div className="absolute left-0 top-full z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                      <div className="max-h-48 overflow-y-auto">
+                        {customerSuggestions.map((c, i) => (
+                          <button key={i} type="button" onMouseDown={() => applyCustomer(c)}
+                            className={`w-full px-4 py-2.5 text-left transition-colors ${i === 0 ? "bg-blue-50 hover:bg-blue-100" : "hover:bg-slate-50"}`}>
+                            <p className="text-sm font-medium text-slate-900">{c.name}</p>
+                            {(c.email || c.phone) && <p className="text-xs text-slate-400 truncate">{[c.email, c.phone].filter(Boolean).join(" · ")}</p>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Client details */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client email</label>
+                  <input type="email" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="client@example.com" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client phone</label>
+                  <input type="tel" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+1 234 567 8900" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client address</label>
+                  <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="Street address" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client city</label>
+                  <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    value={clientCity} onChange={(e) => setClientCity(e.target.value)} placeholder="City" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Client country</label>
+                  <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    value={clientCountry} onChange={(e) => setClientCountry(e.target.value)} placeholder="Country" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Tax ID / VAT No.</label>
+                  <input type="text" className="mt-2 h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                    value={clientTaxId} onChange={(e) => setClientTaxId(e.target.value)} placeholder="e.g. VAT123456" />
                 </div>
               </div>
             </section>
@@ -673,10 +819,21 @@ function InvoicePageInner() {
               )}
 
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="text-slate-600">Invoice Number</div><div className="text-right font-semibold text-slate-900">{invoiceNumber || "—"}</div>
-                <div className="text-slate-600">Sender Name</div><div className="text-right font-semibold text-slate-900">{senderName || "—"}</div>
-                <div className="text-slate-600">Client Name</div><div className="text-right font-semibold text-slate-900">{clientName || "—"}</div>
+                <div className="text-slate-600">Invoice #</div><div className="text-right font-semibold text-slate-900">{invoiceNumber || "—"}</div>
+                <div className="text-slate-600">Sender</div><div className="text-right font-semibold text-slate-900">{senderName || "—"}</div>
                 <div className="text-slate-600">Due Date</div><div className="text-right font-semibold text-slate-900">{dueDate || "—"}</div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-0.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Bill To</p>
+                <p className="text-sm font-semibold text-slate-900">{clientName || "—"}</p>
+                {(clientEmail || clientPhone) && (
+                  <p className="text-xs text-slate-500">{[clientEmail, clientPhone].filter(Boolean).join("  ·  ")}</p>
+                )}
+                {clientAddress && <p className="text-xs text-slate-500">{clientAddress}</p>}
+                {(clientCity || clientCountry) && (
+                  <p className="text-xs text-slate-500">{[clientCity, clientCountry].filter(Boolean).join(", ")}</p>
+                )}
+                {clientTaxId && <p className="text-xs text-slate-500">Tax ID: {clientTaxId}</p>}
               </div>
 
               {/* Collapsible line items */}

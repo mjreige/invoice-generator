@@ -82,6 +82,12 @@ export type BusinessProfileForPdf = {
 export type InvoiceForPdf = {
   senderName: string;
   clientName: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  clientAddress?: string;
+  clientCity?: string;
+  clientCountry?: string;
+  clientTaxId?: string;
   dueDate: string;
   invoiceNumber: string;
   lineItems: LineItemForPdf[];
@@ -191,11 +197,34 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
 
   renderText(doc, invoice.clientName, left, y, {
     font: "helvetica",
+    fontStyle: "bold",
     fontSize: 10,
     align: "left",
     enableArabic,
   });
-  y += 6;
+  y += 5;
+
+  if (invoice.clientAddress) {
+    renderText(doc, invoice.clientAddress, left, y, { font: "helvetica", fontSize: 9, align: "left", enableArabic });
+    y += 5;
+  }
+  const cityCountry = [invoice.clientCity, invoice.clientCountry].filter(Boolean).join(", ");
+  if (cityCountry) {
+    renderText(doc, cityCountry, left, y, { font: "helvetica", fontSize: 9, align: "left", enableArabic });
+    y += 5;
+  }
+  const contactLine = [invoice.clientEmail, invoice.clientPhone].filter(Boolean).join("   |   ");
+  if (contactLine) {
+    renderText(doc, contactLine, left, y, { font: "helvetica", fontSize: 9, align: "left" });
+    y += 5;
+  }
+  if (invoice.clientTaxId) {
+    renderText(doc, `Tax ID: ${invoice.clientTaxId}`, left, y, { font: "helvetica", fontSize: 9, align: "left" });
+    y += 5;
+  }
+  if (!invoice.clientAddress && !cityCountry && !contactLine && !invoice.clientTaxId) {
+    y += 1; // keep consistent spacing when no details
+  }
 
   // Table
   y += 6;
