@@ -110,7 +110,7 @@ export default function ProfilePage() {
     load();
   }, [router]);
 
-  const set = (field: keyof BusinessProfile, value: string | boolean) =>
+  const set = (field: keyof BusinessProfile, value: string | boolean | number) =>
     setProfile((prev) => ({ ...prev, [field]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
