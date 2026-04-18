@@ -51,6 +51,7 @@ function InvoicePageInner() {
   const [lineItemsExpanded, setLineItemsExpanded] = useState(false);
   const [useHeader, setUseHeader] = useState(true);
   const [useSignature, setUseSignature] = useState(true);
+  const [useTax, setUseTax] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const { canGenerateInvoice, isActive, hasCredits, loading: subscriptionLoading, effectivePlan, refresh } = useSubscription();
@@ -90,6 +91,7 @@ function InvoicePageInner() {
       if (businessProfileData) {
         setUseHeader(!!businessProfileData.show_header);
         setUseSignature(!!(businessProfileData.include_signature && businessProfileData.signature_name));
+        setUseTax(!!businessProfileData.tax_enabled && !!businessProfileData.tax_rate);
       }
       if (businessProfileData?.saved_items?.length) {
         setSavedItems(businessProfileData.saved_items);
@@ -117,6 +119,7 @@ function InvoicePageInner() {
           setInvoiceNumberTouched(true);
           setDiscountMode(existingInvoice.discount_type || "percent");
           setDiscountValue(existingInvoice.discount_value || "0");
+          setUseTax((existingInvoice.tax_rate ?? 0) > 0);
           if (existingInvoice.line_items?.length) {
             setLineItems(existingInvoice.line_items.map((item: any) => ({
               ...item,
@@ -162,7 +165,18 @@ function InvoicePageInner() {
     return Math.min(raw, base);
   }, [subtotal, discountMode, discountValue]);
 
-  const grandTotal = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount]);
+  const netAfterDiscount = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount]);
+
+  const hasTax = effectivePlan !== "free" && !!businessProfile?.tax_enabled && (businessProfile?.tax_rate ?? 0) > 0;
+  const taxRate = businessProfile?.tax_rate ?? 0;
+  const taxLabel = businessProfile?.tax_label?.trim() || "Tax";
+
+  const taxAmount = useMemo(() => {
+    if (!useTax || !hasTax) return 0;
+    return netAfterDiscount * (taxRate / 100);
+  }, [useTax, hasTax, taxRate, netAfterDiscount]);
+
+  const grandTotal = useMemo(() => netAfterDiscount + taxAmount, [netAfterDiscount, taxAmount]);
 
   const addLine = () => {
     const id = crypto.randomUUID();
@@ -300,6 +314,8 @@ function InvoicePageInner() {
           subtotal,
           discount_type: discountMode,
           discount_value: discountValue,
+          tax_rate: useTax && hasTax ? taxRate : 0,
+          tax_amount: taxAmount,
           grand_total: grandTotal,
         })
         .eq("id", editId)
@@ -334,6 +350,8 @@ function InvoicePageInner() {
         subtotal,
         discount_type: discountMode,
         discount_value: discountValue,
+        tax_rate: useTax && hasTax ? taxRate : 0,
+        tax_amount: taxAmount,
         grand_total: grandTotal,
       });
 
@@ -384,6 +402,9 @@ function InvoicePageInner() {
       subtotal,
       discountAmount,
       grandTotal,
+      taxAmount: useTax && hasTax ? taxAmount : 0,
+      taxRate: useTax && hasTax ? taxRate : 0,
+      taxLabel: useTax && hasTax ? taxLabel : undefined,
       businessProfile: profileForPdf,
       plan: effectivePlan,
     });
@@ -592,6 +613,12 @@ function InvoicePageInner() {
                 <div className="space-y-1 text-sm">
                   <div className="flex items-center justify-between text-slate-700"><span>Subtotal</span><span>${formatMoney(subtotal)}</span></div>
                   <div className="flex items-center justify-between text-slate-700"><span>Discount</span><span className="font-medium text-rose-600">-${formatMoney(discountAmount)}</span></div>
+                  {useTax && hasTax && (
+                    <div className="flex items-center justify-between text-slate-700">
+                      <span>{taxLabel} ({taxRate}%)</span>
+                      <span className="font-medium text-amber-700">+${formatMoney(taxAmount)}</span>
+                    </div>
+                  )}
                   <div className="mt-1 flex items-center justify-between text-base font-semibold text-slate-900"><span>Grand total</span><span>${formatMoney(grandTotal)}</span></div>
                 </div>
               </div>
@@ -690,15 +717,6 @@ function InvoicePageInner() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm">
-                <div className="flex items-center justify-between text-slate-700"><span>Subtotal</span><span className="font-semibold text-slate-900">${formatMoney(subtotal)}</span></div>
-                {discountAmount > 0 && <div className="mt-1 flex items-center justify-between text-slate-700"><span>Discount</span><span className="font-semibold text-rose-600">-${formatMoney(discountAmount)}</span></div>}
-                <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
-                  <span>{discountAmount > 0 ? "Grand Total" : "Total"}</span>
-                  <span>${formatMoney(grandTotal)}</span>
-                </div>
-              </div>
-
               {effectivePlan !== "free" && businessProfile?.include_signature && businessProfile?.signature_name && (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <div className="flex items-center justify-between">
@@ -714,6 +732,37 @@ function InvoicePageInner() {
                   </div>
                 </div>
               )}
+
+              {hasTax && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-slate-700">
+                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" /></svg>
+                      <span className="font-medium">{taxLabel}</span>
+                      <span className="text-slate-400">({taxRate}%)</span>
+                    </div>
+                    <button type="button" onClick={() => setUseTax(t => !t)}
+                      className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${useTax ? "bg-blue-600" : "bg-slate-300"}`}>
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${useTax ? "translate-x-4" : "translate-x-0"}`} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm">
+                <div className="flex items-center justify-between text-slate-700"><span>Subtotal</span><span className="font-semibold text-slate-900">${formatMoney(subtotal)}</span></div>
+                {discountAmount > 0 && <div className="mt-1 flex items-center justify-between text-slate-700"><span>Discount</span><span className="font-semibold text-rose-600">-${formatMoney(discountAmount)}</span></div>}
+                {useTax && hasTax && taxAmount > 0 && (
+                  <div className="mt-1 flex items-center justify-between text-slate-700">
+                    <span>{taxLabel} ({taxRate}%)</span>
+                    <span className="font-semibold text-amber-700">+${formatMoney(taxAmount)}</span>
+                  </div>
+                )}
+                <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
+                  <span>{discountAmount > 0 || (useTax && taxAmount > 0) ? "Grand Total" : "Total"}</span>
+                  <span>${formatMoney(grandTotal)}</span>
+                </div>
+              </div>
             </div>
             </div>{/* end scrollable area */}
 

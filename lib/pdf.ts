@@ -91,6 +91,9 @@ export type InvoiceForPdf = {
   grandTotal?: number;
   discountMode?: "percent" | "fixed";
   discountValue?: string;
+  taxAmount?: number;
+  taxRate?: number;
+  taxLabel?: string;
   businessProfile?: BusinessProfileForPdf;
   plan?: "free" | "pro" | "business";
 };
@@ -272,13 +275,15 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
 
   const subtotal = invoice.subtotal;
   const discountAmount = invoice.discountAmount ?? 0;
+  const taxAmount = invoice.taxAmount ?? 0;
+  const taxRate = invoice.taxRate ?? 0;
+  const taxLabel = invoice.taxLabel?.trim() || "Tax";
   const grandTotal = invoice.grandTotal;
-  const hasDiscount =
-    typeof subtotal === "number" &&
-    discountAmount > 0 &&
-    typeof grandTotal === "number";
+  const hasDiscount = discountAmount > 0;
+  const hasTaxLine = taxAmount > 0 && taxRate > 0;
+  const hasBreakdown = (hasDiscount || hasTaxLine) && typeof subtotal === "number" && typeof grandTotal === "number";
 
-  if (hasDiscount) {
+  if (hasBreakdown) {
     renderText(doc, "Subtotal", left, y, {
       font: "helvetica",
       fontSize: 10,
@@ -291,17 +296,35 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     });
     y += 6;
 
-    renderText(doc, "Discount", left, y, {
-      font: "helvetica",
-      fontSize: 10,
-      align: "left",
-    });
-    renderText(doc, `($${discountAmount.toFixed(2)})`, xTotalRight, y, {
-      font: "helvetica",
-      fontSize: 10,
-      align: "right",
-    });
-    y += 8;
+    if (hasDiscount) {
+      renderText(doc, "Discount", left, y, {
+        font: "helvetica",
+        fontSize: 10,
+        align: "left",
+      });
+      renderText(doc, `($${discountAmount.toFixed(2)})`, xTotalRight, y, {
+        font: "helvetica",
+        fontSize: 10,
+        align: "right",
+      });
+      y += 6;
+    }
+
+    if (hasTaxLine) {
+      renderText(doc, `${taxLabel} (${taxRate}%)`, left, y, {
+        font: "helvetica",
+        fontSize: 10,
+        align: "left",
+      });
+      renderText(doc, `$${taxAmount.toFixed(2)}`, xTotalRight, y, {
+        font: "helvetica",
+        fontSize: 10,
+        align: "right",
+      });
+      y += 6;
+    }
+
+    y += 2;
     drawLine(y);
     y += 7;
 

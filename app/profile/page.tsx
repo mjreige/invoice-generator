@@ -20,6 +20,9 @@ interface BusinessProfile {
   include_signature?: boolean;
   signature_name?: string;
   enable_arabic?: boolean;
+  tax_enabled?: boolean;
+  tax_rate?: number;
+  tax_label?: string;
 }
 
 function Toggle({
@@ -79,6 +82,9 @@ export default function ProfilePage() {
     include_signature: false,
     signature_name: "",
     enable_arabic: false,
+    tax_enabled: false,
+    tax_rate: 0,
+    tax_label: "",
   });
 
   useEffect(() => {
@@ -369,6 +375,58 @@ export default function ProfilePage() {
                     className={inputClass()}
                     placeholder="Your full name"
                   />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 border-t border-slate-200 pt-4">
+              <h3 className="text-sm font-semibold text-slate-900">Tax</h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Enable Tax on Invoices</p>
+                  <p className="text-xs text-slate-500">Add a tax line to the invoice totals</p>
+                  {isFree && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      Available on{" "}
+                      <Link href="/pricing" className="text-blue-600 hover:underline">Pro plan</Link>
+                    </p>
+                  )}
+                </div>
+                <Toggle
+                  checked={profile.tax_enabled}
+                  onChange={() => set("tax_enabled", !profile.tax_enabled)}
+                  disabled={isFree}
+                />
+              </div>
+              {!isFree && profile.tax_enabled && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Tax Rate (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={profile.tax_rate ?? ""}
+                      onChange={(e) => set("tax_rate", parseFloat(e.target.value) || 0)}
+                      className={inputClass()}
+                      placeholder="e.g. 11"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Tax Label
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.tax_label || ""}
+                      onChange={(e) => set("tax_label", e.target.value)}
+                      className={inputClass()}
+                      placeholder="VAT, GST, Tax…"
+                    />
+                  </div>
                 </div>
               )}
             </div>
