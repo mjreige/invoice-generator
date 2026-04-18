@@ -1,6 +1,7 @@
 export type LineItemForPdf = {
   description: string;
   quantity: string;
+  unit?: string;
   unitPrice: string;
 };
 

@@ -280,7 +280,8 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     const itemHeight = descriptionLines.length * 5;
     const otherY = y - itemHeight + 5;
 
-    renderText(doc, item.quantity, left + 100, otherY, {
+    const qtyLabel = item.unit ? `${item.quantity} ${item.unit}` : item.quantity;
+    renderText(doc, qtyLabel, left + 100, otherY, {
       font: "helvetica",
       fontSize: 9,
       align: "center",
