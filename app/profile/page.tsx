@@ -409,7 +409,7 @@ export default function ProfilePage() {
                       min="0"
                       max="100"
                       step="0.01"
-                      value={profile.tax_rate ?? ""}
+                      value={profile.tax_rate || ""}
                       onChange={(e) => set("tax_rate", parseFloat(e.target.value) || 0)}
                       className={inputClass()}
                       placeholder="e.g. 11"
