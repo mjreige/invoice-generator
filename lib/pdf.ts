@@ -231,19 +231,32 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
   drawLine(y);
   y += 6;
 
+  // Column x positions (A4 content width = 170mm, left=20, right=190)
+  // Description: 20–95 (75mm), Qty: center@107, Unit: center@124, Unit Price: right@152, Total: right@190
+  const xQty = left + 87;       // center of qty column
+  const xUnit = left + 104;     // center of unit column
+  const xUnitPrice = left + 132; // right edge of unit price column
+  // xTotalRight = 190 (already defined)
+
   renderText(doc, "Description", left, y, {
     font: "helvetica",
     fontStyle: "bold",
     fontSize: 9,
     align: "left",
   });
-  renderText(doc, "Quantity", left + 100, y, {
+  renderText(doc, "Qty", xQty, y, {
     font: "helvetica",
     fontStyle: "bold",
     fontSize: 9,
     align: "center",
   });
-  renderText(doc, "Unit Price", left + 130, y, {
+  renderText(doc, "Unit", xUnit, y, {
+    font: "helvetica",
+    fontStyle: "bold",
+    fontSize: 9,
+    align: "center",
+  });
+  renderText(doc, "Unit Price", xUnitPrice, y, {
     font: "helvetica",
     fontStyle: "bold",
     fontSize: 9,
@@ -266,7 +279,7 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
 
     if (!item.description && !quantity && !unitPrice) return;
 
-    const descriptionLines = doc.splitTextToSize(item.description || "", 90);
+    const descriptionLines = doc.splitTextToSize(item.description || "", 75);
     descriptionLines.forEach((line: string) => {
       renderText(doc, line, left, y, {
         font: "helvetica",
@@ -280,13 +293,19 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     const itemHeight = descriptionLines.length * 5;
     const otherY = y - itemHeight + 5;
 
-    const qtyLabel = item.unit ? `${item.quantity} ${item.unit}` : item.quantity;
-    renderText(doc, qtyLabel, left + 100, otherY, {
+    renderText(doc, item.quantity, xQty, otherY, {
       font: "helvetica",
       fontSize: 9,
       align: "center",
     });
-    renderText(doc, `$${unitPrice.toFixed(2)}`, left + 130, otherY, {
+    if (item.unit) {
+      renderText(doc, item.unit, xUnit, otherY, {
+        font: "helvetica",
+        fontSize: 9,
+        align: "center",
+      });
+    }
+    renderText(doc, `$${unitPrice.toFixed(2)}`, xUnitPrice, otherY, {
       font: "helvetica",
       fontSize: 9,
       align: "right",

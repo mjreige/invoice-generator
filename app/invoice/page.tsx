@@ -896,20 +896,21 @@ function InvoicePageInner() {
                 </button>
                 {lineItemsExpanded && (
                   <div className="border-t border-slate-100">
-                    <div className="grid grid-cols-12 gap-1 bg-slate-50 px-4 py-2">
-                      <span className="col-span-5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Description</span>
-                      <span className="col-span-3 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">Qty</span>
+                    <div className="grid grid-cols-12 gap-1 bg-slate-50 px-3 py-2">
+                      <span className="col-span-4 text-xs font-semibold text-slate-400 uppercase tracking-wide">Description</span>
+                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">Qty</span>
+                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">Unit</span>
                       <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Price</span>
                       <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Total</span>
                     </div>
                     {lineItems.filter(li => li.description || li.unitPrice).map((li, i) => {
                       const qty = parseNumber(li.quantity) || 1;
                       const unitPrice = parseNumber(li.unitPrice);
-                      const qtyLabel = li.unit ? `${li.quantity} ${li.unit}` : li.quantity;
                       return (
-                        <div key={i} className="grid grid-cols-12 gap-1 border-t border-slate-100 px-4 py-2">
-                          <span className="col-span-5 text-sm text-slate-800 truncate">{li.description || "—"}</span>
-                          <span className="col-span-3 text-sm text-slate-600 text-center">{qtyLabel}</span>
+                        <div key={i} className="grid grid-cols-12 gap-1 border-t border-slate-100 px-3 py-2 items-center">
+                          <span className="col-span-4 text-sm text-slate-800 truncate">{li.description || "—"}</span>
+                          <span className="col-span-2 text-sm text-slate-600 text-center">{li.quantity}</span>
+                          <span className="col-span-2 text-sm text-slate-500 text-center">{li.unit || "—"}</span>
                           <span className="col-span-2 text-sm text-slate-600 text-right">${formatMoney(unitPrice)}</span>
                           <span className="col-span-2 text-sm font-semibold text-slate-800 text-right">${formatMoney(qty * unitPrice)}</span>
                         </div>
