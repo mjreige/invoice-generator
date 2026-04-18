@@ -669,8 +669,8 @@ function InvoicePageInner() {
               <div className="overflow-visible rounded-3xl border border-slate-200 bg-slate-50">
                 <div className="grid grid-cols-12 gap-3 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
                   <div className="col-span-12 sm:col-span-4">Description</div>
-                  <div className="col-span-3 sm:col-span-2 sm:text-center">Qty</div>
-                  <div className="col-span-3 sm:col-span-2 sm:text-center">Unit</div>
+                  <div className="col-span-2 sm:col-span-2 sm:text-center">Qty</div>
+                  <div className="col-span-4 sm:col-span-2 sm:text-center">Unit</div>
                   <div className="col-span-6 sm:col-span-2 sm:text-right">Unit price</div>
                   <div className="col-span-6 hidden sm:col-span-2 sm:block sm:text-right">Total</div>
                 </div>
@@ -723,7 +723,7 @@ function InvoicePageInner() {
                           </div>
                         )}
                       </div>
-                      <div className="col-span-3 sm:col-span-2">
+                      <div className="col-span-2 sm:col-span-2">
                         <input
                           inputMode="decimal"
                           className={`h-10 w-full rounded-xl border bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-center ${invalid[`qty-${item.id}`] ? "border-rose-300" : "border-slate-200"}`}
@@ -732,9 +732,9 @@ function InvoicePageInner() {
                           onChange={(e) => handleNumberChange(`qty-${item.id}`, e.target.value, (v) => updateLine(item.id, { quantity: v }))}
                         />
                       </div>
-                      <div className="col-span-3 sm:col-span-2">
+                      <div className="col-span-4 sm:col-span-2">
                         <select
-                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-center"
+                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                           value={item.unit}
                           onChange={(e) => updateLine(item.id, { unit: e.target.value })}
                         >
@@ -907,8 +907,8 @@ function InvoicePageInner() {
                       const qty = parseNumber(li.quantity) || 1;
                       const unitPrice = parseNumber(li.unitPrice);
                       return (
-                        <div key={i} className="grid grid-cols-12 gap-1 border-t border-slate-100 px-3 py-2 items-center">
-                          <span className="col-span-4 text-sm text-slate-800 truncate">{li.description || "—"}</span>
+                        <div key={i} className="grid grid-cols-12 gap-1 border-t border-slate-100 px-3 py-2 items-start">
+                          <span className="col-span-4 text-sm text-slate-800 break-words min-w-0">{li.description || "—"}</span>
                           <span className="col-span-2 text-sm text-slate-600 text-center">{li.quantity}</span>
                           <span className="col-span-2 text-sm text-slate-500 text-center">{li.unit || "—"}</span>
                           <span className="col-span-2 text-sm text-slate-600 text-right">${formatMoney(unitPrice)}</span>
