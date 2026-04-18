@@ -368,7 +368,7 @@ function InvoicePageInner() {
     setInvoiceNumberTouched(false);
     setDiscountMode("percent");
     setDiscountValue("0");
-    setLineItems([{ id: crypto.randomUUID(), description: "", quantity: "1", unitPrice: "" }]);
+    setLineItems([{ id: crypto.randomUUID(), description: "", quantity: "1", unit: "", unitPrice: "" }]);
   };
 
   const confirmAndGenerate = async () => {
