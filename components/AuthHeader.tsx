@@ -13,6 +13,7 @@ export default function AuthHeader() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const {
     plan,
+    effectivePlan,
     isActive,
     invoiceCount,
     creditsRemaining,
@@ -102,11 +103,23 @@ export default function AuthHeader() {
     }
 
     if (hasCredits) {
+      const badgeColor =
+        effectivePlan === "business"
+          ? "bg-purple-600"
+          : effectivePlan === "pro"
+          ? "bg-blue-500"
+          : "bg-amber-500";
+      const badgeLabel =
+        effectivePlan === "business"
+          ? "Business"
+          : effectivePlan === "pro"
+          ? "Pro"
+          : "Starter";
       return (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-500 text-white">Credits</span>
-            <span className="text-xs text-slate-300">{creditsRemaining} remaining</span>
+            <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${badgeColor} text-white`}>{badgeLabel}</span>
+            <span className="text-xs text-slate-300">{creditsRemaining} credits left</span>
           </div>
           <p className="text-xs text-slate-400">{invoiceCount} invoices generated total</p>
         </div>
