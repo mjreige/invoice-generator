@@ -86,7 +86,7 @@ function LandingPageInner() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
         </svg>
       ),
-      title: "Business Profile",
+      title: "My Profile",
       description: "Add your business details and custom branding to every invoice",
       badge: "Pro & Business"
     },
@@ -106,7 +106,7 @@ function LandingPageInner() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      title: "Invoice History & Editing",
+      title: "My Invoices",
       description: "Track all your invoices and edit any past invoice to re-download an updated PDF",
       badge: "All Plans"
     },
@@ -116,7 +116,7 @@ function LandingPageInner() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
       ),
-      title: "Saved Line Items",
+      title: "Line Item Templates",
       description: "Save your most-used services with preset prices — they auto-fill when creating new invoices",
       badge: "Pro & Business"
     },
@@ -126,7 +126,7 @@ function LandingPageInner() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
-      title: "Saved Customers",
+      title: "My Customers",
       description: "Save client details and have them auto-fill on new invoices — name, address, email, phone, tax ID",
       badge: "Pro & Business"
     },
@@ -241,9 +241,9 @@ function LandingPageInner() {
             </div>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               {[
-                { name: "FREE", price: "$0", desc: "Get started", features: ["5 invoices total", "PDF download", "Invoice history", "Discounts & line item units"] },
+                { name: "FREE", price: "$0", desc: "Get started", features: ["5 invoices total", "PDF download", "My Invoices", "Discounts & line item units"] },
                 { name: "CREDIT PACKS", price: "From $4.99", desc: "Pay once, never expires", features: ["Starter $4.99 · 10 invoices (basic)", "Pro Pack $9.99 · 25 invoices + pro features", "Business Pack $17.99 · 50 invoices + all features"], popular: true },
-                { name: "MONTHLY", price: "From $7/mo", desc: "Unlimited invoices", features: ["Pro $7/mo · business profile, tax, customers", "Business $12/mo · Arabic PDF + all pro features", "Cancel anytime"] },
+                { name: "MONTHLY", price: "From $7/mo", desc: "Unlimited invoices", features: ["Pro $7/mo · my profile, tax, customers", "Business $12/mo · Arabic PDF + all pro features", "Cancel anytime"] },
               ].map((plan, i) => (
                 <div key={i} className={`bg-slate-800/50 rounded-xl border ${plan.popular ? "border-blue-500/50 ring-2 ring-blue-500/20" : "border-slate-700/50"} p-6 relative`}>
                   {plan.popular && (
@@ -309,10 +309,10 @@ function LandingPageInner() {
             <p className="text-slate-500 text-sm text-center mb-5">Here's what you now have access to:</p>
             <ul className="space-y-2 mb-6">
               {(welcomePlan === "credits"
-                ? ["10 invoices — never expire", "PDF download & invoice history", "Discounts (% or fixed)", "Line item units"]
+                ? ["10 invoices — never expire", "PDF download & my invoices", "Discounts (% or fixed)", "Line item units"]
                 : welcomePlan === "pro"
-                ? ["Unlimited invoices", "Business profile & branding", "Digital signature", "Tax support (rate + custom label)", "Saved customers with autocomplete", "Saved line items with autocomplete", "Edit & re-download past invoices", "Line item units", "Priority email support"]
-                : ["Everything in Pro", "Arabic PDF support (RTL text rendering)", "Saved customers list", "Priority customer support"]
+                ? ["Unlimited invoices", "My profile & branding", "Digital signature", "Tax support (rate + custom label)", "My customers with autocomplete", "Line item templates with autocomplete", "Edit & re-download past invoices", "Line item units", "Priority email support"]
+                : ["Everything in Pro", "Arabic PDF support (RTL text rendering)", "My customers list", "Priority customer support"]
               ).map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
                   <svg className={`w-4 h-4 flex-shrink-0 mt-0.5 ${welcomePlan === "business" ? "text-purple-500" : "text-blue-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,7 +334,7 @@ function LandingPageInner() {
                   onClick={() => { setShowWelcome(false); router.push("/saved-items"); }}
                   className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition"
                 >
-                  Set up Saved Line Items →
+                  Set up Line Item Templates →
                 </button>
               )}
               <button
