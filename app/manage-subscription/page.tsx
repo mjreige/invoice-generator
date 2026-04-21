@@ -142,21 +142,24 @@ export default function ManageSubscriptionPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-                      plan === "business" ? "bg-purple-100 text-purple-700" :
-                      plan === "pro" ? "bg-blue-100 text-blue-700" :
+                      subscription?.pack_type === "business_pack" || plan === "business" ? "bg-purple-100 text-purple-700" :
+                      subscription?.pack_type === "pro_pack" || plan === "pro" ? "bg-blue-100 text-blue-700" :
+                      subStatus === "credits_only" ? "bg-amber-100 text-amber-700" :
                       "bg-slate-100 text-slate-700"
                     }`}>
-                      {plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Business"}
+                      {subStatus === "credits_only"
+                        ? subscription?.pack_type === "business_pack" ? "Business Pack"
+                          : subscription?.pack_type === "pro_pack" ? "Pro Pack"
+                          : "Starter Pack"
+                        : plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Business"}
                     </span>
                     {subStatus === "active" && <span className="text-xs text-green-600 font-medium">● Active</span>}
-                    {(subStatus === "cancelled_active" || justCancelled) && <span className="text-xs text-amber-600 font-medium">● Cancelled</span>}
+                    {(subStatus === "cancelled_active" || justCancelled) && <span className="text-xs text-amber-600 font-medium">● Ends {periodEnd}</span>}
                     {subStatus === "cancelled_expired" && <span className="text-xs text-slate-500 font-medium">● Expired</span>}
-                    {subStatus === "credits_only" && <span className="text-xs text-amber-600 font-medium">● Credits</span>}
                   </div>
                   {subStatus === "active" && periodEnd && <p className="text-sm text-slate-500">Next billing: {periodEnd}</p>}
-                  {(subStatus === "cancelled_active" || justCancelled) && periodEnd && <p className="text-sm text-slate-500">Access until: {periodEnd}</p>}
-                  {subStatus === "cancelled_expired" && <p className="text-sm text-slate-500">Subscription expired</p>}
-                  {subStatus === "credits_only" && <p className="text-sm text-slate-500">{creditsRemaining} credits remaining</p>}
+                  {subStatus === "credits_only" && <p className="text-sm text-slate-500">{creditsRemaining} invoice credits remaining</p>}
+                  {subStatus === "cancelled_expired" && <p className="text-sm text-slate-500">Subscription expired — your data is preserved</p>}
                 </div>
                 <Link href="/pricing" className="text-sm font-medium text-blue-600 hover:text-blue-700">View plans →</Link>
               </div>
@@ -176,12 +179,12 @@ export default function ManageSubscriptionPage() {
               </div>
             )}
 
-            {/* Already cancelled info */}
+            {/* Subscription ending soon info */}
             {subStatus === "cancelled_active" && !justCancelled && (
-              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5">
-                <h2 className="text-sm font-semibold text-amber-800 mb-1">Subscription Already Cancelled</h2>
-                <p className="text-sm text-amber-700">
-                  Your subscription was cancelled and will expire on <strong>{periodEnd}</strong>. You still have full access until then.
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+                <h2 className="text-sm font-semibold text-blue-900 mb-1">Full access until {periodEnd}</h2>
+                <p className="text-sm text-blue-700">
+                  After that, you can continue with invoice credits — a one-time purchase with no monthly commitment.
                 </p>
               </div>
             )}

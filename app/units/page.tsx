@@ -27,9 +27,9 @@ export default function UnitsPage() {
       if (data?.custom_units?.length) {
         setUnits(data.custom_units);
       } else {
-        // First visit — seed with defaults
+        // First visit — seed with defaults (upsert creates the row if it doesn't exist yet)
         setUnits(DEFAULT_UNITS);
-        await supabase.from("business_profiles").update({ custom_units: DEFAULT_UNITS }).eq("user_id", session.user.id);
+        await supabase.from("business_profiles").upsert({ user_id: session.user.id, custom_units: DEFAULT_UNITS }, { onConflict: "user_id" });
       }
       setLoading(false);
     };
@@ -40,7 +40,7 @@ export default function UnitsPage() {
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      await supabase.from("business_profiles").update({ custom_units: updated }).eq("user_id", session.user.id);
+      await supabase.from("business_profiles").upsert({ user_id: session.user.id, custom_units: updated }, { onConflict: "user_id" });
     }
     setSaving(false);
   };
