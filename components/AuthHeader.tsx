@@ -181,38 +181,48 @@ export default function AuthHeader() {
                   </div>
 
                   <div className="py-1">
+                    {/* Actions */}
                     <a href="/invoice" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Generate Invoice
+                      New Invoice
                     </a>
                     <a href="/history" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Invoice History
+                      My Invoices
                     </a>
-                    <a href="/profile" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Business Profile
-                    </a>
-                    <a href="/saved-items" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Saved Line Items
-                    </a>
-                    <a href="/customers" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Customers
-                    </a>
-                    <a href="/units" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Preset Units
-                    </a>
-                    <a href="/pricing" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Pricing
-                    </a>
-                    {(isActive || hasCredits) && (
-                      <a href="/manage-subscription" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                        Manage Subscription
+
+                    {/* Data */}
+                    <div className="border-t border-white/5 mt-1 pt-1">
+                      <a href="/profile" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                        My Profile
                       </a>
-                    )}
-                    <a href="/change-password" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Change Password
-                    </a>
-                    <a href="/support" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
-                      Contact Support
-                    </a>
+                      <a href="/saved-items" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                        Line Item Templates
+                      </a>
+                      <a href="/customers" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                        My Customers
+                      </a>
+                      <a href="/units" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                        Units
+                      </a>
+                    </div>
+
+                    {/* Account */}
+                    <div className="border-t border-white/5 mt-1 pt-1">
+                      <a href="/pricing" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                        Pricing
+                      </a>
+                      {(isActive || hasCredits) && (
+                        <a href="/manage-subscription" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                          Billing
+                        </a>
+                      )}
+                      <a href="/change-password" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                        Security
+                      </a>
+                      <a href="/support" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                        Help & Support
+                      </a>
+                    </div>
+
                     <div className="border-t border-white/5 mt-1 pt-1">
                       <button
                         type="button"

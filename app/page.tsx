@@ -194,42 +194,19 @@ function LandingPageInner() {
               </div>
             )}
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            <div className="mt-8 flex flex-col items-start gap-3">
               <button
                 onClick={handleGenerateClick}
-                className="flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px"
+                className="flex h-14 w-full sm:w-auto items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:brightness-105 active:translate-y-px"
               >
                 Generate Invoice
               </button>
-              <a
-                href={historyHref}
-                className="flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 active:translate-y-px"
-              >
-                View Invoice History
-              </a>
+              {isLoggedIn && (
+                <a href={historyHref} className="text-sm text-slate-500 hover:text-slate-700 transition-colors">
+                  View my invoices →
+                </a>
+              )}
             </div>
-            {isLoggedIn && (
-              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-                <a href="/units" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
-                  </svg>
-                  Manage Preset Units
-                </a>
-                <a href="/saved-items" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  Saved Line Items
-                </a>
-                <a href="/customers" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Customers
-                </a>
-              </div>
-            )}
           </div>
 
           {/* Features */}
