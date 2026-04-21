@@ -45,7 +45,7 @@ export default function ManageSubscriptionPage() {
     const hasCredits = (subscription.invoice_credits || 0) - (subscription.credits_used || 0) > 0;
     const isInPeriod = periodEnd ? new Date(periodEnd) > new Date() : false;
 
-    if (!hasPaddleId && hasCredits) return "credits_only";
+    if (hasCredits && (!hasPaddleId || (status === "cancelled" && !isInPeriod))) return "credits_only";
     if (!hasPaddleId) return "none";
 
     if (status === "active") return "active";
