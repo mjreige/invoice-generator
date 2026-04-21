@@ -26,7 +26,11 @@ export async function initPaddle() {
           process.env.NEXT_PUBLIC_PADDLE_PRO_PACK_PRICE_ID,
         ];
         const plan = businessIds.includes(priceId) ? 'business' : proIds.includes(priceId) ? 'pro' : 'credits';
-        window.location.href = `${window.location.origin}/?welcome=true&plan=${plan}`;
+        // Delay redirect to give the Paddle webhook time to update the DB
+        // before the page reloads and refetches subscription data
+        setTimeout(() => {
+          window.location.href = `${window.location.origin}/?welcome=true&plan=${plan}`;
+        }, 2500);
       }
     }
   });

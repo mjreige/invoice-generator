@@ -11,7 +11,7 @@ function LandingPageInner() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomePlan, setWelcomePlan] = useState<"pro" | "business" | "credits">("pro");
-  const { canGenerateInvoice, invoiceCount, isActive, hasCredits, loading } = useSubscription();
+  const { canGenerateInvoice, invoiceCount, isActive, hasCredits, loading, refresh } = useSubscription();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -29,15 +29,21 @@ function LandingPageInner() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Show welcome modal after purchase
+  // Show welcome modal after purchase and refresh subscription data
   useEffect(() => {
     if (searchParams.get("welcome") === "true") {
       const plan = searchParams.get("plan");
       setWelcomePlan(plan === "business" ? "business" : plan === "credits" ? "credits" : "pro");
       setShowWelcome(true);
       router.replace("/", { scroll: false });
+      // Refresh once immediately and again after a delay in case the
+      // Paddle webhook needed extra time to update the database
+      refresh();
+      const t = setTimeout(() => refresh(), 3000);
+      return () => clearTimeout(t);
     }
-  }, [searchParams, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleGenerateClick = () => {
     if (!isLoggedIn) {

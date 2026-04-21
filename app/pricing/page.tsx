@@ -295,17 +295,17 @@ export default function Pricing() {
             </div>
 
             {/* BUSINESS */}
-            <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-8">
+            <div className="bg-slate-800/50 rounded-2xl border border-purple-500/30 p-8">
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-white mb-2">BUSINESS</h3>
                 {annual ? (
                   <div>
-                    <span className="text-4xl font-bold text-white">$129</span>
+                    <span className="text-4xl font-bold text-purple-400">$129</span>
                     <span className="text-slate-400">/year</span>
                     <div className="text-xs text-green-400 font-medium mt-1">$10.75/month · Save $15</div>
                   </div>
                 ) : (
-                  <div><span className="text-4xl font-bold text-white">$12</span><span className="text-slate-400">/month</span></div>
+                  <div><span className="text-4xl font-bold text-purple-400">$12</span><span className="text-slate-400">/month</span></div>
                 )}
                 <p className="text-slate-300 mt-2">For growing businesses</p>
               </div>
