@@ -123,6 +123,26 @@ function LandingPageInner() {
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+      title: "Saved Customers",
+      description: "Save client details and have them auto-fill on new invoices — name, address, email, phone, tax ID",
+      badge: "Pro & Business"
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      ),
+      title: "Tax & Discounts",
+      description: "Apply percentage or fixed discounts, and configure tax rate with a custom label on every invoice",
+      badge: "Tax: Pro & Business · Discounts: All Plans"
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
         </svg>
       ),
@@ -244,9 +264,9 @@ function LandingPageInner() {
             </div>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               {[
-                { name: "FREE", price: "$0", desc: "Get started", features: ["5 invoices total", "PDF download", "Invoice history"] },
-                { name: "CREDIT PACKS", price: "From $4.99", desc: "Pay once, use anytime", features: ["10, 25, or 50 invoices", "Never expires", "Pro features included"], popular: true },
-                { name: "MONTHLY", price: "From $7/mo", desc: "For frequent users", features: ["Unlimited invoices", "Business profile", "Arabic support on Business"] },
+                { name: "FREE", price: "$0", desc: "Get started", features: ["5 invoices total", "PDF download", "Invoice history", "Discounts & line item units"] },
+                { name: "CREDIT PACKS", price: "From $4.99", desc: "Pay once, never expires", features: ["Starter $4.99 · 10 invoices (basic)", "Pro Pack $9.99 · 25 invoices + pro features", "Business Pack $17.99 · 50 invoices + all features"], popular: true },
+                { name: "MONTHLY", price: "From $7/mo", desc: "Unlimited invoices", features: ["Pro $7/mo · business profile, tax, customers", "Business $12/mo · Arabic PDF + all pro features", "Cancel anytime"] },
               ].map((plan, i) => (
                 <div key={i} className={`bg-slate-800/50 rounded-xl border ${plan.popular ? "border-blue-500/50 ring-2 ring-blue-500/20" : "border-slate-700/50"} p-6 relative`}>
                   {plan.popular && (
@@ -312,10 +332,10 @@ function LandingPageInner() {
             <p className="text-slate-500 text-sm text-center mb-5">Here's what you now have access to:</p>
             <ul className="space-y-2 mb-6">
               {(welcomePlan === "credits"
-                ? ["Unlimited invoice generation until credits run out", "Business profile & branding", "Digital signature", "Invoice history & editing", "Saved line items"]
+                ? ["10 invoices — never expire", "PDF download & invoice history", "Discounts (% or fixed)", "Line item units"]
                 : welcomePlan === "pro"
-                ? ["Unlimited invoices", "Business profile & branding", "Digital signature", "Invoice editing", "Saved line items (auto-fill when creating)"]
-                : ["Everything in Pro", "Arabic PDF support (RTL)", "Priority support", "Saved line items (auto-fill when creating)"]
+                ? ["Unlimited invoices", "Business profile & branding", "Digital signature", "Tax support (rate + custom label)", "Saved customers with autocomplete", "Saved line items with autocomplete", "Edit & re-download past invoices", "Line item units", "Priority email support"]
+                : ["Everything in Pro", "Arabic PDF support (RTL text rendering)", "Saved customers list", "Priority customer support"]
               ).map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
                   <svg className={`w-4 h-4 flex-shrink-0 mt-0.5 ${welcomePlan === "business" ? "text-purple-500" : "text-blue-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

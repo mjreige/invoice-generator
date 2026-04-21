@@ -110,9 +110,11 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Starter</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Digital signature</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved line items</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile & digital signature</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Tax support (rate + custom label)</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved line items & customers</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Edit & re-download past invoices</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Line item units</li>
                 </ul>
                 <button
                   onClick={() => handleBuy(PRICES.proPack, "proPack")}
@@ -133,7 +135,8 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Pro Pack</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support (RTL)</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved customers list</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Priority support</li>
                 </ul>
                 <button
@@ -168,9 +171,12 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Unlimited invoices</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Digital signature</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved line items</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile & digital signature</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Tax support (rate + custom label)</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved line items & customers</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Edit & re-download past invoices</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Line item units</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Priority email support</li>
                 </ul>
                 <button
                   onClick={() => handleBuy(PRICES.pro, "pro")}
@@ -189,8 +195,9 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Pro</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Priority support</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support (RTL)</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved customers list</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Priority customer support</li>
                 </ul>
                 <button
                   onClick={() => handleBuy(PRICES.business, "business")}

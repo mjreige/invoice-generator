@@ -310,7 +310,7 @@ export default function Pricing() {
                 <p className="text-slate-300 mt-2">For growing businesses</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {["Everything in Pro", "Arabic language support", "Saved customers list", "Priority customer support"].map(f => (
+                {["Everything in Pro", "Arabic PDF support (RTL text rendering)", "Saved customers list", "Priority customer support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300">{f}</span></li>
                 ))}
               </ul>
