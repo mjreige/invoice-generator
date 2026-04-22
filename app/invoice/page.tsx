@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
 import UpgradePopup from "@/components/UpgradePopup";
+import GuideMePopup from "@/components/GuideMePopup";
 
 type LineItem = {
   id: string;
@@ -79,6 +80,7 @@ function InvoicePageInner() {
   const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [arabicWarningOpen, setArabicWarningOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const [discountMode, setDiscountMode] = useState<"percent" | "fixed">("percent");
   const [discountValue, setDiscountValue] = useState("0");
@@ -558,8 +560,22 @@ function InvoicePageInner() {
       <div className="mx-auto w-full max-w-5xl">
         <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/95 shadow-2xl shadow-black/40 backdrop-blur">
           <div className="border-b border-slate-200/80 bg-gradient-to-b from-white to-slate-50 px-6 py-6 sm:px-8">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{isEditing ? "Edit invoice" : "Create invoice"}</h1>
-            <p className="mt-1 text-sm text-slate-600">{isEditing ? "Update the details and re-download the PDF." : "Fill out the details and export a clean PDF."}</p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{isEditing ? "Edit invoice" : "Create invoice"}</h1>
+                <p className="mt-1 text-sm text-slate-600">{isEditing ? "Update the details and re-download the PDF." : "Fill out the details and export a clean PDF."}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGuideOpen(true)}
+                className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition-colors mt-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Guide Me
+              </button>
+            </div>
           </div>
 
           <div className="space-y-8 px-6 py-6 sm:px-8 sm:py-8">
@@ -1048,6 +1064,7 @@ function InvoicePageInner() {
       )}
 
       <UpgradePopup show={upgradePopupOpen} onClose={() => setUpgradePopupOpen(false)} />
+      <GuideMePopup show={guideOpen} onClose={() => setGuideOpen(false)} />
     </main>
   );
 }
