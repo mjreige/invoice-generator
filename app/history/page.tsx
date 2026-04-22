@@ -35,6 +35,9 @@ export default function HistoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalInvoices, setTotalInvoices] = useState(0);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [filterCustomer, setFilterCustomer] = useState("");
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -47,10 +50,14 @@ export default function HistoryPage() {
       }
       const user = session.user;
 
-      const { count } = await supabase
+      let countQuery = supabase
         .from("invoices")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id);
+      if (filterCustomer.trim()) countQuery = countQuery.ilike("client_name", `%${filterCustomer.trim()}%`);
+      if (filterFrom) countQuery = countQuery.gte("due_date", filterFrom);
+      if (filterTo) countQuery = countQuery.lte("due_date", filterTo);
+      const { count } = await countQuery;
       setTotalInvoices(count || 0);
 
       let orderByColumn = "created_at";
@@ -66,18 +73,20 @@ export default function HistoryPage() {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
-      const { data, error } = await supabase
+      let dataQuery = supabase
         .from("invoices")
         .select("id, invoice_number, client_name, due_date, grand_total, created_at, subtotal, discount_type, discount_value")
-        .eq("user_id", user.id)
-        .order(orderByColumn, { ascending })
-        .range(from, to);
+        .eq("user_id", user.id);
+      if (filterCustomer.trim()) dataQuery = dataQuery.ilike("client_name", `%${filterCustomer.trim()}%`);
+      if (filterFrom) dataQuery = dataQuery.gte("due_date", filterFrom);
+      if (filterTo) dataQuery = dataQuery.lte("due_date", filterTo);
+      const { data, error } = await dataQuery.order(orderByColumn, { ascending }).range(from, to);
 
       if (!error && data) setInvoices(data as InvoiceRow[]);
       setLoading(false);
     };
     void load();
-  }, [router, currentPage, sortBy]);
+  }, [router, currentPage, sortBy, filterCustomer, filterFrom, filterTo]);
 
   const totalPages = Math.ceil(totalInvoices / itemsPerPage);
 
@@ -210,9 +219,9 @@ export default function HistoryPage() {
       <div className="mx-auto w-full max-w-5xl">
         <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/95 shadow-2xl shadow-black/40 backdrop-blur">
           <div className="border-b border-slate-200/80 bg-gradient-to-b from-white to-slate-50 px-6 py-6 sm:px-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Invoice history</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">My Invoices</h1>
                 <p className="mt-1 text-sm text-slate-600">View and download invoices you have generated.</p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -234,6 +243,45 @@ export default function HistoryPage() {
                   Back to home
                 </button>
               </div>
+            </div>
+            {/* Filters */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 block">Customer</label>
+                <input
+                  type="text"
+                  value={filterCustomer}
+                  onChange={(e) => { setFilterCustomer(e.target.value); setCurrentPage(1); }}
+                  placeholder="Filter by customer name…"
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 block">Due from</label>
+                <input
+                  type="date"
+                  value={filterFrom}
+                  onChange={(e) => { setFilterFrom(e.target.value); setCurrentPage(1); }}
+                  className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 block">Due to</label>
+                <input
+                  type="date"
+                  value={filterTo}
+                  onChange={(e) => { setFilterTo(e.target.value); setCurrentPage(1); }}
+                  className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+              {(filterCustomer || filterFrom || filterTo) && (
+                <button
+                  onClick={() => { setFilterCustomer(""); setFilterFrom(""); setFilterTo(""); setCurrentPage(1); }}
+                  className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition whitespace-nowrap"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           </div>
 

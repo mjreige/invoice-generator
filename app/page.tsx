@@ -5,11 +5,13 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
 import UpgradePopup from "@/components/UpgradePopup";
+import GuideMePopup from "@/components/GuideMePopup";
 
 function LandingPageInner() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [welcomePlan, setWelcomePlan] = useState<"pro" | "business" | "credits">("pro");
   const { canGenerateInvoice, invoiceCount, isActive, hasCredits, effectivePlan, loading, refresh } = useSubscription();
   const searchParams = useSearchParams();
@@ -19,6 +21,11 @@ function LandingPageInner() {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setIsLoggedIn(Boolean(user));
+      // Auto-show guide for new users (set by signup page)
+      if (user && typeof window !== "undefined" && localStorage.getItem("show_guide") === "true") {
+        localStorage.removeItem("show_guide");
+        setShowGuide(true);
+      }
     };
     void load();
 
@@ -28,6 +35,15 @@ function LandingPageInner() {
 
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // Also open guide from ?guide=true URL param (avatar link)
+  useEffect(() => {
+    if (searchParams.get("guide") === "true") {
+      setShowGuide(true);
+      router.replace("/", { scroll: false });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Show welcome modal after purchase and refresh subscription data
   useEffect(() => {
@@ -292,6 +308,7 @@ function LandingPageInner() {
       </footer>
 
       <UpgradePopup show={showUpgrade} onClose={() => setShowUpgrade(false)} />
+      <GuideMePopup show={showGuide} onClose={() => setShowGuide(false)} />
 
       {/* Welcome modal after purchase */}
       {showWelcome && (

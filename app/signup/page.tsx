@@ -123,6 +123,7 @@ export default function SignupPage() {
       return;
     }
 
+    if (typeof window !== "undefined") localStorage.setItem("show_guide", "true");
     setSignupSuccess(true);
   };
 

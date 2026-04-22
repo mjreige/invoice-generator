@@ -188,6 +188,9 @@ export default function AuthHeader() {
                     <a href="/history" className="flex items-center px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
                       My Invoices
                     </a>
+                    <a href="/?guide=true" className="flex items-center px-4 py-2.5 text-sm text-blue-400 hover:bg-white/5 hover:text-blue-300 transition-colors">
+                      Guide Me
+                    </a>
 
                     {/* Data */}
                     <div className="border-t border-white/5 mt-1 pt-1">

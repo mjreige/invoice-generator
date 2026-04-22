@@ -112,9 +112,9 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Starter</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile & digital signature</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Tax support (rate + custom label)</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved line items & customers</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Line item templates & my customers</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Edit & re-download past invoices</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Line item units</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Billable item units</li>
                 </ul>
                 <button
                   onClick={() => handleBuy(PRICES.proPack, "proPack")}
@@ -173,9 +173,9 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Unlimited invoices</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile & digital signature</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Tax support (rate + custom label)</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved line items & customers</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Line item templates & my customers</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Edit & re-download past invoices</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Line item units</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Billable item units</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Priority email support</li>
                 </ul>
                 <button

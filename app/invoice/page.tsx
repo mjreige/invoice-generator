@@ -77,6 +77,8 @@ function InvoicePageInner() {
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const { canGenerateInvoice, isActive, hasCredits, loading: subscriptionLoading, effectivePlan, refresh } = useSubscription();
   const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [arabicWarningOpen, setArabicWarningOpen] = useState(false);
 
   const [discountMode, setDiscountMode] = useState<"percent" | "fixed">("percent");
   const [discountValue, setDiscountValue] = useState("0");
@@ -521,14 +523,34 @@ function InvoicePageInner() {
     router.push(isEditing ? "/history" : "/");
   };
 
+  const hasArabicText = (text: string) =>
+    /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
+
   const handleGenerateClick = () => {
     if (subscriptionLoading) return;
     if (!canGenerateInvoice) {
       setUpgradePopupOpen(true);
-    } else {
-      setConfirmError(null);
-      setConfirmOpen(true);
+      return;
     }
+    // Validation
+    if (!clientName.trim()) {
+      setValidationError("Client name is required.");
+      return;
+    }
+    const hasValidItem = lineItems.some(li => li.description.trim());
+    if (!hasValidItem) {
+      setValidationError("At least one line item with a description is required.");
+      return;
+    }
+    setValidationError(null);
+    // Arabic detection — warn if not on Business plan
+    const arabicDetected = lineItems.some(li => hasArabicText(li.description));
+    if (arabicDetected && effectivePlan !== "business") {
+      setArabicWarningOpen(true);
+      return;
+    }
+    setConfirmError(null);
+    setConfirmOpen(true);
   };
 
   return (
@@ -814,6 +836,12 @@ function InvoicePageInner() {
               </div>
             </section>
 
+            {validationError && (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                {validationError}
+              </div>
+            )}
+
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
               <button
                 type="button"
@@ -895,27 +923,33 @@ function InvoicePageInner() {
                   </svg>
                 </button>
                 {lineItemsExpanded && (
-                  <div className="border-t border-slate-100">
-                    <div className="grid grid-cols-12 gap-1 bg-slate-50 px-3 py-2">
-                      <span className="col-span-4 text-xs font-semibold text-slate-400 uppercase tracking-wide">Description</span>
-                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">Qty</span>
-                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">Unit</span>
-                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Price</span>
-                      <span className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-right">Total</span>
-                    </div>
-                    {lineItems.filter(li => li.description || li.unitPrice).map((li, i) => {
-                      const qty = parseNumber(li.quantity) || 1;
-                      const unitPrice = parseNumber(li.unitPrice);
-                      return (
-                        <div key={i} className="grid grid-cols-12 gap-1 border-t border-slate-100 px-3 py-2 items-start">
-                          <span className="col-span-4 text-sm text-slate-800 break-words min-w-0">{li.description || "—"}</span>
-                          <span className="col-span-2 text-sm text-slate-600 text-center">{li.quantity}</span>
-                          <span className="col-span-2 text-sm text-slate-500 text-center">{li.unit || "—"}</span>
-                          <span className="col-span-2 text-sm text-slate-600 text-right">${formatMoney(unitPrice)}</span>
-                          <span className="col-span-2 text-sm font-semibold text-slate-800 text-right">${formatMoney(qty * unitPrice)}</span>
-                        </div>
-                      );
-                    })}
+                  <div className="border-t border-slate-100 overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-50">
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide min-w-[140px]">Description</th>
+                          <th className="px-3 py-2 text-center text-xs font-semibold text-slate-400 uppercase tracking-wide w-16">Qty</th>
+                          <th className="px-3 py-2 text-center text-xs font-semibold text-slate-400 uppercase tracking-wide w-20">Unit</th>
+                          <th className="px-3 py-2 text-right text-xs font-semibold text-slate-400 uppercase tracking-wide w-24">Price</th>
+                          <th className="px-3 py-2 text-right text-xs font-semibold text-slate-400 uppercase tracking-wide w-24">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lineItems.filter(li => li.description || li.unitPrice).map((li, i) => {
+                          const qty = parseNumber(li.quantity) || 1;
+                          const unitPrice = parseNumber(li.unitPrice);
+                          return (
+                            <tr key={i} className="border-t border-slate-100">
+                              <td className="px-3 py-2 text-slate-800">{li.description || "—"}</td>
+                              <td className="px-3 py-2 text-slate-600 text-center">{li.quantity}</td>
+                              <td className="px-3 py-2 text-slate-500 text-center">{li.unit || "—"}</td>
+                              <td className="px-3 py-2 text-slate-600 text-right">${formatMoney(unitPrice)}</td>
+                              <td className="px-3 py-2 font-semibold text-slate-800 text-right">${formatMoney(qty * unitPrice)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
@@ -973,6 +1007,40 @@ function InvoicePageInner() {
               <button type="button" onClick={() => setConfirmOpen(false)} className="h-10 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Cancel</button>
               <button type="button" onClick={confirmAndGenerate} className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg transition hover:brightness-105">
                 {isEditing ? "Update & Download" : "Confirm & Generate"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Arabic detected — upgrade prompt */}
+      {arabicWarningOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setArabicWarningOpen(false)} />
+          <div className="relative bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-sm p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-semibold text-slate-900">Arabic text detected</h3>
+            </div>
+            <p className="text-sm text-slate-600 mb-5 leading-relaxed">
+              Your line items contain Arabic text. Full Arabic PDF support with right-to-left (RTL) layout is available on the <strong>Business plan</strong>. You can still generate the invoice, but the layout may not render correctly.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => { setArabicWarningOpen(false); setUpgradePopupOpen(true); }}
+                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition"
+              >
+                Upgrade to Business
+              </button>
+              <button
+                onClick={() => { setArabicWarningOpen(false); setConfirmError(null); setConfirmOpen(true); }}
+                className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-700 font-medium text-sm hover:bg-slate-50 transition"
+              >
+                Generate anyway
               </button>
             </div>
           </div>
