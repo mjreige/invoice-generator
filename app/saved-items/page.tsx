@@ -110,8 +110,8 @@ export default function SavedItemsPage() {
                 </svg>
               </button>
               <div className="flex-1">
-                <h1 className="text-xl font-semibold text-slate-900">Saved Line Items</h1>
-                <p className="text-sm text-slate-500">Pre-saved items auto-fill in your invoices</p>
+                <h1 className="text-xl font-semibold text-slate-900">Line Item Templates</h1>
+                <p className="text-sm text-slate-500">Save your most-used billable items — they auto-suggest as you type on any new invoice</p>
               </div>
               <button onClick={() => router.push("/")} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -184,10 +184,10 @@ export default function ProfilePage() {
               </button>
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">
-                  Business Profile
+                  My Profile
                 </h1>
                 <p className="text-sm text-slate-500">
-                  Manage your business information for invoices.
+                  Set up your business branding, digital signature, and tax settings for every invoice
                 </p>
               </div>
             </div>

@@ -96,8 +96,8 @@ export default function UnitsPage() {
                 </svg>
               </button>
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-semibold text-slate-900">Preset Units</h1>
-                <p className="text-sm text-slate-500">Units available in the invoice line item dropdown</p>
+                <h1 className="text-xl font-semibold text-slate-900">Units</h1>
+                <p className="text-sm text-slate-500">Manage the units available in the line item dropdown when creating invoices</p>
               </div>
               <button onClick={() => router.push("/")} className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
