@@ -148,7 +148,7 @@ export default function AuthHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur overflow-visible">
+    <header className="fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur overflow-visible">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3 overflow-visible">
         <Link href="/" className="text-sm font-semibold text-white truncate">
   Invoice Generator

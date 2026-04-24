@@ -310,7 +310,7 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     });
 
     const itemHeight2 = descriptionLines.length * 5;
-    const otherY = y - itemHeight2 + 5;
+    const otherY = y - itemHeight2;
 
     renderText(doc, item.quantity, xQty, otherY, { font: "helvetica", fontSize: 9, align: "center" });
     if (item.unit) {

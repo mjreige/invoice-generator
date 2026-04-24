@@ -223,28 +223,13 @@ export default function Pricing() {
         </div>
 
 
-        {/* SUBSCRIPTIONS */}
-        <div className="mb-20">
+        {/* FREE PLAN */}
+        <div className="mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-white">Subscriptions</h2>
-            <p className="text-slate-400 mt-2">Unlimited invoices · Cancel anytime</p>
-            <div className="flex items-center justify-center gap-3 mt-5">
-              <span className={`text-sm font-medium ${!annual ? "text-white" : "text-slate-400"}`}>Monthly</span>
-              <button
-                type="button"
-                onClick={() => setAnnual(!annual)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${annual ? "bg-green-500" : "bg-slate-600"}`}
-              >
-                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${annual ? "translate-x-5" : "translate-x-0"}`} />
-              </button>
-              <span className={`text-sm font-medium ${annual ? "text-white" : "text-slate-400"}`}>
-                Annual
-                <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-green-500 text-white rounded-full">Save 10%</span>
-              </span>
-            </div>
+            <h2 className="text-2xl font-bold text-white">Free Plan</h2>
+            <p className="text-slate-400 mt-2">No credit card required · Get started instantly</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* FREE */}
+          <div className="max-w-sm mx-auto">
             <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-8">
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-white mb-2">FREE</h3>
@@ -265,6 +250,30 @@ export default function Pricing() {
                 <Link href="/signup" className="block w-full py-3 px-6 rounded-lg font-semibold text-center bg-slate-700 hover:bg-slate-600 text-white transition-colors">Get Started Free</Link>
               ) : null}
             </div>
+          </div>
+        </div>
+
+        {/* SUBSCRIPTIONS */}
+        <div className="mb-20">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-white">Subscriptions</h2>
+            <p className="text-slate-400 mt-2">Unlimited invoices · Cancel anytime</p>
+            <div className="flex items-center justify-center gap-3 mt-5">
+              <span className={`text-sm font-medium ${!annual ? "text-white" : "text-slate-400"}`}>Monthly</span>
+              <button
+                type="button"
+                onClick={() => setAnnual(!annual)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${annual ? "bg-green-500" : "bg-slate-600"}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${annual ? "translate-x-5" : "translate-x-0"}`} />
+              </button>
+              <span className={`text-sm font-medium ${annual ? "text-white" : "text-slate-400"}`}>
+                Annual
+                <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-green-500 text-white rounded-full">Save 10%</span>
+              </span>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
 
             {/* PRO */}
             <div className="relative bg-slate-800/50 rounded-2xl border border-blue-500/50 ring-2 ring-blue-500/20 p-8">

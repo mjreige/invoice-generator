@@ -43,6 +43,7 @@ export default function RootLayout({
       <body>
         <SubscriptionProvider>
           <AuthHeader />
+          <div className="h-[56px]" aria-hidden="true" />
           {children}
         </SubscriptionProvider>
         <script

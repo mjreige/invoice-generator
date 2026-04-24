@@ -4,11 +4,20 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
+import { openCheckout } from "@/lib/paddle";
 import UpgradePopup from "@/components/UpgradePopup";
 import GuideMePopup from "@/components/GuideMePopup";
 
+const HOME_PRICES = {
+  proPack: process.env.NEXT_PUBLIC_PADDLE_PRO_PACK_PRICE_ID || "pri_01km55kskn8sv6ea8hrg940h1p",
+  pro: process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || "pri_01kkshav4ehmnnwz4an3z07wes",
+  business: process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || "pri_01kkshe2hfk9jp508nyy8q081v",
+};
+
 function LandingPageInner() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [pricingLoadingId, setPricingLoadingId] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
@@ -21,6 +30,7 @@ function LandingPageInner() {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setIsLoggedIn(Boolean(user));
+      setCurrentUser(user ?? null);
       // Auto-show guide for new users (set by signup page)
       if (user && typeof window !== "undefined" && localStorage.getItem("show_guide") === "true") {
         localStorage.removeItem("show_guide");
@@ -71,6 +81,21 @@ function LandingPageInner() {
       return;
     }
     window.location.href = "/invoice";
+  };
+
+  const handlePricingBuy = async (priceId: string, id: string) => {
+    if (!currentUser?.email) {
+      router.push("/login?redirect=/pricing");
+      return;
+    }
+    setPricingLoadingId(id);
+    try {
+      await openCheckout(priceId, currentUser.email, currentUser.id);
+    } catch (err) {
+      console.error("Checkout error:", err);
+    } finally {
+      setPricingLoadingId(null);
+    }
   };
 
   const historyHref = isLoggedIn ? "/history" : "/login?redirect=/history";
@@ -265,34 +290,84 @@ function LandingPageInner() {
               <p className="mt-4 text-lg text-slate-300">Pay only for what you need — no forced subscriptions</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {[
-                { name: "FREE", price: "$0", desc: "Get started", features: ["5 invoices total", "PDF download", "My Invoices", "Discounts & line item units"] },
-                { name: "CREDIT PACKS", price: "From $4.99", desc: "Pay once, never expires", features: ["Starter $4.99 · 10 invoices (basic)", "Pro Pack $9.99 · 25 invoices + pro features", "Business Pack $17.99 · 50 invoices + all features"], popular: true },
-                { name: "MONTHLY", price: "From $7/mo", desc: "Unlimited invoices", features: ["Pro $7/mo · my profile, tax, customers", "Business $12/mo · Arabic PDF + all pro features", "Cancel anytime"] },
-              ].map((plan, i) => (
-                <div key={i} className={`bg-slate-800/50 rounded-xl border ${plan.popular ? "border-blue-500/50 ring-2 ring-blue-500/20" : "border-slate-700/50"} p-6 relative`}>
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Best Value</span>
-                    </div>
-                  )}
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-                    <p className="text-2xl font-bold text-white mt-1">{plan.price}</p>
-                    <p className="text-slate-400 text-sm">{plan.desc}</p>
-                  </div>
-                  <ul className="space-y-2">
-                    {plan.features.map((f, fi) => (
-                      <li key={fi} className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="text-slate-300 text-sm">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {/* FREE */}
+              <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6 flex flex-col">
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white">FREE</h3>
+                  <p className="text-2xl font-bold text-white mt-1">$0</p>
+                  <p className="text-slate-400 text-sm">Get started</p>
                 </div>
-              ))}
+                <ul className="space-y-2 mb-6 flex-1">
+                  {["5 invoices total", "PDF download", "My Invoices", "Discounts & line item units"].map((f, fi) => (
+                    <li key={fi} className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      <span className="text-slate-300 text-sm">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                {!isLoggedIn ? (
+                  <a href="/signup" className="block w-full py-2.5 rounded-lg font-semibold text-center bg-slate-700 hover:bg-slate-600 text-white transition-colors text-sm">Get Started Free</a>
+                ) : (
+                  <div className="w-full py-2.5 rounded-lg font-semibold text-center bg-slate-700/50 text-slate-400 text-sm cursor-default">Currently Active</div>
+                )}
+              </div>
+
+              {/* CREDIT PACKS */}
+              <div className="relative bg-slate-800/50 rounded-xl border border-blue-500/50 ring-2 ring-blue-500/20 p-6 flex flex-col">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Best Value</span>
+                </div>
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white">CREDIT PACKS</h3>
+                  <p className="text-2xl font-bold text-white mt-1">From $4.99</p>
+                  <p className="text-slate-400 text-sm">Pay once, never expires</p>
+                </div>
+                <ul className="space-y-2 mb-6 flex-1">
+                  {["Starter $4.99 · 10 invoices (basic)", "Pro Pack $9.99 · 25 invoices + pro features", "Business Pack $17.99 · 50 invoices + all features"].map((f, fi) => (
+                    <li key={fi} className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      <span className="text-slate-300 text-sm">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handlePricingBuy(HOME_PRICES.proPack, "proPack")}
+                  disabled={pricingLoadingId === "proPack"}
+                  className="block w-full py-2.5 rounded-lg font-semibold text-center bg-blue-500 hover:bg-blue-600 text-white transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {pricingLoadingId === "proPack" ? "Loading..." : "Buy Pro Pack — $9.99"}
+                </button>
+                <a href="/pricing" className="block text-center text-xs text-slate-400 hover:text-slate-300 mt-2 transition-colors">See all credit packs →</a>
+              </div>
+
+              {/* MONTHLY */}
+              <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6 flex flex-col">
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white">MONTHLY</h3>
+                  <p className="text-2xl font-bold text-white mt-1">From $7/mo</p>
+                  <p className="text-slate-400 text-sm">Unlimited invoices</p>
+                </div>
+                <ul className="space-y-2 mb-6 flex-1">
+                  {["Pro $7/mo · my profile, tax, customers", "Business $12/mo · Arabic PDF + all pro features", "Cancel anytime"].map((f, fi) => (
+                    <li key={fi} className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      <span className="text-slate-300 text-sm">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                {isActive ? (
+                  <div className="w-full py-2.5 rounded-lg font-semibold text-center bg-slate-600 text-slate-300 text-sm cursor-not-allowed">Active Subscription</div>
+                ) : (
+                  <button
+                    onClick={() => handlePricingBuy(HOME_PRICES.pro, "proMonthly")}
+                    disabled={pricingLoadingId === "proMonthly"}
+                    className="block w-full py-2.5 rounded-lg font-semibold text-center bg-slate-700 hover:bg-slate-600 text-white transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {pricingLoadingId === "proMonthly" ? "Loading..." : "Subscribe to Pro — $7/mo"}
+                  </button>
+                )}
+                <a href="/pricing" className="block text-center text-xs text-slate-400 hover:text-slate-300 mt-2 transition-colors">Compare all plans →</a>
+              </div>
             </div>
             <div className="text-center">
               <a href="/pricing" className="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors">
