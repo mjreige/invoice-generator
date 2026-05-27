@@ -95,8 +95,8 @@ function InvoicePageInner() {
   const descriptionRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const quantityRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [invalid, setInvalid] = useState<Record<string, boolean>>({});
-  const [savedItems, setSavedItems] = useState<{ description: string; unitPrice: string }[]>([]);
-  const [suggestions, setSuggestions] = useState<{ itemId: string; matches: { description: string; unitPrice: string }[] }>({ itemId: "", matches: [] });
+  const [savedItems, setSavedItems] = useState<{ description: string; unitPrice: string; currency?: string }[]>([]);
+  const [suggestions, setSuggestions] = useState<{ itemId: string; matches: { description: string; unitPrice: string; currency?: string }[] }>({ itemId: "", matches: [] });
   const hasSavedItems = effectivePlan === "pro" || effectivePlan === "business";
 
   useEffect(() => {
@@ -291,10 +291,16 @@ function InvoicePageInner() {
     }
   };
 
-  const applySuggestion = (itemId: string, suggestion: { description: string; unitPrice: string }) => {
-    updateLine(itemId, { description: suggestion.description, unitPrice: suggestion.unitPrice });
+  const applySuggestion = (itemId: string, suggestion: { description: string; unitPrice: string; currency?: string }) => {
+    const currencyMatches = !suggestion.currency || suggestion.currency === currency;
+    updateLine(itemId, {
+      description: suggestion.description,
+      unitPrice: currencyMatches ? suggestion.unitPrice : "",
+    });
     setSuggestions({ itemId: "", matches: [] });
-    setTimeout(() => quantityRefs.current[itemId]?.focus(), 50);
+    if (currencyMatches) {
+      setTimeout(() => quantityRefs.current[itemId]?.focus(), 50);
+    }
   };
 
   const autoSaveItem = async (description: string, unitPrice: string) => {
@@ -304,7 +310,7 @@ function InvoicePageInner() {
       // Pro/Business: only save if new item — prices are managed from /saved-items page
       const exists = savedItems.some(s => s.description.toLowerCase() === description.trim().toLowerCase());
       if (exists) return;
-      const updated = [...savedItems, { description: description.trim(), unitPrice: unitPrice || "" }];
+      const updated = [...savedItems, { description: description.trim(), unitPrice: unitPrice || "", currency }];
       setSavedItems(updated);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -772,7 +778,17 @@ function InvoicePageInner() {
                                   className={`grid grid-cols-12 w-full items-center gap-2 px-3 py-2 text-sm transition-colors text-left ${i === 0 ? "bg-blue-50 hover:bg-blue-100" : "hover:bg-slate-50"}`}
                                 >
                                   <span className="col-span-8 text-slate-900 truncate">{s.description}</span>
-                                  <span className="col-span-4 text-slate-500">{s.unitPrice ? s.unitPrice : <span className="text-slate-300">—</span>}</span>
+                                  <span className="col-span-4 text-right">
+                                    {s.unitPrice ? (
+                                      s.currency && s.currency !== currency ? (
+                                        <span className="text-amber-500 font-medium">{s.unitPrice} <span className="text-xs">{s.currency}</span></span>
+                                      ) : (
+                                        <span className="text-slate-500">{s.unitPrice}</span>
+                                      )
+                                    ) : (
+                                      <span className="text-slate-300">—</span>
+                                    )}
+                                  </span>
                                 </button>
                               ))}
                             </div>
@@ -801,7 +817,7 @@ function InvoicePageInner() {
                         </select>
                       </div>
                       <div className="col-span-5 sm:col-span-2">
-                        <div className={`flex h-10 w-full items-center rounded-xl border bg-white transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 ${invalid[`unit-${item.id}`] ? "border-rose-300" : "border-slate-200"}`}>
+                        <div className={`flex h-10 w-full items-center rounded-xl border bg-white transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 ${invalid[`unit-${item.id}`] ? "border-rose-300" : item.description.trim() && !item.unitPrice ? "border-amber-400" : "border-slate-200"}`}>
                           <span className="pointer-events-none pl-3 text-sm text-slate-500 flex-shrink-0">{getCurrencySymbol(currency)}</span>
                           <input
                             inputMode="decimal"
