@@ -116,7 +116,7 @@ function LandingPageInner() {
       ),
       title: "Arabic Language Support",
       description: "Full Arabic language support with RTL text rendering in PDF",
-      badge: "Business"
+      badge: "Max Pack & Business"
     },
     {
       icon: (
@@ -126,7 +126,7 @@ function LandingPageInner() {
       ),
       title: "My Profile",
       description: "Add your business details and custom branding to every invoice",
-      badge: "Pro & Business"
+      badge: "Plus Pack & above"
     },
     {
       icon: (
@@ -136,7 +136,7 @@ function LandingPageInner() {
       ),
       title: "Digital Signature",
       description: "Add professional digital signatures to your invoices",
-      badge: "Pro & Business"
+      badge: "Plus Pack & above"
     },
     {
       icon: (
@@ -145,8 +145,8 @@ function LandingPageInner() {
         </svg>
       ),
       title: "My Invoices",
-      description: "Track all your invoices in one place. Pro users can edit and re-download any past invoice as an updated PDF",
-      badge: "View: All Plans · Edit: Pro & Business"
+      description: "Track all your invoices in one place. Plus Pack and above users can also edit and re-download any past invoice as an updated PDF",
+      badge: "View: All Plans · Edit: Plus Pack & above"
     },
     {
       icon: (
@@ -156,7 +156,7 @@ function LandingPageInner() {
       ),
       title: "Line Item Templates",
       description: "Save your most-used services with preset prices — they auto-fill when creating new invoices",
-      badge: "Pro & Business"
+      badge: "Plus Pack & above"
     },
     {
       icon: (
@@ -166,7 +166,7 @@ function LandingPageInner() {
       ),
       title: "My Customers",
       description: "Save client details and have them auto-fill on new invoices — name, address, email, phone, tax ID",
-      badge: "Pro & Business"
+      badge: "Plus Pack & above"
     },
     {
       icon: (
@@ -176,7 +176,7 @@ function LandingPageInner() {
       ),
       title: "Tax & Discounts",
       description: "Apply percentage or fixed discounts, and configure tax rate with a custom label on every invoice",
-      badge: "Tax: Pro & Business · Discounts: All Plans"
+      badge: "Tax: Plus Pack & above · Discounts: All Plans"
     },
     {
       icon: (
@@ -196,7 +196,7 @@ function LandingPageInner() {
       ),
       title: "Multi-Currency",
       description: "Invoice in 25+ currencies — USD, EUR, GBP, AED, LBP, and more. Set a default currency in your profile",
-      badge: "Pro & Business"
+      badge: "Plus Pack & above"
     },
     {
       icon: (
@@ -206,7 +206,7 @@ function LandingPageInner() {
       ),
       title: "Custom Units",
       description: "Define your own billable units — hours, days, words, sessions, or anything your business uses",
-      badge: "Pro & Business"
+      badge: "Plus Pack & above"
     }
   ];
 
