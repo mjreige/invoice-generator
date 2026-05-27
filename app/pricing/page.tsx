@@ -147,6 +147,7 @@ export default function Pricing() {
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white">Pay As You Go</h2>
             <p className="text-slate-400 mt-2">One-time purchase · No subscription · Never expires</p>
+            <p className="text-slate-500 text-xs mt-2">Automation features (reminders, recurring invoices) require a monthly plan.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {/* Starter */}
@@ -207,7 +208,7 @@ export default function Pricing() {
                 <div className="text-xs text-slate-400">$0.40 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
-                {["Everything in Pro Pack", "Arabic PDF support (RTL text rendering)", "Multi-currency invoicing (25+ currencies)", "Priority support"].map(f => (
+                {["Everything in Pro Pack", "Arabic PDF support (RTL text rendering)", "Priority support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300 text-sm">{f}</span></li>
                 ))}
               </ul>
@@ -319,7 +320,7 @@ export default function Pricing() {
                 <p className="text-slate-300 mt-2">For growing businesses</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {["Everything in Pro", "Arabic PDF support (RTL text rendering)", "Multi-currency invoicing (25+ currencies)", "Priority customer support"].map(f => (
+                {["Everything in Pro", "Arabic PDF support (RTL text rendering)", "Priority customer support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300">{f}</span></li>
                 ))}
               </ul>
