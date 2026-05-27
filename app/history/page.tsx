@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
+import { getCurrencySymbol } from "@/lib/currencies";
 import type { LineItemForPdf } from "@/lib/types";
 
 type InvoiceRow = {
@@ -19,6 +20,7 @@ type InvoiceRow = {
   discount_type: "percent" | "fixed" | null;
   discount_value: number | null;
   grand_total: number | null;
+  currency: string | null;
   created_at: string;
 };
 
@@ -75,7 +77,7 @@ export default function HistoryPage() {
 
       let dataQuery = supabase
         .from("invoices")
-        .select("id, invoice_number, client_name, due_date, grand_total, created_at, subtotal, discount_type, discount_value")
+        .select("id, invoice_number, client_name, due_date, grand_total, created_at, subtotal, discount_type, discount_value, currency")
         .eq("user_id", user.id);
       if (filterCustomer.trim()) dataQuery = dataQuery.ilike("client_name", `%${filterCustomer.trim()}%`);
       if (filterFrom) dataQuery = dataQuery.gte("due_date", filterFrom);
@@ -162,6 +164,7 @@ export default function HistoryPage() {
         grandTotal,
         businessProfile: profileData || undefined,
         plan,
+        currency: fullInvoice.currency ?? "USD",
       });
     } catch (err) {
       console.error("Download error:", err);
@@ -314,7 +317,7 @@ export default function HistoryPage() {
                         {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "—"}
                       </div>
                       <div className="sm:col-span-1 text-right text-sm font-semibold text-slate-900">
-                        ${formatMoney(getPreviewTotals(invoice).grandTotal)}
+                        {getCurrencySymbol(invoice.currency || "USD")}{formatMoney(getPreviewTotals(invoice).grandTotal)}
                       </div>
                       <div className="flex items-center gap-2 sm:col-span-4 sm:justify-end">
                         <button
@@ -397,8 +400,8 @@ export default function HistoryPage() {
                       <div key={`${previewInvoice.id}-${idx}`} className="grid grid-cols-12 items-center gap-1 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
                         <div className="col-span-5 text-sm font-medium text-slate-900">{li.description || "—"}</div>
                         <div className="col-span-2 text-center text-sm text-slate-800">{li.quantity || "—"}</div>
-                        <div className="col-span-2 text-right text-sm text-slate-800">{li.unitPrice ? `$${formatMoney(unit)}` : "—"}</div>
-                        <div className="col-span-3 text-right text-sm font-semibold text-slate-900">${formatMoney(rowTotal)}</div>
+                        <div className="col-span-2 text-right text-sm text-slate-800">{li.unitPrice ? `${getCurrencySymbol(previewInvoice.currency || "USD")}${formatMoney(unit)}` : "—"}</div>
+                        <div className="col-span-3 text-right text-sm font-semibold text-slate-900">{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(rowTotal)}</div>
                       </div>
                     );
                   })}
@@ -409,9 +412,9 @@ export default function HistoryPage() {
                 const { subtotal, discountAmount, grandTotal } = getPreviewTotals(previewInvoice);
                 return (
                   <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-                    <div className="flex items-center justify-between text-sm text-slate-700"><span>Subtotal</span><span className="font-semibold text-slate-900">${formatMoney(subtotal)}</span></div>
-                    <div className="mt-1 flex items-center justify-between text-sm text-slate-700"><span>Discount</span><span className="font-semibold text-rose-600">-${formatMoney(discountAmount)}</span></div>
-                    <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900"><span>Grand total</span><span>${formatMoney(grandTotal)}</span></div>
+                    <div className="flex items-center justify-between text-sm text-slate-700"><span>Subtotal</span><span className="font-semibold text-slate-900">{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(subtotal)}</span></div>
+                    <div className="mt-1 flex items-center justify-between text-sm text-slate-700"><span>Discount</span><span className="font-semibold text-rose-600">-{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(discountAmount)}</span></div>
+                    <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900"><span>Grand total</span><span>{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(grandTotal)}</span></div>
                   </div>
                 );
               })()}

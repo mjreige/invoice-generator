@@ -13,3 +13,5 @@ export type BusinessProfileForPdf = {
   signature_name?: string;
 };
 
+export type CurrencyCode = string; // ISO 4217
+

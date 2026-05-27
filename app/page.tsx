@@ -76,10 +76,7 @@ function LandingPageInner() {
       window.location.href = "/login?redirect=/invoice";
       return;
     }
-    if (!loading && !canGenerateInvoice) {
-      setShowUpgrade(true);
-      return;
-    }
+    // Soft wall: always let them into the form; upgrade prompt shows at confirm step
     window.location.href = "/invoice";
   };
 

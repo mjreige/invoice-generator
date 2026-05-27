@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import type { LineItemForPdf } from "./types";
 import ArabicReshaper from "arabic-reshaper";
+import { getCurrencySymbol } from "./currencies";
 
 // Cache the Amiri font base64 so it's only loaded once
 let amiriBase64Cache: string | null = null;
@@ -102,10 +103,12 @@ export type InvoiceForPdf = {
   taxLabel?: string;
   businessProfile?: BusinessProfileForPdf;
   plan?: "free" | "pro" | "business";
+  currency?: string;
 };
 
 export async function generateInvoicePdf(invoice: InvoiceForPdf) {
   const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+  const sym = getCurrencySymbol(invoice.currency || "USD");
 
   const enableArabic = !!invoice.businessProfile?.enable_arabic;
 
@@ -316,8 +319,8 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     if (item.unit) {
       renderText(doc, item.unit, xUnit, otherY, { font: "helvetica", fontSize: 9, align: "center" });
     }
-    renderText(doc, `$${unitPrice.toFixed(2)}`, xUnitPrice, otherY, { font: "helvetica", fontSize: 9, align: "right" });
-    renderText(doc, `$${total.toFixed(2)}`,     xTotalRight, otherY, { font: "helvetica", fontSize: 9, align: "right" });
+    renderText(doc, `${sym}${unitPrice.toFixed(2)}`, xUnitPrice, otherY, { font: "helvetica", fontSize: 9, align: "right" });
+    renderText(doc, `${sym}${total.toFixed(2)}`,     xTotalRight, otherY, { font: "helvetica", fontSize: 9, align: "right" });
     y += 5;
   });
 
@@ -341,18 +344,18 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
 
   if (hasBreakdown) {
     renderText(doc, "Subtotal", left, y, { font: "helvetica", fontSize: 10, align: "left" });
-    renderText(doc, `$${subtotal!.toFixed(2)}`, xTotalRight, y, { font: "helvetica", fontSize: 10, align: "right" });
+    renderText(doc, `${sym}${subtotal!.toFixed(2)}`, xTotalRight, y, { font: "helvetica", fontSize: 10, align: "right" });
     y += 6;
 
     if (hasDiscount) {
       renderText(doc, "Discount", left, y, { font: "helvetica", fontSize: 10, align: "left" });
-      renderText(doc, `($${discountAmount.toFixed(2)})`, xTotalRight, y, { font: "helvetica", fontSize: 10, align: "right" });
+      renderText(doc, `(${sym}${discountAmount.toFixed(2)})`, xTotalRight, y, { font: "helvetica", fontSize: 10, align: "right" });
       y += 6;
     }
 
     if (hasTaxLine) {
       renderText(doc, `${taxLabel} (${taxRate}%)`, left, y, { font: "helvetica", fontSize: 10, align: "left" });
-      renderText(doc, `$${taxAmount.toFixed(2)}`, xTotalRight, y, { font: "helvetica", fontSize: 10, align: "right" });
+      renderText(doc, `${sym}${taxAmount.toFixed(2)}`, xTotalRight, y, { font: "helvetica", fontSize: 10, align: "right" });
       y += 6;
     }
 
@@ -361,11 +364,11 @@ export async function generateInvoicePdf(invoice: InvoiceForPdf) {
     y += 7;
 
     renderText(doc, "Grand Total", left, y, { font: "helvetica", fontStyle: "bold", fontSize: 10, align: "left" });
-    renderText(doc, `$${grandTotal!.toFixed(2)}`, xTotalRight, y, { font: "helvetica", fontStyle: "bold", fontSize: 10, align: "right" });
+    renderText(doc, `${sym}${grandTotal!.toFixed(2)}`, xTotalRight, y, { font: "helvetica", fontStyle: "bold", fontSize: 10, align: "right" });
   } else {
     y += 4;
     renderText(doc, "Total", left, y, { font: "helvetica", fontStyle: "bold", fontSize: 10, align: "left" });
-    renderText(doc, `$${invoice.total.toFixed(2)}`, xTotalRight, y, { font: "helvetica", fontStyle: "bold", fontSize: 10, align: "right" });
+    renderText(doc, `${sym}${invoice.total.toFixed(2)}`, xTotalRight, y, { font: "helvetica", fontStyle: "bold", fontSize: 10, align: "right" });
   }
 
   // ── Signature ─────────────────────────────────────────────────────────────

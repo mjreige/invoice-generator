@@ -185,7 +185,7 @@ export default function Pricing() {
                 <div className="text-xs text-slate-400">$0.40 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
-                {["Everything in Starter", "Business profile", "Digital signature", "Line item templates", "Edit invoices", "Tax support", "My customers with autocomplete", "Billable item units"].map(f => (
+                {["Everything in Starter", "Multi-currency invoicing (25+ currencies)", "Business profile & digital signature", "Tax support (rate + custom label)", "Line item templates & my customers", "Edit & re-download past invoices", "Billable item units"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300 text-sm">{f}</span></li>
                 ))}
               </ul>
@@ -207,7 +207,7 @@ export default function Pricing() {
                 <div className="text-xs text-slate-400">$0.36 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
-                {["Everything in Pro Pack", "Arabic PDF support", "Priority support", "My customers list", "Tax support", "Billable item units"].map(f => (
+                {["Everything in Pro Pack", "Arabic PDF support (RTL text rendering)", "Multi-currency invoicing (25+ currencies)", "Priority support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300 text-sm">{f}</span></li>
                 ))}
               </ul>
@@ -269,7 +269,7 @@ export default function Pricing() {
               </button>
               <span className={`text-sm font-medium ${annual ? "text-white" : "text-slate-400"}`}>
                 Annual
-                <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-green-500 text-white rounded-full">Save 10%</span>
+                <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-green-500 text-white rounded-full">2 months free</span>
               </span>
             </div>
           </div>
@@ -288,7 +288,7 @@ export default function Pricing() {
                   <div>
                     <span className="text-4xl font-bold text-white">$75</span>
                     <span className="text-slate-400">/year</span>
-                    <div className="text-xs text-green-400 font-medium mt-1">$6.25/month · Save $9</div>
+                    <div className="text-xs text-green-400 font-medium mt-1">$6.25/month · 2 months free</div>
                   </div>
                 ) : (
                   <div><span className="text-4xl font-bold text-white">$7</span><span className="text-slate-400">/month</span></div>
@@ -296,7 +296,7 @@ export default function Pricing() {
                 <p className="text-slate-300 mt-2">For freelancers</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {["Unlimited invoices", "Business profile", "Digital signature", "Line item templates", "Edit invoices", "Tax support", "My customers with autocomplete", "Billable item units", "Priority email support"].map(f => (
+                {["Unlimited invoices", "Multi-currency invoicing (25+ currencies)", "Business profile & digital signature", "Tax support (rate + custom label)", "Line item templates & my customers", "Edit & re-download past invoices", "Billable item units", "Priority email support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300">{f}</span></li>
                 ))}
               </ul>
@@ -311,7 +311,7 @@ export default function Pricing() {
                   <div>
                     <span className="text-4xl font-bold text-purple-400">$129</span>
                     <span className="text-slate-400">/year</span>
-                    <div className="text-xs text-green-400 font-medium mt-1">$10.75/month · Save $15</div>
+                    <div className="text-xs text-green-400 font-medium mt-1">$10.75/month · 2 months free</div>
                   </div>
                 ) : (
                   <div><span className="text-4xl font-bold text-purple-400">$12</span><span className="text-slate-400">/month</span></div>
@@ -319,7 +319,7 @@ export default function Pricing() {
                 <p className="text-slate-300 mt-2">For growing businesses</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {["Everything in Pro", "Arabic PDF support (RTL text rendering)", "My customers list", "Priority customer support"].map(f => (
+                {["Everything in Pro", "Arabic PDF support (RTL text rendering)", "Multi-currency invoicing (25+ currencies)", "Priority customer support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300">{f}</span></li>
                 ))}
               </ul>

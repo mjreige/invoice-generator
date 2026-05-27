@@ -110,11 +110,11 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Starter</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Multi-currency invoicing (25+ currencies)</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile & digital signature</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Tax support (rate + custom label)</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Line item templates & my customers</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Edit & re-download past invoices</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Billable item units</li>
                 </ul>
                 <button
                   onClick={() => handleBuy(PRICES.proPack, "proPack")}
@@ -171,11 +171,11 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Unlimited invoices</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Multi-currency invoicing (25+ currencies)</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Business profile & digital signature</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Tax support (rate + custom label)</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Line item templates & my customers</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Edit & re-download past invoices</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Billable item units</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Priority email support</li>
                 </ul>
                 <button
@@ -195,8 +195,8 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Pro</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support (RTL)</li>
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Saved customers list</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support (RTL text rendering)</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Multi-currency invoicing (25+ currencies)</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Priority customer support</li>
                 </ul>
                 <button

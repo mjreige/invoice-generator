@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
+import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import UpgradePopup from "@/components/UpgradePopup";
 import GuideMePopup from "@/components/GuideMePopup";
 
@@ -82,6 +83,7 @@ function InvoicePageInner() {
   const [arabicWarningOpen, setArabicWarningOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
 
+  const [currency, setCurrency] = useState("USD");
   const [discountMode, setDiscountMode] = useState<"percent" | "fixed">("percent");
   const [discountValue, setDiscountValue] = useState("0");
 
@@ -117,6 +119,9 @@ function InvoicePageInner() {
         setUseHeader(!!businessProfileData.show_header);
         setUseSignature(!!(businessProfileData.include_signature && businessProfileData.signature_name));
         setUseTax(!!businessProfileData.tax_enabled && !!businessProfileData.tax_rate);
+        if (businessProfileData.default_currency) {
+          setCurrency(businessProfileData.default_currency);
+        }
       }
       if (businessProfileData?.saved_items?.length) {
         setSavedItems(businessProfileData.saved_items);
@@ -168,6 +173,7 @@ function InvoicePageInner() {
           setDiscountMode(existingInvoice.discount_type || "percent");
           setDiscountValue(existingInvoice.discount_value || "0");
           setUseTax((existingInvoice.tax_rate ?? 0) > 0);
+          if (existingInvoice.currency) setCurrency(existingInvoice.currency);
           if (existingInvoice.line_items?.length) {
             setLineItems(existingInvoice.line_items.map((item: any) => ({
               ...item,
@@ -415,6 +421,7 @@ function InvoicePageInner() {
           tax_rate: useTax && hasTax ? taxRate : 0,
           tax_amount: taxAmount,
           grand_total: grandTotal,
+          currency,
         })
         .eq("id", editId)
         .eq("user_id", user.id);
@@ -457,6 +464,7 @@ function InvoicePageInner() {
         tax_rate: useTax && hasTax ? taxRate : 0,
         tax_amount: taxAmount,
         grand_total: grandTotal,
+        currency,
       });
 
       if (insertError) {
@@ -517,6 +525,7 @@ function InvoicePageInner() {
       taxLabel: useTax && hasTax ? taxLabel : undefined,
       businessProfile: profileForPdf,
       plan: effectivePlan,
+      currency,
     });
 
     setConfirmOpen(false);
@@ -530,11 +539,7 @@ function InvoicePageInner() {
 
   const handleGenerateClick = () => {
     if (subscriptionLoading) return;
-    if (!canGenerateInvoice) {
-      setUpgradePopupOpen(true);
-      return;
-    }
-    // Validation
+    // Soft wall: validation runs first; upgrade shown inside the confirm modal
     if (!clientName.trim()) {
       setValidationError("Client name is required.");
       return;
@@ -606,7 +611,20 @@ function InvoicePageInner() {
                       onChange={(e) => setDueDate(e.target.value)}
                     />
                   </div>
-                  <div className="hidden sm:block" />
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Currency</label>
+                    <select
+                      className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
+                    >
+                      {CURRENCIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code} — {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -959,8 +977,8 @@ function InvoicePageInner() {
                               <td className="px-3 py-2 text-slate-800">{li.description || "—"}</td>
                               <td className="px-3 py-2 text-slate-600 text-center">{li.quantity}</td>
                               <td className="px-3 py-2 text-slate-500 text-center">{li.unit || "—"}</td>
-                              <td className="px-3 py-2 text-slate-600 text-right">${formatMoney(unitPrice)}</td>
-                              <td className="px-3 py-2 font-semibold text-slate-800 text-right">${formatMoney(qty * unitPrice)}</td>
+                              <td className="px-3 py-2 text-slate-600 text-right">{getCurrencySymbol(currency)}{formatMoney(unitPrice)}</td>
+                              <td className="px-3 py-2 font-semibold text-slate-800 text-right">{getCurrencySymbol(currency)}{formatMoney(qty * unitPrice)}</td>
                             </tr>
                           );
                         })}
@@ -1003,17 +1021,17 @@ function InvoicePageInner() {
               )}
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm">
-                <div className="flex items-center justify-between text-slate-700"><span>Subtotal</span><span className="font-semibold text-slate-900">${formatMoney(subtotal)}</span></div>
-                {discountAmount > 0 && <div className="mt-1 flex items-center justify-between text-slate-700"><span>Discount</span><span className="font-semibold text-rose-600">-${formatMoney(discountAmount)}</span></div>}
+                <div className="flex items-center justify-between text-slate-700"><span>Subtotal</span><span className="font-semibold text-slate-900">{getCurrencySymbol(currency)}{formatMoney(subtotal)}</span></div>
+                {discountAmount > 0 && <div className="mt-1 flex items-center justify-between text-slate-700"><span>Discount</span><span className="font-semibold text-rose-600">-{getCurrencySymbol(currency)}{formatMoney(discountAmount)}</span></div>}
                 {useTax && hasTax && taxAmount > 0 && (
                   <div className="mt-1 flex items-center justify-between text-slate-700">
                     <span>{taxLabel} ({taxRate}%)</span>
-                    <span className="font-semibold text-amber-700">+${formatMoney(taxAmount)}</span>
+                    <span className="font-semibold text-amber-700">+{getCurrencySymbol(currency)}{formatMoney(taxAmount)}</span>
                   </div>
                 )}
                 <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
                   <span>{discountAmount > 0 || (useTax && taxAmount > 0) ? "Grand Total" : "Total"}</span>
-                  <span>${formatMoney(grandTotal)}</span>
+                  <span>{getCurrencySymbol(currency)}{formatMoney(grandTotal)}</span>
                 </div>
               </div>
             </div>
@@ -1021,9 +1039,19 @@ function InvoicePageInner() {
 
             <div className="flex-shrink-0 flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-6 py-4">
               <button type="button" onClick={() => setConfirmOpen(false)} className="h-10 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">Cancel</button>
-              <button type="button" onClick={confirmAndGenerate} className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg transition hover:brightness-105">
-                {isEditing ? "Update & Download" : "Confirm & Generate"}
-              </button>
+              {!isEditing && !canGenerateInvoice ? (
+                <button
+                  type="button"
+                  onClick={() => { setConfirmOpen(false); setUpgradePopupOpen(true); }}
+                  className="h-10 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 text-sm font-semibold text-white shadow-lg transition hover:brightness-105"
+                >
+                  Upgrade to Download PDF
+                </button>
+              ) : (
+                <button type="button" onClick={confirmAndGenerate} className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg transition hover:brightness-105">
+                  {isEditing ? "Update & Download" : "Confirm & Generate"}
+                </button>
+              )}
             </div>
           </div>
         </div>

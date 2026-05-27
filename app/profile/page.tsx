@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
+import { CURRENCIES } from "@/lib/currencies";
 import { Lock } from "lucide-react";
 import Link from "next/link";
 
@@ -23,6 +24,7 @@ interface BusinessProfile {
   tax_enabled?: boolean;
   tax_rate?: number;
   tax_label?: string;
+  default_currency?: string;
 }
 
 function Toggle({
@@ -85,6 +87,7 @@ export default function ProfilePage() {
     tax_enabled: false,
     tax_rate: 0,
     tax_label: "",
+    default_currency: "USD",
   });
 
   useEffect(() => {
@@ -331,6 +334,24 @@ export default function ProfilePage() {
               <h3 className="text-sm font-semibold text-slate-900">
                 Invoice Options
               </h3>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  Default Currency
+                </label>
+                <select
+                  value={profile.default_currency || "USD"}
+                  onChange={(e) => set("default_currency", e.target.value)}
+                  disabled={isFree}
+                  className={inputClass(isFree).replace("px-4", "px-3")}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} — {c.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-400">Pre-fills the currency on every new invoice</p>
+              </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-700">
