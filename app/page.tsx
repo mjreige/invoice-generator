@@ -105,7 +105,7 @@ function LandingPageInner() {
         </svg>
       ),
       title: "Invoices Your Way",
-      description: "5 free invoices to start, then buy credit packs or subscribe monthly — no pressure",
+      description: "5 free invoices to start, then buy pay-as-you-go packs or subscribe monthly — no pressure",
       badge: "All Plans"
     },
     {
@@ -335,12 +335,12 @@ function LandingPageInner() {
                   <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Best Value</span>
                 </div>
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-bold text-white">CREDIT PACKS</h3>
+                  <h3 className="text-lg font-bold text-white">PAY AS YOU GO</h3>
                   <p className="text-2xl font-bold text-white mt-1">From $4.99</p>
                   <p className="text-slate-400 text-sm">Pay once, never expires</p>
                 </div>
                 <ul className="space-y-2 mb-6 flex-1">
-                  {["Starter $4.99 · 10 invoices (basic)", "Pro Pack $9.99 · 25 invoices + pro features", "Business Pack $19.99 · 50 invoices + all features"].map((f, fi) => (
+                  {["Starter $4.99 · 10 invoices (basic)", "Plus Pack $9.99 · 25 invoices + pro features", "Max Pack $19.99 · 50 invoices + all features"].map((f, fi) => (
                     <li key={fi} className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                       <span className="text-slate-300 text-sm">{f}</span>
@@ -352,9 +352,9 @@ function LandingPageInner() {
                   disabled={pricingLoadingId === "proPack"}
                   className="block w-full py-2.5 rounded-lg font-semibold text-center bg-blue-500 hover:bg-blue-600 text-white transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {pricingLoadingId === "proPack" ? "Loading..." : "Buy Pro Pack — $9.99"}
+                  {pricingLoadingId === "proPack" ? "Loading..." : "Buy Plus Pack — $9.99"}
                 </button>
-                <a href="/pricing" className="block text-center text-xs text-slate-400 hover:text-slate-300 mt-2 transition-colors">See all credit packs →</a>
+                <a href="/pricing" className="block text-center text-xs text-slate-400 hover:text-slate-300 mt-2 transition-colors">See all packs →</a>
               </div>
 
               {/* MONTHLY */}

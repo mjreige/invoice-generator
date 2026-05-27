@@ -172,7 +172,7 @@ export default function Pricing() {
               )}
             </div>
 
-            {/* Pro Pack */}
+            {/* Plus Pack */}
             <div className="relative bg-slate-800/50 rounded-2xl border border-blue-500/50 ring-2 ring-blue-500/20 p-6">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <div className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
@@ -180,7 +180,7 @@ export default function Pricing() {
                 </div>
               </div>
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-white">Pro Pack</h3>
+                <h3 className="text-xl font-bold text-white">Plus Pack</h3>
                 <div className="mt-2"><span className="text-3xl font-bold text-white">$9.99</span></div>
                 <div className="text-blue-400 font-semibold mt-1">25 invoices</div>
                 <div className="text-xs text-slate-400">$0.40 per invoice</div>
@@ -194,21 +194,21 @@ export default function Pricing() {
                 <Link href="/login?redirect=/pricing" className="block w-full py-2.5 rounded-lg font-semibold text-center bg-blue-500 hover:bg-blue-600 text-white transition-colors text-sm">Get Started</Link>
               ) : (
                 <button onClick={() => handleBuy(PRICES.proPack, "proPack")} disabled={loadingId === "proPack"} className="block w-full py-2.5 rounded-lg font-semibold text-center bg-blue-500 hover:bg-blue-600 text-white transition-colors text-sm disabled:opacity-70">
-                  {loadingId === "proPack" ? "Loading..." : "Buy Pro Pack"}
+                  {loadingId === "proPack" ? "Loading..." : "Buy Plus Pack"}
                 </button>
               )}
             </div>
 
-            {/* Business Pack */}
+            {/* Max Pack */}
             <div className="bg-slate-800/50 rounded-2xl border border-purple-500/30 p-6">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-white">Business Pack</h3>
+                <h3 className="text-xl font-bold text-white">Max Pack</h3>
                 <div className="mt-2"><span className="text-3xl font-bold text-white">$19.99</span></div>
                 <div className="text-purple-400 font-semibold mt-1">50 invoices</div>
                 <div className="text-xs text-slate-400">$0.40 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
-                {["Everything in Pro Pack", "Arabic PDF support (RTL text rendering)", "Priority support"].map(f => (
+                {["Everything in Plus Pack", "Arabic PDF support (RTL text rendering)", "Priority support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300 text-sm">{f}</span></li>
                 ))}
               </ul>
@@ -216,7 +216,7 @@ export default function Pricing() {
                 <Link href="/login?redirect=/pricing" className="block w-full py-2.5 rounded-lg font-semibold text-center bg-purple-600 hover:bg-purple-700 text-white transition-colors text-sm">Get Started</Link>
               ) : (
                 <button onClick={() => handleBuy(PRICES.businessPack, "businessPack")} disabled={loadingId === "businessPack"} className="block w-full py-2.5 rounded-lg font-semibold text-center bg-purple-600 hover:bg-purple-700 text-white transition-colors text-sm disabled:opacity-70">
-                  {loadingId === "businessPack" ? "Loading..." : "Buy Business Pack"}
+                  {loadingId === "businessPack" ? "Loading..." : "Buy Max Pack"}
                 </button>
               )}
             </div>

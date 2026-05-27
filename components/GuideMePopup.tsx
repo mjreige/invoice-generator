@@ -145,10 +145,10 @@ const steps = [
           {[
             ["Free", "bg-slate-100 text-slate-700", "5 invoices total — no card needed"],
             ["Starter Pack", "bg-amber-100 text-amber-700", "$4.99 · 10 credits, never expire"],
-            ["Pro Pack", "bg-blue-100 text-blue-700", "$9.99 · 25 credits + pro features"],
-            ["Business Pack", "bg-purple-100 text-purple-700", "$17.99 · 50 credits + all features"],
-            ["Pro Monthly", "bg-blue-100 text-blue-700", "$7/mo · unlimited invoices"],
-            ["Business Monthly", "bg-purple-100 text-purple-700", "$12/mo · unlimited + Arabic PDF"],
+            ["Plus Pack", "bg-blue-100 text-blue-700", "$9.99 · 25 credits + pro features"],
+            ["Max Pack", "bg-purple-100 text-purple-700", "$19.99 · 50 credits + all features"],
+            ["Pro Monthly", "bg-blue-100 text-blue-700", "$9/mo · unlimited invoices"],
+            ["Business Monthly", "bg-purple-100 text-purple-700", "$15/mo · unlimited + Arabic PDF"],
           ].map(([name, colors, desc]) => (
             <div key={name} className="flex items-center gap-2 text-sm">
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold flex-shrink-0 ${colors}`}>{name}</span>

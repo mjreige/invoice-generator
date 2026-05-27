@@ -98,13 +98,13 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </button>
               </div>
 
-              {/* Pro Pack */}
+              {/* Plus Pack */}
               <div className="relative bg-slate-700/50 rounded-xl border border-blue-500/50 ring-2 ring-blue-500/20 p-5">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Best Value</span>
                 </div>
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-bold text-white">Pro Pack</h3>
+                  <h3 className="text-lg font-bold text-white">Plus Pack</h3>
                   <div className="text-3xl font-bold text-white mt-1">$9.99</div>
                   <div className="text-blue-400 font-semibold mt-1">25 invoices</div>
                   <div className="text-xs text-slate-400 mt-1">$0.40 per invoice</div>
@@ -122,20 +122,20 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   disabled={loadingId === "proPack"}
                   className="w-full py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition disabled:opacity-50"
                 >
-                  {loadingId === "proPack" ? "Opening..." : "Buy Pro Pack"}
+                  {loadingId === "proPack" ? "Opening..." : "Buy Plus Pack"}
                 </button>
               </div>
 
-              {/* Business Pack */}
+              {/* Max Pack */}
               <div className="bg-slate-700/50 rounded-xl border border-purple-500/30 p-5">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-bold text-white">Business Pack</h3>
+                  <h3 className="text-lg font-bold text-white">Max Pack</h3>
                   <div className="text-3xl font-bold text-white mt-1">$19.99</div>
                   <div className="text-purple-400 font-semibold mt-1">50 invoices</div>
                   <div className="text-xs text-slate-400 mt-1">$0.40 per invoice</div>
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
-                  <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Pro Pack</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Plus Pack</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support (RTL)</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Priority support</li>
                 </ul>
@@ -144,7 +144,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   disabled={loadingId === "businessPack"}
                   className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition disabled:opacity-50"
                 >
-                  {loadingId === "businessPack" ? "Opening..." : "Buy Business Pack"}
+                  {loadingId === "businessPack" ? "Opening..." : "Buy Max Pack"}
                 </button>
               </div>
             </div>

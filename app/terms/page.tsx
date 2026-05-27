@@ -51,8 +51,8 @@ export default function TermsOfService() {
                 <p className="text-slate-300">Create up to 5 invoices total with basic features.</p>
               </div>
               <div className="bg-slate-700/30 rounded-lg p-4 mb-4">
-                <h3 className="font-semibold text-white mb-2">Credit Packs (One-time)</h3>
-                <p className="text-slate-300">Starter (10 invoices – $4.99), Pro Pack (25 invoices – $9.99), Business Pack (50 invoices – $17.99). Credits never expire.</p>
+                <h3 className="font-semibold text-white mb-2">Pay As You Go (One-time)</h3>
+                <p className="text-slate-300">Starter (10 invoices – $4.99), Plus Pack (25 invoices – $9.99), Max Pack (50 invoices – $19.99). Credits never expire.</p>
               </div>
               <div className="bg-slate-700/30 rounded-lg p-4 mb-4">
                 <h3 className="font-semibold text-white mb-2">Pro Plan – $7/month</h3>

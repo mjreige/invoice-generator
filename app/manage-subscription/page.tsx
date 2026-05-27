@@ -148,8 +148,8 @@ export default function ManageSubscriptionPage() {
                       "bg-slate-100 text-slate-700"
                     }`}>
                       {subStatus === "credits_only"
-                        ? subscription?.pack_type === "business_pack" ? "Business Pack"
-                          : subscription?.pack_type === "pro_pack" ? "Pro Pack"
+                        ? subscription?.pack_type === "business_pack" ? "Max Pack"
+                          : subscription?.pack_type === "pro_pack" ? "Plus Pack"
                           : "Starter Pack"
                         : plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Business"}
                     </span>
