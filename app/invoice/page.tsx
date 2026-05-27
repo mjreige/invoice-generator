@@ -772,7 +772,7 @@ function InvoicePageInner() {
                                   className={`grid grid-cols-12 w-full items-center gap-2 px-3 py-2 text-sm transition-colors text-left ${i === 0 ? "bg-blue-50 hover:bg-blue-100" : "hover:bg-slate-50"}`}
                                 >
                                   <span className="col-span-8 text-slate-900 truncate">{s.description}</span>
-                                  <span className="col-span-4 text-slate-500">{s.unitPrice ? `${getCurrencySymbol(currency)}${s.unitPrice}` : <span className="text-slate-300">—</span>}</span>
+                                  <span className="col-span-4 text-slate-500">{s.unitPrice ? s.unitPrice : <span className="text-slate-300">—</span>}</span>
                                 </button>
                               ))}
                             </div>
@@ -801,11 +801,11 @@ function InvoicePageInner() {
                         </select>
                       </div>
                       <div className="col-span-5 sm:col-span-2">
-                        <div className="relative">
-                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">{getCurrencySymbol(currency)}</span>
+                        <div className={`flex h-10 w-full items-center rounded-xl border bg-white transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 ${invalid[`unit-${item.id}`] ? "border-rose-300" : "border-slate-200"}`}>
+                          <span className="pointer-events-none pl-3 text-sm text-slate-500 flex-shrink-0">{getCurrencySymbol(currency)}</span>
                           <input
                             inputMode="decimal"
-                            className={`h-10 w-full rounded-xl border bg-white pl-7 pr-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-right ${invalid[`unit-${item.id}`] ? "border-rose-300" : "border-slate-200"}`}
+                            className="h-full flex-1 min-w-0 bg-transparent pr-3 pl-1 text-sm text-slate-900 outline-none sm:text-right"
                             value={item.unitPrice}
                             onChange={(e) => handleNumberChange(`unit-${item.id}`, e.target.value, (v) => updateLine(item.id, { unitPrice: v }))}
                             onBlur={(e) => { if (item.description.trim()) autoSaveItem(item.description, e.target.value); }}
@@ -817,7 +817,7 @@ function InvoicePageInner() {
                         <div className="flex items-center justify-between gap-2 sm:justify-end sm:pt-1">
                           <div className="text-sm font-semibold text-slate-900 sm:font-medium">
                             <span className="text-slate-500 sm:hidden">Row total: </span>
-                            ${formatMoney(rowTotals[index])}
+                            {getCurrencySymbol(currency)}{formatMoney(rowTotals[index])}
                           </div>
                           <button type="button" onClick={() => removeLine(item.id)} className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-700">×</button>
                         </div>
@@ -839,7 +839,7 @@ function InvoicePageInner() {
                     <div className="text-sm font-semibold text-slate-700">Discount</div>
                     <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 p-1 text-xs font-medium text-slate-600">
                       <button type="button" onClick={() => setDiscountMode("percent")} className={`rounded-full px-2.5 py-1 transition ${discountMode === "percent" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>%</button>
-                      <button type="button" onClick={() => setDiscountMode("fixed")} className={`rounded-full px-2.5 py-1 transition ${discountMode === "fixed" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>$</button>
+                      <button type="button" onClick={() => setDiscountMode("fixed")} className={`rounded-full px-2.5 py-1 transition ${discountMode === "fixed" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>{getCurrencySymbol(currency)}</button>
                     </div>
                   </div>
                   <div className="w-full sm:max-w-[160px]">
@@ -857,15 +857,15 @@ function InvoicePageInner() {
                   </div>
                 </div>
                 <div className="space-y-1 text-sm">
-                  <div className="flex items-center justify-between text-slate-700"><span>Subtotal</span><span>${formatMoney(subtotal)}</span></div>
-                  <div className="flex items-center justify-between text-slate-700"><span>Discount</span><span className="font-medium text-rose-600">-${formatMoney(discountAmount)}</span></div>
+                  <div className="flex items-center justify-between text-slate-700"><span>Subtotal</span><span>{getCurrencySymbol(currency)}{formatMoney(subtotal)}</span></div>
+                  <div className="flex items-center justify-between text-slate-700"><span>Discount</span><span className="font-medium text-rose-600">-{getCurrencySymbol(currency)}{formatMoney(discountAmount)}</span></div>
                   {useTax && hasTax && (
                     <div className="flex items-center justify-between text-slate-700">
                       <span>{taxLabel} ({taxRate}%)</span>
-                      <span className="font-medium text-amber-700">+${formatMoney(taxAmount)}</span>
+                      <span className="font-medium text-amber-700">+{getCurrencySymbol(currency)}{formatMoney(taxAmount)}</span>
                     </div>
                   )}
-                  <div className="mt-1 flex items-center justify-between text-base font-semibold text-slate-900"><span>Grand total</span><span>${formatMoney(grandTotal)}</span></div>
+                  <div className="mt-1 flex items-center justify-between text-base font-semibold text-slate-900"><span>Grand total</span><span>{getCurrencySymbol(currency)}{formatMoney(grandTotal)}</span></div>
                 </div>
               </div>
             </section>
