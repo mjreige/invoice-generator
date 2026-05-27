@@ -153,11 +153,10 @@ export default function SavedItemsPage() {
                 {items.length > 0 ? (
                   <div className="overflow-visible rounded-xl border border-slate-200">
                     {/* Header */}
-                    <div className="grid grid-cols-12 gap-2 bg-slate-100 px-3 py-2">
-                      <span className="col-span-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</span>
-                      <span className="col-span-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Price</span>
-                      <span className="col-span-1 text-xs font-semibold text-slate-500 uppercase tracking-wide">Cur.</span>
-                      <span className="col-span-3" />
+                    <div className="flex items-center gap-2 bg-slate-100 px-3 py-2">
+                      <span className="flex-1 text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</span>
+                      <span className="w-28 text-xs font-semibold text-slate-500 uppercase tracking-wide">Price</span>
+                      <span className="w-16" />
                     </div>
                     {items.map((item, i) => (
                       <div key={i} className="border-t border-slate-100">
@@ -172,10 +171,10 @@ export default function SavedItemsPage() {
                               placeholder="Description"
                             />
                             <div className="flex gap-2">
-                              <div className="flex h-9 flex-1 items-center rounded-lg border border-blue-300 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 overflow-hidden">
+                              <div className="flex h-9 flex-1 items-center rounded-lg border border-blue-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
                                 <span className="pl-2 text-sm text-slate-500 flex-shrink-0">{getCurrencySymbol(editCurrency)}</span>
                                 <input
-                                  className="h-full flex-1 min-w-0 bg-transparent px-2 text-sm text-slate-900 outline-none"
+                                  className="h-full flex-1 min-w-0 bg-transparent pl-1 pr-2 text-sm text-slate-900 outline-none"
                                   value={editPrice}
                                   onChange={(e) => setEditPrice(e.target.value)}
                                   placeholder="0.00"
@@ -200,15 +199,16 @@ export default function SavedItemsPage() {
                             </div>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-12 items-center gap-2 bg-white px-3 py-2.5 hover:bg-slate-50 transition-colors">
-                            <span className="col-span-5 text-sm text-slate-900 truncate">{item.description}</span>
-                            <span className="col-span-3 text-sm text-slate-500">
-                              {item.unitPrice
-                                ? <>{getCurrencySymbol(item.currency || "USD")}{item.unitPrice}</>
-                                : <span className="text-slate-300">—</span>}
+                          <div className="flex items-center gap-2 bg-white px-3 py-2.5 hover:bg-slate-50 transition-colors">
+                            <span className="flex-1 min-w-0 text-sm text-slate-900 truncate">{item.description}</span>
+                            <span className="w-28 flex-shrink-0 text-sm text-slate-500">
+                              {item.unitPrice ? (
+                                <>{getCurrencySymbol(item.currency || "USD")}{item.unitPrice} <span className="text-xs text-slate-400">{item.currency || "USD"}</span></>
+                              ) : (
+                                <span className="text-slate-300">—</span>
+                              )}
                             </span>
-                            <span className="col-span-1 text-xs text-slate-400">{item.currency || "USD"}</span>
-                            <div className="col-span-3 flex items-center justify-end gap-1">
+                            <div className="flex flex-shrink-0 items-center gap-1">
                               <button onClick={() => startEdit(i)} className="h-7 rounded-lg border border-slate-200 px-2.5 text-xs text-slate-600 hover:bg-slate-100 transition">
                                 Edit
                               </button>
@@ -236,8 +236,8 @@ export default function SavedItemsPage() {
                     placeholder="Item description"
                     className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
-                  <div className="flex w-full gap-2">
-                    <div className="flex h-10 flex-1 items-center rounded-xl border border-slate-200 bg-slate-50 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 overflow-hidden">
+                  <div className="flex gap-2">
+                    <div className="flex h-10 flex-1 items-center rounded-xl border border-slate-200 bg-slate-50 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
                       <span className="pl-3 text-sm text-slate-500 flex-shrink-0">{getCurrencySymbol(newCurrency)}</span>
                       <input
                         type="text"
@@ -245,7 +245,7 @@ export default function SavedItemsPage() {
                         onChange={(e) => setNewPrice(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
                         placeholder="0.00"
-                        className="h-full flex-1 min-w-0 bg-transparent px-2 text-sm text-slate-900 outline-none"
+                        className="h-full flex-1 min-w-0 bg-transparent pl-1 pr-3 text-sm text-slate-900 outline-none"
                       />
                     </div>
                     <select
@@ -257,15 +257,15 @@ export default function SavedItemsPage() {
                         <option key={c.code} value={c.code}>{c.code}</option>
                       ))}
                     </select>
-                    <button
-                      type="button"
-                      onClick={handleAdd}
-                      disabled={saving || !newDesc.trim()}
-                      className="h-10 flex-shrink-0 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {saving ? "Adding…" : "Add Item"}
-                    </button>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleAdd}
+                    disabled={saving || !newDesc.trim()}
+                    className="h-10 w-full rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {saving ? "Adding…" : "Add Item"}
+                  </button>
                 </div>
               </>
             )}
