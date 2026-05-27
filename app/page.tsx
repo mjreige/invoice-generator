@@ -341,11 +341,11 @@ function LandingPageInner() {
               <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6 flex flex-col">
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-bold text-white">MONTHLY</h3>
-                  <p className="text-2xl font-bold text-white mt-1">From $7/mo</p>
+                  <p className="text-2xl font-bold text-white mt-1">From $9/mo</p>
                   <p className="text-slate-400 text-sm">Unlimited invoices</p>
                 </div>
                 <ul className="space-y-2 mb-6 flex-1">
-                  {["Pro $7/mo · my profile, tax, customers", "Business $12/mo · Arabic PDF + all pro features", "Cancel anytime"].map((f, fi) => (
+                  {["Pro $9/mo · my profile, tax, customers", "Business $15/mo · Arabic PDF + all pro features", "Cancel anytime"].map((f, fi) => (
                     <li key={fi} className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                       <span className="text-slate-300 text-sm">{f}</span>
@@ -360,7 +360,7 @@ function LandingPageInner() {
                     disabled={pricingLoadingId === "proMonthly"}
                     className="block w-full py-2.5 rounded-lg font-semibold text-center bg-slate-700 hover:bg-slate-600 text-white transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {pricingLoadingId === "proMonthly" ? "Loading..." : "Subscribe to Pro — $7/mo"}
+                    {pricingLoadingId === "proMonthly" ? "Loading..." : "Subscribe to Pro — $9/mo"}
                   </button>
                 )}
                 <a href="/pricing" className="block text-center text-xs text-slate-400 hover:text-slate-300 mt-2 transition-colors">Compare all plans →</a>

@@ -145,7 +145,7 @@ export default function Pricing() {
         {/* CREDIT PACKS */}
         <div className="mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-white">Invoice Credit Packs</h2>
+            <h2 className="text-2xl font-bold text-white">Pay As You Go</h2>
             <p className="text-slate-400 mt-2">One-time purchase · No subscription · Never expires</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -202,9 +202,9 @@ export default function Pricing() {
             <div className="bg-slate-800/50 rounded-2xl border border-purple-500/30 p-6">
               <div className="text-center mb-6">
                 <h3 className="text-xl font-bold text-white">Business Pack</h3>
-                <div className="mt-2"><span className="text-3xl font-bold text-white">$17.99</span></div>
+                <div className="mt-2"><span className="text-3xl font-bold text-white">$19.99</span></div>
                 <div className="text-purple-400 font-semibold mt-1">50 invoices</div>
-                <div className="text-xs text-slate-400">$0.36 per invoice</div>
+                <div className="text-xs text-slate-400">$0.40 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
                 {["Everything in Pro Pack", "Arabic PDF support (RTL text rendering)", "Multi-currency invoicing (25+ currencies)", "Priority support"].map(f => (
@@ -256,7 +256,7 @@ export default function Pricing() {
         {/* SUBSCRIPTIONS */}
         <div className="mb-20">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-white">Subscriptions</h2>
+            <h2 className="text-2xl font-bold text-white">Unlimited Access</h2>
             <p className="text-slate-400 mt-2">Unlimited invoices · Cancel anytime</p>
             <div className="flex items-center justify-center gap-3 mt-5">
               <span className={`text-sm font-medium ${!annual ? "text-white" : "text-slate-400"}`}>Monthly</span>
@@ -286,12 +286,12 @@ export default function Pricing() {
                 <h3 className="text-2xl font-bold text-white mb-2">PRO</h3>
                 {annual ? (
                   <div>
-                    <span className="text-4xl font-bold text-white">$75</span>
+                    <span className="text-4xl font-bold text-white">$89</span>
                     <span className="text-slate-400">/year</span>
-                    <div className="text-xs text-green-400 font-medium mt-1">$6.25/month · 2 months free</div>
+                    <div className="text-xs text-green-400 font-medium mt-1">$7.42/month · 2 months free</div>
                   </div>
                 ) : (
-                  <div><span className="text-4xl font-bold text-white">$7</span><span className="text-slate-400">/month</span></div>
+                  <div><span className="text-4xl font-bold text-white">$9</span><span className="text-slate-400">/month</span></div>
                 )}
                 <p className="text-slate-300 mt-2">For freelancers</p>
               </div>
@@ -309,12 +309,12 @@ export default function Pricing() {
                 <h3 className="text-2xl font-bold text-white mb-2">BUSINESS</h3>
                 {annual ? (
                   <div>
-                    <span className="text-4xl font-bold text-purple-400">$129</span>
+                    <span className="text-4xl font-bold text-purple-400">$149</span>
                     <span className="text-slate-400">/year</span>
-                    <div className="text-xs text-green-400 font-medium mt-1">$10.75/month · 2 months free</div>
+                    <div className="text-xs text-green-400 font-medium mt-1">$12.42/month · 2 months free</div>
                   </div>
                 ) : (
-                  <div><span className="text-4xl font-bold text-purple-400">$12</span><span className="text-slate-400">/month</span></div>
+                  <div><span className="text-4xl font-bold text-purple-400">$15</span><span className="text-slate-400">/month</span></div>
                 )}
                 <p className="text-slate-300 mt-2">For growing businesses</p>
               </div>

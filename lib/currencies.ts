@@ -24,6 +24,7 @@ export const CURRENCIES = [
   { code: "OMR", symbol: "OMR",  name: "Omani Rial" },
   { code: "EGP", symbol: "EGP",  name: "Egyptian Pound" },
   { code: "MAD", symbol: "MAD",  name: "Moroccan Dirham" },
+  { code: "LBP", symbol: "LL",   name: "Lebanese Pound" },
 ];
 
 export function getCurrencySymbol(code: string): string {

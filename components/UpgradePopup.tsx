@@ -167,7 +167,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 </div>
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-bold text-white">Pro</h3>
-                  <div><span className="text-3xl font-bold text-white">$7</span><span className="text-slate-400">/month</span></div>
+                  <div><span className="text-3xl font-bold text-white">$9</span><span className="text-slate-400">/month</span></div>
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Unlimited invoices</li>
@@ -191,7 +191,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
               <div className="bg-slate-700/50 rounded-xl border border-purple-500/30 p-5">
                 <div className="text-center mb-4">
                   <h3 className="text-lg font-bold text-white">Business</h3>
-                  <div><span className="text-3xl font-bold text-white">$12</span><span className="text-slate-400">/month</span></div>
+                  <div><span className="text-3xl font-bold text-white">$15</span><span className="text-slate-400">/month</span></div>
                 </div>
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Pro</li>
