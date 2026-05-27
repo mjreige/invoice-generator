@@ -772,7 +772,7 @@ function InvoicePageInner() {
                                   className={`grid grid-cols-12 w-full items-center gap-2 px-3 py-2 text-sm transition-colors text-left ${i === 0 ? "bg-blue-50 hover:bg-blue-100" : "hover:bg-slate-50"}`}
                                 >
                                   <span className="col-span-8 text-slate-900 truncate">{s.description}</span>
-                                  <span className="col-span-4 text-slate-500">{s.unitPrice ? `$${s.unitPrice}` : <span className="text-slate-300">—</span>}</span>
+                                  <span className="col-span-4 text-slate-500">{s.unitPrice ? `${getCurrencySymbol(currency)}${s.unitPrice}` : <span className="text-slate-300">—</span>}</span>
                                 </button>
                               ))}
                             </div>
@@ -802,7 +802,7 @@ function InvoicePageInner() {
                       </div>
                       <div className="col-span-5 sm:col-span-2">
                         <div className="relative">
-                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">$</span>
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">{getCurrencySymbol(currency)}</span>
                           <input
                             inputMode="decimal"
                             className={`h-10 w-full rounded-xl border bg-white pl-7 pr-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-right ${invalid[`unit-${item.id}`] ? "border-rose-300" : "border-slate-200"}`}
@@ -845,7 +845,7 @@ function InvoicePageInner() {
                   <div className="w-full sm:max-w-[160px]">
                     <div className="relative">
                       {discountMode === "percent" && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">%</span>}
-                      {discountMode === "fixed" && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">$</span>}
+                      {discountMode === "fixed" && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{getCurrencySymbol(currency)}</span>}
                       <input
                         inputMode="decimal"
                         className={`h-10 w-full rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 ${discountMode === "fixed" ? "pl-7 pr-3 text-left" : "pl-3 pr-7 text-right"}`}
