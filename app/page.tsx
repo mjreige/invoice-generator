@@ -145,8 +145,8 @@ function LandingPageInner() {
         </svg>
       ),
       title: "My Invoices",
-      description: "Track all your invoices and edit any past invoice to re-download an updated PDF",
-      badge: "All Plans"
+      description: "Track all your invoices in one place. Pro users can edit and re-download any past invoice as an updated PDF",
+      badge: "View: All Plans · Edit: Pro & Business"
     },
     {
       icon: (
@@ -187,6 +187,26 @@ function LandingPageInner() {
       title: "PDF Export",
       description: "Download professional PDF invoices ready to send to clients",
       badge: "All Plans"
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 9l3-1m-3 1l-3-9m3 9l-6 2m0-2l3-9m0 0L9 5m6 2l-3-1" />
+        </svg>
+      ),
+      title: "Multi-Currency",
+      description: "Invoice in 25+ currencies — USD, EUR, GBP, AED, LBP, and more. Set a default currency in your profile",
+      badge: "Pro & Business"
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+      ),
+      title: "Custom Units",
+      description: "Define your own billable units — hours, days, words, sessions, or anything your business uses",
+      badge: "Pro & Business"
     }
   ];
 
@@ -320,7 +340,7 @@ function LandingPageInner() {
                   <p className="text-slate-400 text-sm">Pay once, never expires</p>
                 </div>
                 <ul className="space-y-2 mb-6 flex-1">
-                  {["Starter $4.99 · 10 invoices (basic)", "Pro Pack $9.99 · 25 invoices + pro features", "Business Pack $17.99 · 50 invoices + all features"].map((f, fi) => (
+                  {["Starter $4.99 · 10 invoices (basic)", "Pro Pack $9.99 · 25 invoices + pro features", "Business Pack $19.99 · 50 invoices + all features"].map((f, fi) => (
                     <li key={fi} className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                       <span className="text-slate-300 text-sm">{f}</span>
