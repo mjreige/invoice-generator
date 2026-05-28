@@ -292,7 +292,8 @@ function InvoicePageInner() {
   };
 
   const applySuggestion = (itemId: string, suggestion: { description: string; unitPrice: string; currency?: string }) => {
-    const currencyMatches = !suggestion.currency || suggestion.currency === currency;
+    const savedCurrency = suggestion.currency || "USD";
+    const currencyMatches = savedCurrency === currency;
     updateLine(itemId, {
       description: suggestion.description,
       unitPrice: currencyMatches ? suggestion.unitPrice : "",

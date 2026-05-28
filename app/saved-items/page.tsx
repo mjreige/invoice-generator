@@ -153,10 +153,8 @@ export default function SavedItemsPage() {
                 {items.length > 0 ? (
                   <div className="overflow-visible rounded-xl border border-slate-200">
                     {/* Header */}
-                    <div className="flex items-center gap-2 bg-slate-100 px-3 py-2">
-                      <span className="flex-1 text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</span>
-                      <span className="w-28 text-xs font-semibold text-slate-500 uppercase tracking-wide">Price</span>
-                      <span className="w-16" />
+                    <div className="bg-slate-100 px-3 py-2">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description · Price · Actions</span>
                     </div>
                     {items.map((item, i) => (
                       <div key={i} className="border-t border-slate-100">
@@ -199,22 +197,24 @@ export default function SavedItemsPage() {
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 bg-white px-3 py-2.5 hover:bg-slate-50 transition-colors">
-                            <span className="flex-1 min-w-0 text-sm text-slate-900 truncate">{item.description}</span>
-                            <span className="w-28 flex-shrink-0 text-sm text-slate-500">
-                              {item.unitPrice ? (
-                                <>{getCurrencySymbol(item.currency || "USD")}{item.unitPrice} <span className="text-xs text-slate-400">{item.currency || "USD"}</span></>
-                              ) : (
-                                <span className="text-slate-300">—</span>
-                              )}
-                            </span>
-                            <div className="flex flex-shrink-0 items-center gap-1">
-                              <button onClick={() => startEdit(i)} className="h-7 rounded-lg border border-slate-200 px-2.5 text-xs text-slate-600 hover:bg-slate-100 transition">
-                                Edit
-                              </button>
-                              <button onClick={() => handleDelete(i)} className="h-7 rounded-lg border border-rose-200 px-2.5 text-xs text-rose-500 hover:bg-rose-50 transition">
-                                ✕
-                              </button>
+                          <div className="bg-white px-3 py-2.5 hover:bg-slate-50 transition-colors">
+                            <span className="block text-sm text-slate-900 truncate mb-1">{item.description}</span>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-sm text-slate-500">
+                                {item.unitPrice ? (
+                                  <>{getCurrencySymbol(item.currency || "USD")}{item.unitPrice} <span className="text-xs text-slate-400">{item.currency || "USD"}</span></>
+                                ) : (
+                                  <span className="text-slate-300">No price set</span>
+                                )}
+                              </span>
+                              <div className="flex flex-shrink-0 items-center gap-1">
+                                <button onClick={() => startEdit(i)} className="h-7 rounded-lg border border-slate-200 px-2.5 text-xs text-slate-600 hover:bg-slate-100 transition">
+                                  Edit
+                                </button>
+                                <button onClick={() => handleDelete(i)} className="h-7 rounded-lg border border-rose-200 px-2.5 text-xs text-rose-500 hover:bg-rose-50 transition">
+                                  ✕
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}

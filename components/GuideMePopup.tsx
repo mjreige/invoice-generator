@@ -77,7 +77,7 @@ const steps = [
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-xs text-slate-400">Available on Pro & Business plans. Go to <strong>My Profile</strong> in the avatar menu.</p>
+        <p className="mt-4 text-xs text-slate-400">Available on Plus Pack & above. Go to <strong>My Profile</strong> in the avatar menu.</p>
       </div>
     ),
   },
@@ -97,7 +97,7 @@ const steps = [
             </li>
           ))}
         </ul>
-        <p className="text-xs text-slate-400">Go to <strong>My Customers</strong> in the avatar menu. Available on Pro & Business plans.</p>
+        <p className="text-xs text-slate-400">Go to <strong>My Customers</strong> in the avatar menu. Available on Plus Pack & above.</p>
       </div>
     ),
   },
@@ -113,7 +113,7 @@ const steps = [
           <p className="font-semibold text-slate-800 mb-1">Example</p>
           <p className="text-slate-600">Save "Website Development" at $1,500 — type "web" and it appears instantly.</p>
         </div>
-        <p className="text-xs text-slate-400">Go to <strong>Line Item Templates</strong> in the avatar menu. Available on Pro & Business plans.</p>
+        <p className="text-xs text-slate-400">Go to <strong>Line Item Templates</strong> in the avatar menu. Available on Plus Pack & above.</p>
       </div>
     ),
   },
