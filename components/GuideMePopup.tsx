@@ -22,6 +22,7 @@ const steps = [
             ["Invoice in 25+ currencies with the correct symbol on the PDF", "blue"],
             ["Save customers and line item templates for faster invoicing", "blue"],
             ["Apply discounts, taxes, and digital signatures", "blue"],
+            ["Set automatic payment reminders before and after the due date", "blue"],
             ["Track your full invoice history and re-download any past invoice", "blue"],
           ].map(([text]) => (
             <li key={text} className="flex gap-2 text-sm text-slate-700">
@@ -161,6 +162,39 @@ const steps = [
           ))}
         </div>
         <p className="text-xs text-slate-400">Go to <strong>Units</strong> in the avatar menu to add or remove units. Free for all plans.</p>
+      </div>
+    ),
+  },
+  {
+    icon: "🔔",
+    title: "Payment Reminders",
+    body: (
+      <div>
+        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+          Automatically email your client when an invoice is coming due — or when it's overdue. No manual follow-up needed.
+        </p>
+        <ol className="space-y-3 mb-4">
+          {[
+            ["Enable reminders on any invoice", "Scroll to the Payment Reminders section at the bottom of the invoice form and toggle it on."],
+            ["Set your timing", "Choose how many days before and after the due date to send the reminder — e.g. 3 days before, 1 day after."],
+            ["Add the client's email", "Reminders are sent to the client email field. You'll see a warning if it's missing."],
+            ["Save the invoice", "Once saved, the cron job checks daily and sends the emails at the right time automatically."],
+          ].map(([title, desc], i) => (
+            <li key={i} className="flex gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">{i + 1}</span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{title}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600 mb-3 space-y-1">
+          <p>✉ Reminders are sent from <strong>noreply@ncgmgroup.com</strong> with your name as the sender.</p>
+          <p>✓ Each reminder is sent only once — sent badges appear when you re-open the invoice.</p>
+          <p>⚠ Changing the day count resets the sent flag so the reminder goes out again.</p>
+        </div>
+        <p className="text-xs text-slate-400">Available on <strong>Pro & Business monthly subscriptions</strong> only.</p>
       </div>
     ),
   },

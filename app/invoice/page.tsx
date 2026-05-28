@@ -75,6 +75,13 @@ function InvoicePageInner() {
   const [useHeader, setUseHeader] = useState(true);
   const [useSignature, setUseSignature] = useState(true);
   const [useTax, setUseTax] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderBeforeDays, setReminderBeforeDays] = useState(3);
+  const [reminderAfterDays, setReminderAfterDays] = useState(1);
+  const [reminderSentBefore, setReminderSentBefore] = useState(false);
+  const [reminderSentAfter, setReminderSentAfter] = useState(false);
+  const [reminderOrigBeforeDays, setReminderOrigBeforeDays] = useState(3);
+  const [reminderOrigAfterDays, setReminderOrigAfterDays] = useState(1);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const { canGenerateInvoice, isActive, hasCredits, loading: subscriptionLoading, effectivePlan, refresh } = useSubscription();
@@ -174,6 +181,16 @@ function InvoicePageInner() {
           setDiscountValue(existingInvoice.discount_value || "0");
           setUseTax((existingInvoice.tax_rate ?? 0) > 0);
           if (existingInvoice.currency) setCurrency(existingInvoice.currency);
+          if (existingInvoice.reminders) {
+            const r = existingInvoice.reminders;
+            setReminderEnabled(r.enabled ?? false);
+            setReminderBeforeDays(r.before_days ?? 3);
+            setReminderAfterDays(r.after_days ?? 1);
+            setReminderSentBefore(r.sent_before ?? false);
+            setReminderSentAfter(r.sent_after ?? false);
+            setReminderOrigBeforeDays(r.before_days ?? 3);
+            setReminderOrigAfterDays(r.after_days ?? 1);
+          }
           if (existingInvoice.line_items?.length) {
             setLineItems(existingInvoice.line_items.map((item: any) => ({
               ...item,
@@ -429,6 +446,14 @@ function InvoicePageInner() {
           tax_amount: taxAmount,
           grand_total: grandTotal,
           currency,
+          reminders: isActive ? {
+            enabled: reminderEnabled,
+            before_days: reminderBeforeDays,
+            after_days: reminderAfterDays,
+            // preserve sent flags only if days haven't changed, so changing days resets the send
+            sent_before: reminderEnabled && reminderBeforeDays === reminderOrigBeforeDays ? reminderSentBefore : false,
+            sent_after: reminderEnabled && reminderAfterDays === reminderOrigAfterDays ? reminderSentAfter : false,
+          } : null,
         })
         .eq("id", editId)
         .eq("user_id", user.id);
@@ -472,6 +497,13 @@ function InvoicePageInner() {
         tax_amount: taxAmount,
         grand_total: grandTotal,
         currency,
+        reminders: isActive ? {
+          enabled: reminderEnabled,
+          before_days: reminderBeforeDays,
+          after_days: reminderAfterDays,
+          sent_before: false,
+          sent_after: false,
+        } : null,
       });
 
       if (insertError) {
@@ -886,6 +918,93 @@ function InvoicePageInner() {
                 </div>
               </div>
             </section>
+
+            {/* Reminder section — Pro/Business subscribers only */}
+            {isActive && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-semibold text-slate-900">Payment reminders</h2>
+                    <p className="mt-0.5 text-xs text-slate-500">Send automatic email reminders to your client about this invoice.</p>
+                  </div>
+                  {/* Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setReminderEnabled((v) => !v)}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${reminderEnabled ? "bg-blue-600" : "bg-slate-200"}`}
+                    role="switch"
+                    aria-checked={reminderEnabled}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${reminderEnabled ? "translate-x-5" : "translate-x-0"}`} />
+                  </button>
+                </div>
+
+                {reminderEnabled && (
+                  <div className="space-y-3 pt-1 border-t border-slate-100">
+                    {!clientEmail && (
+                      <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                        <span>Add a client email above for reminders to be sent.</span>
+                      </div>
+                    )}
+                    {!dueDate && (
+                      <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                        <span>Set a due date above so reminders can be scheduled.</span>
+                      </div>
+                    )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Remind before due date</label>
+                        <div className="mt-2 flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            max="30"
+                            className="h-10 w-20 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            value={reminderBeforeDays}
+                            onChange={(e) => setReminderBeforeDays(Math.max(0, parseInt(e.target.value) || 0))}
+                          />
+                          <span className="text-sm text-slate-600">days before</span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-400">Set to 0 to skip this reminder.</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Remind after due date</label>
+                        <div className="mt-2 flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            max="30"
+                            className="h-10 w-20 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            value={reminderAfterDays}
+                            onChange={(e) => setReminderAfterDays(Math.max(0, parseInt(e.target.value) || 0))}
+                          />
+                          <span className="text-sm text-slate-600">days after</span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-400">Set to 0 to skip this reminder.</p>
+                      </div>
+                    </div>
+                    {(reminderSentBefore || reminderSentAfter) && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {reminderSentBefore && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+                            <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                            Before reminder sent
+                          </span>
+                        )}
+                        {reminderSentAfter && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+                            <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                            After reminder sent
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
 
             {validationError && (
               <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
