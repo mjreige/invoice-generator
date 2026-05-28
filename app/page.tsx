@@ -207,6 +207,16 @@ function LandingPageInner() {
       title: "Custom Units",
       description: "Define your own billable units — hours, days, words, sessions, or anything your business uses",
       badge: "Plus Pack & above"
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      ),
+      title: "Payment Reminders",
+      description: "Automatically email clients before and after the due date — set the timing and let it run on autopilot",
+      badge: "Pro & Business"
     }
   ];
 
@@ -365,7 +375,7 @@ function LandingPageInner() {
                   <p className="text-slate-400 text-sm">Unlimited invoices</p>
                 </div>
                 <ul className="space-y-2 mb-6 flex-1">
-                  {["Pro $9/mo · my profile, tax, customers", "Business $15/mo · Arabic PDF + all pro features", "Cancel anytime"].map((f, fi) => (
+                  {["Pro $9/mo · unlimited + payment reminders", "Business $15/mo · Arabic PDF + all pro features", "Cancel anytime"].map((f, fi) => (
                     <li key={fi} className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                       <span className="text-slate-300 text-sm">{f}</span>
