@@ -129,6 +129,13 @@ function InvoicePageInner() {
         if (businessProfileData.default_currency) {
           setCurrency(businessProfileData.default_currency);
         }
+        // Pre-fill reminder defaults on new invoices only
+        if (!editId && businessProfileData.reminder_defaults) {
+          const rd = businessProfileData.reminder_defaults;
+          setReminderEnabled(rd.enabled ?? false);
+          setReminderBeforeDays(rd.before_days ?? 3);
+          setReminderAfterDays(rd.after_days ?? 1);
+        }
       }
       if (businessProfileData?.saved_items?.length) {
         setSavedItems(businessProfileData.saved_items);

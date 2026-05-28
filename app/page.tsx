@@ -215,7 +215,7 @@ function LandingPageInner() {
         </svg>
       ),
       title: "Payment Reminders",
-      description: "Automatically email clients before and after the due date — set the timing and let it run on autopilot",
+      description: "Set your default reminder timing in your profile — every invoice pre-fills automatically. Send before and after the due date with zero manual follow-up",
       badge: "Pro & Business"
     }
   ];

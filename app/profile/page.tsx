@@ -25,6 +25,11 @@ interface BusinessProfile {
   tax_rate?: number;
   tax_label?: string;
   default_currency?: string;
+  reminder_defaults?: {
+    enabled: boolean;
+    before_days: number;
+    after_days: number;
+  };
 }
 
 function Toggle({
@@ -88,6 +93,7 @@ export default function ProfilePage() {
     tax_rate: 0,
     tax_label: "",
     default_currency: "USD",
+    reminder_defaults: { enabled: false, before_days: 3, after_days: 1 },
   });
 
   useEffect(() => {
@@ -115,6 +121,12 @@ export default function ProfilePage() {
 
   const set = (field: keyof BusinessProfile, value: string | boolean | number) =>
     setProfile((prev) => ({ ...prev, [field]: value }));
+
+  const setReminder = (field: keyof NonNullable<BusinessProfile["reminder_defaults"]>, value: boolean | number) =>
+    setProfile((prev) => ({
+      ...prev,
+      reminder_defaults: { enabled: false, before_days: 3, after_days: 1, ...prev.reminder_defaults, [field]: value },
+    }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -447,6 +459,63 @@ export default function ProfilePage() {
                       className={inputClass()}
                       placeholder="VAT, GST, Tax…"
                     />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 border-t border-slate-200 pt-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-900">Payment Reminders</h3>
+                {isFree && <Lock className="w-4 h-4 text-slate-400" />}
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Enable by default on new invoices</p>
+                  <p className="text-xs text-slate-500">Pre-fill the reminder toggle on every new invoice you create</p>
+                  {isFree && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      Available on <Link href="/pricing" className="text-blue-600 hover:underline">Pro plan</Link>
+                    </p>
+                  )}
+                </div>
+                <Toggle
+                  checked={profile.reminder_defaults?.enabled}
+                  onChange={() => setReminder("enabled", !profile.reminder_defaults?.enabled)}
+                  disabled={isFree}
+                />
+              </div>
+              {!isFree && profile.reminder_defaults?.enabled && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">Days before due date</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        value={profile.reminder_defaults?.before_days ?? 3}
+                        onChange={(e) => setReminder("before_days", Math.max(0, parseInt(e.target.value) || 0))}
+                        className={inputClass()}
+                        placeholder="3"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400">Set to 0 to skip the before reminder.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">Days after due date</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        value={profile.reminder_defaults?.after_days ?? 1}
+                        onChange={(e) => setReminder("after_days", Math.max(0, parseInt(e.target.value) || 0))}
+                        className={inputClass()}
+                        placeholder="1"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400">Set to 0 to skip the after reminder.</p>
                   </div>
                 </div>
               )}

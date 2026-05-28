@@ -73,6 +73,7 @@ const steps = [
             ["Default currency", "Pre-fills the currency on every new invoice — change it per invoice if needed"],
             ["Digital signature", "Adds a personal signature line to your invoices"],
             ["Tax settings", "Configure your tax rate and label — VAT, GST, etc."],
+            ["Default reminder settings", "Set your preferred reminder timing once — every new invoice pre-fills automatically"],
             ["Arabic PDF support", "Enable RTL layout for Arabic content (Max Pack & Business only)"],
           ].map(([title, desc]) => (
             <li key={title} className="flex gap-2 text-sm">
@@ -175,10 +176,10 @@ const steps = [
         </p>
         <ol className="space-y-3 mb-4">
           {[
-            ["Enable reminders on any invoice", "Scroll to the Payment Reminders section at the bottom of the invoice form and toggle it on."],
-            ["Set your timing", "Choose how many days before and after the due date to send the reminder — e.g. 3 days before, 1 day after."],
+            ["Set your defaults in My Profile", "Go to My Profile → Payment Reminders. Enable and set your preferred timing once — e.g. 3 days before, 1 day after. Every new invoice will pre-fill with these settings automatically."],
+            ["Override per invoice", "The reminder section at the bottom of each invoice form is pre-filled from your profile. Adjust or disable it for any specific invoice before saving."],
             ["Add the client's email", "Reminders are sent to the client email field. You'll see a warning if it's missing."],
-            ["Save the invoice", "Once saved, the cron job checks daily and sends the emails at the right time automatically."],
+            ["Save the invoice", "Once saved, the system checks daily and sends the emails at the right time automatically."],
           ].map(([title, desc], i) => (
             <li key={i} className="flex gap-3">
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">{i + 1}</span>
