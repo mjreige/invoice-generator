@@ -19,6 +19,7 @@ const steps = [
         <ul className="space-y-2.5">
           {[
             ["Create and download professional PDF invoices", "blue"],
+            ["Invoice in 25+ currencies with the correct symbol on the PDF", "blue"],
             ["Save customers and line item templates for faster invoicing", "blue"],
             ["Apply discounts, taxes, and digital signatures", "blue"],
             ["Track your full invoice history and re-download any past invoice", "blue"],
@@ -40,6 +41,7 @@ const steps = [
         <ol className="space-y-3">
           {[
             ["Enter a client name", "Required — this appears as 'Bill To' on the PDF."],
+            ["Choose your currency", "Defaults to your profile currency. Change it per invoice from the dropdown next to the due date."],
             ["Add your billable items", "Each item needs a description. Add quantity, unit, and price as needed."],
             ["Apply a discount (optional)", "Choose a percentage or fixed amount off the subtotal."],
             ["Click 'Generate PDF'", "Review the summary screen, then confirm — your PDF downloads automatically."],
@@ -67,9 +69,10 @@ const steps = [
         <ul className="space-y-2.5">
           {[
             ["Business name & address", "Shown in the invoice header on every PDF"],
+            ["Default currency", "Pre-fills the currency on every new invoice — change it per invoice if needed"],
             ["Digital signature", "Adds a personal signature line to your invoices"],
             ["Tax settings", "Configure your tax rate and label — VAT, GST, etc."],
-            ["Arabic PDF support", "Enable RTL layout for Arabic content (Business plan only)"],
+            ["Arabic PDF support", "Enable RTL layout for Arabic content (Max Pack & Business only)"],
           ].map(([title, desc]) => (
             <li key={title} className="flex gap-2 text-sm">
               <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>
@@ -109,11 +112,37 @@ const steps = [
         <p className="text-sm text-slate-600 leading-relaxed mb-4">
           Save your most-used billable items so they auto-suggest as you type on any new invoice.
         </p>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm mb-4">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm mb-3">
           <p className="font-semibold text-slate-800 mb-1">Example</p>
-          <p className="text-slate-600">Save "Website Development" at $1,500 — type "web" and it appears instantly.</p>
+          <p className="text-slate-600">Save "Website Development" at 1,500 USD — type "web" and it appears instantly on any new invoice.</p>
         </div>
+        <p className="text-xs text-slate-500 mb-2">⚠ Each template stores a currency with its price. If your invoice is in a different currency, the price clears automatically so you don't accidentally bill the wrong amount.</p>
         <p className="text-xs text-slate-400">Go to <strong>Line Item Templates</strong> in the avatar menu. Available on Plus Pack & above.</p>
+      </div>
+    ),
+  },
+  {
+    icon: "💱",
+    title: "Multi-Currency",
+    body: (
+      <div>
+        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+          Invoice clients in their local currency — the correct symbol appears everywhere on the form and on the PDF.
+        </p>
+        <ul className="space-y-2.5 mb-4">
+          {[
+            ["25+ currencies supported", "USD, EUR, GBP, AED, LBP, SAR, INR, and more"],
+            ["Set a default in My Profile", "Every new invoice pre-fills with your chosen currency"],
+            ["Override per invoice", "Use the currency dropdown next to the due date field"],
+            ["Stored with line item templates", "Templates remember their currency — mismatches are flagged automatically"],
+          ].map(([title, desc]) => (
+            <li key={title} className="flex gap-2 text-sm">
+              <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>
+              <span><strong className="text-slate-800">{title}</strong> — <span className="text-slate-500">{desc}</span></span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-slate-400">Available on Plus Pack & above.</p>
       </div>
     ),
   },
@@ -156,7 +185,8 @@ const steps = [
             </div>
           ))}
         </div>
-        <p className="mt-4 text-xs text-slate-400">Visit <strong>Pricing</strong> in the avatar menu to compare and upgrade.</p>
+        <p className="mt-3 text-xs text-slate-500">Invoice reminders and recurring invoices are available on monthly subscriptions only.</p>
+        <p className="mt-2 text-xs text-slate-400">Visit <strong>Pricing</strong> in the avatar menu to compare and upgrade.</p>
       </div>
     ),
   },
