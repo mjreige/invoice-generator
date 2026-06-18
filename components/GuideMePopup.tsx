@@ -23,6 +23,7 @@ const steps = [
             ["Save customers and line item templates for faster invoicing", "blue"],
             ["Apply discounts, taxes, and digital signatures", "blue"],
             ["Set automatic payment reminders before and after the due date", "blue"],
+            ["Use a custom invoice numbering format that resets every year", "blue"],
             ["Track your full invoice history and re-download any past invoice", "blue"],
           ].map(([text]) => (
             <li key={text} className="flex gap-2 text-sm text-slate-700">
@@ -74,6 +75,7 @@ const steps = [
             ["Digital signature", "Adds a personal signature line to your invoices"],
             ["Tax settings", "Configure your tax rate and label — VAT, GST, etc."],
             ["Default reminder settings", "Set your preferred reminder timing once — every new invoice pre-fills automatically"],
+            ["Custom invoice numbering", "Define your own format with automatic yearly reset — Business plan only"],
             ["Arabic PDF support", "Enable RTL layout for Arabic content (Max Pack & Business only)"],
           ].map(([title, desc]) => (
             <li key={title} className="flex gap-2 text-sm">
@@ -200,6 +202,38 @@ const steps = [
     ),
   },
   {
+    icon: "🔢",
+    title: "Invoice Numbering",
+    body: (
+      <div>
+        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+          Define your own invoice numbering format instead of the default — e.g. <strong>ACME-2026-0001</strong> — and let it auto-generate and auto-increment on every new invoice.
+        </p>
+        <ol className="space-y-3 mb-4">
+          {[
+            ["Enable it in My Profile", "Go to My Profile → Invoice Numbering and turn it on. Set a prefix and a template using placeholders like {PREFIX}, {YYYY}, {YY}, {MM}, and {SEQ:4}."],
+            ["Preview updates live", "As you edit the prefix and template, the next invoice number is shown immediately so you can confirm the format before saving."],
+            ["Numbers generate automatically", "Every new invoice pre-fills the next number in the sequence — no manual entry needed."],
+            ["Choose whether to allow overrides", "Leave manual edits allowed, or lock the field so the number can never be changed by hand on individual invoices."],
+          ].map(([title, desc], i) => (
+            <li key={i} className="flex gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">{i + 1}</span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{title}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600 mb-3 space-y-1">
+          <p>🔁 The sequence resets to 1 automatically at the start of each calendar year.</p>
+          <p>✓ Turning this on for the first time continues from your existing invoice count this year, so you won't get duplicate numbers.</p>
+        </div>
+        <p className="text-xs text-slate-400">Available on the <strong>Business monthly subscription</strong> only.</p>
+      </div>
+    ),
+  },
+  {
     icon: "💳",
     title: "Plans & Credits",
     body: (
@@ -212,7 +246,7 @@ const steps = [
             ["Plus Pack", "bg-blue-100 text-blue-700", "$9.99 · 25 credits + pro features"],
             ["Max Pack", "bg-purple-100 text-purple-700", "$19.99 · 50 credits + all features"],
             ["Pro Monthly", "bg-blue-100 text-blue-700", "$9/mo · unlimited invoices"],
-            ["Business Monthly", "bg-purple-100 text-purple-700", "$15/mo · unlimited + Arabic PDF"],
+            ["Business Monthly", "bg-purple-100 text-purple-700", "$15/mo · Arabic PDF + custom numbering"],
           ].map(([name, colors, desc]) => (
             <div key={name} className="flex items-center gap-2 text-sm">
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold flex-shrink-0 ${colors}`}>{name}</span>

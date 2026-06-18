@@ -197,6 +197,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                 <ul className="space-y-2 mb-5 text-sm text-slate-300">
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Everything in Pro</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Arabic PDF support (RTL text rendering)</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Custom invoice numbering templates</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Priority customer support</li>
                 </ul>
                 <button
