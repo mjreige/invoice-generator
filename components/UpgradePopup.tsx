@@ -73,7 +73,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
               <div className="h-px flex-1 bg-slate-600" />
             </div>
             <p className="text-center text-sm text-slate-400 mb-1">One-time purchase · No subscription · Never expires</p>
-            <p className="text-center text-xs text-slate-500 mb-5">Automation features (reminders, recurring invoices) require a monthly plan.</p>
+            <p className="text-center text-xs text-slate-500 mb-5">Automation features (like payment reminders) require a monthly plan.</p>
 
             <div className="grid sm:grid-cols-3 gap-4">
               {/* Starter */}

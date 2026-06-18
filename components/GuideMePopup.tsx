@@ -254,7 +254,7 @@ const steps = [
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-slate-500">Invoice reminders and recurring invoices are available on monthly subscriptions only.</p>
+        <p className="mt-3 text-xs text-slate-500">Invoice reminders are available on monthly subscriptions only.</p>
         <p className="mt-2 text-xs text-slate-400">Visit <strong>Pricing</strong> in the avatar menu to compare and upgrade.</p>
       </div>
     ),

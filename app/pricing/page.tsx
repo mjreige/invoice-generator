@@ -147,7 +147,7 @@ export default function Pricing() {
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white">Pay As You Go</h2>
             <p className="text-slate-400 mt-2">One-time purchase · No subscription · Never expires</p>
-            <p className="text-slate-500 text-xs mt-2">Automation features (reminders, recurring invoices) require a monthly plan.</p>
+            <p className="text-slate-500 text-xs mt-2">Automation features (like payment reminders) require a monthly plan.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {/* Starter */}
