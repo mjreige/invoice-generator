@@ -7,6 +7,7 @@ import { useSubscription } from "@/lib/useSubscription";
 import { CURRENCIES } from "@/lib/currencies";
 import { Lock } from "lucide-react";
 import Link from "next/link";
+import { DEFAULT_INVOICE_NUMBER_TEMPLATE, formatTemplate } from "@/lib/invoiceNumberTemplate";
 
 interface BusinessProfile {
   business_name?: string;
@@ -29,6 +30,14 @@ interface BusinessProfile {
     enabled: boolean;
     before_days: number;
     after_days: number;
+  };
+  invoice_number_template?: {
+    enabled: boolean;
+    prefix: string;
+    template: string;
+    allow_override: boolean;
+    last_year: number;
+    last_seq: number;
   };
 }
 
@@ -94,6 +103,7 @@ export default function ProfilePage() {
     tax_label: "",
     default_currency: "USD",
     reminder_defaults: { enabled: false, before_days: 3, after_days: 1 },
+    invoice_number_template: DEFAULT_INVOICE_NUMBER_TEMPLATE,
   });
 
   useEffect(() => {
@@ -127,6 +137,51 @@ export default function ProfilePage() {
       ...prev,
       reminder_defaults: { enabled: false, before_days: 3, after_days: 1, ...prev.reminder_defaults, [field]: value },
     }));
+
+  const setNumberTemplate = (
+    field: keyof NonNullable<BusinessProfile["invoice_number_template"]>,
+    value: boolean | number | string
+  ) =>
+    setProfile((prev) => ({
+      ...prev,
+      invoice_number_template: { ...DEFAULT_INVOICE_NUMBER_TEMPLATE, ...prev.invoice_number_template, [field]: value },
+    }));
+
+  // Turning the template on for the first time: seed last_seq from invoices already
+  // issued this calendar year, so numbering continues instead of restarting at 1.
+  const handleToggleNumberTemplate = async () => {
+    const turningOn = !profile.invoice_number_template?.enabled;
+    const neverUsed = (profile.invoice_number_template?.last_seq ?? 0) === 0;
+
+    if (turningOn && neverUsed) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const currentYear = new Date().getFullYear();
+        const yearStart = `${currentYear}-01-01T00:00:00.000Z`;
+        const { count } = await supabase
+          .from("invoices")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("created_at", yearStart);
+
+        setProfile((prev) => ({
+          ...prev,
+          invoice_number_template: {
+            ...DEFAULT_INVOICE_NUMBER_TEMPLATE,
+            ...prev.invoice_number_template,
+            enabled: true,
+            last_year: currentYear,
+            last_seq: count ?? 0,
+          },
+        }));
+        return;
+      }
+    }
+
+    setNumberTemplate("enabled", turningOn);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -516,6 +571,86 @@ export default function ProfilePage() {
                       />
                     </div>
                     <p className="text-xs text-slate-400">Set to 0 to skip the after reminder.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 border-t border-slate-200 pt-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-900">Invoice Numbering</h3>
+                {!isBusiness && <Lock className="w-4 h-4 text-slate-400" />}
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Use a custom invoice number template</p>
+                  <p className="text-xs text-slate-500">Auto-generate invoice numbers in your own format, resetting yearly</p>
+                  {!isBusiness && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      Available on <Link href="/pricing" className="text-blue-600 hover:underline">Business plan</Link>
+                    </p>
+                  )}
+                </div>
+                <Toggle
+                  checked={profile.invoice_number_template?.enabled}
+                  onChange={handleToggleNumberTemplate}
+                  disabled={!isBusiness}
+                />
+              </div>
+              {isBusiness && profile.invoice_number_template?.enabled && (
+                <div className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">Prefix</label>
+                      <input
+                        type="text"
+                        value={profile.invoice_number_template?.prefix ?? "INV"}
+                        onChange={(e) => setNumberTemplate("prefix", e.target.value)}
+                        className={inputClass()}
+                        placeholder="ACME"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">Template</label>
+                      <input
+                        type="text"
+                        value={profile.invoice_number_template?.template ?? "{PREFIX}-{YYYY}-{SEQ:4}"}
+                        onChange={(e) => setNumberTemplate("template", e.target.value)}
+                        className={`${inputClass()} font-mono`}
+                        placeholder="{PREFIX}-{YYYY}-{SEQ:4}"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-500">
+                    Placeholders: <code className="rounded bg-slate-100 px-1 py-0.5">{"{PREFIX}"}</code>{" "}
+                    <code className="rounded bg-slate-100 px-1 py-0.5">{"{YYYY}"}</code>{" "}
+                    <code className="rounded bg-slate-100 px-1 py-0.5">{"{YY}"}</code>{" "}
+                    <code className="rounded bg-slate-100 px-1 py-0.5">{"{MM}"}</code>{" "}
+                    <code className="rounded bg-slate-100 px-1 py-0.5">{"{SEQ:N}"}</code> (sequence padded to N digits)
+                  </p>
+
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Preview</p>
+                    <p className="text-sm font-mono font-semibold text-slate-900">
+                      {formatTemplate(profile.invoice_number_template?.template || "{PREFIX}-{YYYY}-{SEQ:4}", {
+                        prefix: profile.invoice_number_template?.prefix || "INV",
+                        year: new Date().getFullYear(),
+                        month: new Date().getMonth() + 1,
+                        seq: 1,
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">Allow editing the number on each invoice</p>
+                      <p className="text-xs text-slate-500">Turn off to lock the field so it always uses the auto-generated number</p>
+                    </div>
+                    <Toggle
+                      checked={profile.invoice_number_template?.allow_override}
+                      onChange={() => setNumberTemplate("allow_override", !profile.invoice_number_template?.allow_override)}
+                    />
                   </div>
                 </div>
               )}

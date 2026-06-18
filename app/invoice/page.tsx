@@ -7,6 +7,7 @@ import { useSubscription } from "@/lib/useSubscription";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import UpgradePopup from "@/components/UpgradePopup";
 import GuideMePopup from "@/components/GuideMePopup";
+import { getNextInvoiceNumber } from "@/lib/invoiceNumberTemplate";
 
 type LineItem = {
   id: string;
@@ -105,6 +106,20 @@ function InvoicePageInner() {
   const [savedItems, setSavedItems] = useState<{ description: string; unitPrice: string; currency?: string }[]>([]);
   const [suggestions, setSuggestions] = useState<{ itemId: string; matches: { description: string; unitPrice: string; currency?: string }[] }>({ itemId: "", matches: [] });
   const hasSavedItems = effectivePlan === "pro" || effectivePlan === "business";
+
+  const numberTemplateEnabled = effectivePlan === "business" && !!businessProfile?.invoice_number_template?.enabled;
+  const numberTemplateLocked = numberTemplateEnabled && businessProfile?.invoice_number_template?.allow_override === false;
+
+  // Auto-fill the invoice number from the Business numbering template for new invoices.
+  // Runs as its own effect (rather than inline in init()) so it stays correct even if
+  // the subscription plan or business profile finish loading after the initial render.
+  useEffect(() => {
+    if (editId) return;
+    if (invoiceNumberTouched) return;
+    if (!numberTemplateEnabled || !businessProfile?.invoice_number_template) return;
+    const { invoiceNumber: nextNum } = getNextInvoiceNumber(businessProfile.invoice_number_template);
+    setInvoiceNumber(nextNum);
+  }, [editId, invoiceNumberTouched, numberTemplateEnabled, businessProfile]);
 
   useEffect(() => {
     const init = async () => {
@@ -518,6 +533,21 @@ function InvoicePageInner() {
         return;
       }
 
+      // Advance the stored sequence so the next invoice continues from here
+      if (numberTemplateEnabled && businessProfile?.invoice_number_template) {
+        const { nextLastYear, nextLastSeq } = getNextInvoiceNumber(businessProfile.invoice_number_template);
+        const updatedTemplate = {
+          ...businessProfile.invoice_number_template,
+          last_year: nextLastYear,
+          last_seq: nextLastSeq,
+        };
+        await supabase
+          .from("business_profiles")
+          .update({ invoice_number_template: updatedTemplate })
+          .eq("user_id", user.id);
+        setBusinessProfile((prev: any) => (prev ? { ...prev, invoice_number_template: updatedTemplate } : prev));
+      }
+
       // Increment credits_used if user is on credits (not subscription)
       if (!isActive && hasCredits) {
         const { data: sub } = await supabase
@@ -641,11 +671,17 @@ function InvoicePageInner() {
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-700">Invoice number</label>
                   <input
-                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className={`mt-2 h-11 w-full rounded-2xl border border-slate-200 px-4 text-sm shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${
+                      numberTemplateLocked ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white text-slate-900"
+                    }`}
                     value={invoiceNumber}
                     onChange={(e) => { setInvoiceNumberTouched(true); setInvoiceNumber(e.target.value); }}
                     placeholder="INV-0001"
+                    disabled={numberTemplateLocked}
                   />
+                  {numberTemplateLocked && (
+                    <p className="mt-1 text-xs text-slate-400">Auto-generated from your numbering template</p>
+                  )}
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
