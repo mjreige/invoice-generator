@@ -1,17 +1,84 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+/**
+ * Verifies the Paddle webhook signature.
+ * Header format: `Paddle-Signature: ts=<unix>;h1=<hmac-sha256-hex>`
+ * Signed payload is `${ts}:${rawBody}`, HMAC'd with the webhook secret.
+ */
+function verifyPaddleSignature(rawBody: string, signatureHeader: string | null, secret: string): boolean {
+  if (!signatureHeader) return false;
+
+  const parts = Object.fromEntries(
+    signatureHeader.split(";").map((kv) => {
+      const [k, v] = kv.split("=");
+      return [k?.trim(), v?.trim()];
+    })
+  );
+  const ts = parts["ts"];
+  const h1 = parts["h1"];
+  if (!ts || !h1) return false;
+
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(`${ts}:${rawBody}`)
+    .digest("hex");
+
+  // Timing-safe compare; lengths must match for timingSafeEqual
+  const a = Buffer.from(expected, "hex");
+  const b = Buffer.from(h1, "hex");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    console.log("Webhook received:", body.event_type);
+    // 1. Read the RAW body first — signature verification needs the exact bytes.
+    const rawBody = await request.text();
+
+    const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error("Webhook rejected: PADDLE_WEBHOOK_SECRET is not configured");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+    }
+
+    const signature = request.headers.get("paddle-signature");
+    if (!verifyPaddleSignature(rawBody, signature, webhookSecret)) {
+      console.error("Webhook rejected: invalid signature");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    const body = JSON.parse(rawBody);
+    console.log("Webhook received:", body.event_type, body.event_id);
 
     const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      console.error("Webhook error: SUPABASE_SERVICE_ROLE_KEY is not configured");
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey);
+
+    // 2. Idempotency — skip events we've already processed (Paddle retries deliver duplicates).
+    const eventId: string | undefined = body.event_id;
+    if (eventId) {
+      const { error: dupError } = await supabase
+        .from("processed_webhook_events")
+        .insert({ event_id: eventId });
+      if (dupError) {
+        // Unique-violation => already processed. Acknowledge so Paddle stops retrying.
+        if (dupError.code === "23505") {
+          console.log("Duplicate webhook ignored:", eventId);
+          return NextResponse.json({ success: true, duplicate: true }, { status: 200 });
+        }
+        console.error("Idempotency insert error:", dupError);
+        // Fail closed so Paddle retries rather than risk losing the event.
+        return NextResponse.json({ error: "Idempotency check failed" }, { status: 500 });
+      }
+    }
 
     const eventType = body.event_type;
     const data = body.data;
@@ -72,7 +139,6 @@ export async function POST(request: Request) {
       }
 
       if (creditsToAdd > 0 && userId) {
-        // First check if user already has a subscription row
         const { data: existing } = await supabase
           .from("subscriptions")
           .select("invoice_credits, credits_used, plan")
@@ -80,7 +146,6 @@ export async function POST(request: Request) {
           .single();
 
         if (existing) {
-          // Add credits to existing row
           const newCredits = (existing.invoice_credits || 0) + creditsToAdd;
           const { error } = await supabase
             .from("subscriptions")
@@ -94,7 +159,6 @@ export async function POST(request: Request) {
           if (error) console.error("Credits update error:", error);
           else console.log(`Added ${creditsToAdd} credits for user ${userId}, total: ${newCredits}`);
         } else {
-          // Create new row for credits user
           const { error } = await supabase.from("subscriptions").insert({
             user_id: userId,
             plan: "free",

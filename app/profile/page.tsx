@@ -76,14 +76,16 @@ function Toggle({
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { effectivePlan } = useSubscription();
+  const { effectivePlan, isActive } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isFree = effectivePlan === "free";
-  const isBusiness = effectivePlan === "business";
+  // Custom invoice numbering is a Business *subscription* feature only —
+  // not granted via the Max Pack (which also maps to effectivePlan "business").
+  const isBusiness = isActive && effectivePlan === "business";
 
   const [profile, setProfile] = useState<BusinessProfile>({
     business_name: "",
@@ -522,13 +524,13 @@ export default function ProfilePage() {
             <div className="space-y-4 border-t border-slate-200 pt-4">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-slate-900">Payment Reminders</h3>
-                {isFree && <Lock className="w-4 h-4 text-slate-400" />}
+                {!isActive && <Lock className="w-4 h-4 text-slate-400" />}
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-700">Enable by default on new invoices</p>
                   <p className="text-xs text-slate-500">Pre-fill the reminder toggle on every new invoice you create</p>
-                  {isFree && (
+                  {!isActive && (
                     <p className="text-xs text-slate-400 mt-1">
                       Available on <Link href="/pricing" className="text-blue-600 hover:underline">Pro plan</Link>
                     </p>
@@ -537,10 +539,10 @@ export default function ProfilePage() {
                 <Toggle
                   checked={profile.reminder_defaults?.enabled}
                   onChange={() => setReminder("enabled", !profile.reminder_defaults?.enabled)}
-                  disabled={isFree}
+                  disabled={!isActive}
                 />
               </div>
-              {!isFree && profile.reminder_defaults?.enabled && (
+              {isActive && profile.reminder_defaults?.enabled && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">Days before due date</label>

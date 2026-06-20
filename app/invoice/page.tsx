@@ -107,7 +107,7 @@ function InvoicePageInner() {
   const [suggestions, setSuggestions] = useState<{ itemId: string; matches: { description: string; unitPrice: string; currency?: string }[] }>({ itemId: "", matches: [] });
   const hasSavedItems = effectivePlan === "pro" || effectivePlan === "business";
 
-  const numberTemplateEnabled = effectivePlan === "business" && !!businessProfile?.invoice_number_template?.enabled;
+  const numberTemplateEnabled = isActive && effectivePlan === "business" && !!businessProfile?.invoice_number_template?.enabled;
   const numberTemplateLocked = numberTemplateEnabled && businessProfile?.invoice_number_template?.allow_override === false;
 
   // Auto-fill the invoice number from the Business numbering template for new invoices.

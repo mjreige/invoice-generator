@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
   // 2. Fetch all invoices with reminders enabled, due date set, and client email present
   const { data: invoices, error } = await supabaseAdmin
     .from("invoices")
-    .select("id, invoice_number, client_name, client_email, sender_name, due_date, grand_total, currency, reminders")
+    .select("id, user_id, invoice_number, client_name, client_email, sender_name, due_date, grand_total, currency, reminders")
     .not("reminders", "is", null)
     .not("client_email", "is", null)
     .not("due_date", "is", null);
@@ -133,6 +133,26 @@ export async function GET(req: NextRequest) {
     console.error("Cron: failed to fetch invoices", error);
     return NextResponse.json({ error: "DB error" }, { status: 500 });
   }
+
+  // Reminders are a paid-plan feature — only send for senders whose subscription
+  // is currently active (mirrors the isActive logic in SubscriptionProvider).
+  const { data: subs } = await supabaseAdmin
+    .from("subscriptions")
+    .select("user_id, status, current_period_end, paddle_subscription_id")
+    .not("paddle_subscription_id", "is", null);
+
+  const now = new Date();
+  const activeUserIds = new Set(
+    (subs || [])
+      .filter((s) => {
+        const inPeriod = s.current_period_end ? new Date(s.current_period_end) > now : false;
+        return (
+          (s.status === "active" && (!s.current_period_end || inPeriod)) ||
+          (s.status === "cancelled" && inPeriod)
+        );
+      })
+      .map((s) => s.user_id)
+  );
 
   let sent = 0;
   const errors: string[] = [];
@@ -147,6 +167,7 @@ export async function GET(req: NextRequest) {
     };
 
     if (!reminders?.enabled) continue;
+    if (!activeUserIds.has(invoice.user_id)) continue;
     if (!invoice.client_email) continue;
 
     const dueDate = invoice.due_date;

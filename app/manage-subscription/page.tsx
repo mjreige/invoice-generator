@@ -63,10 +63,18 @@ export default function ManageSubscriptionPage() {
     setCancelling(true);
     setError(null);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setError("Your session expired. Please sign in again.");
+        setCancelling(false);
+        return;
+      }
       const response = await fetch("/api/cancel-subscription", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscriptionId: subscription.paddle_subscription_id }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to cancel");
