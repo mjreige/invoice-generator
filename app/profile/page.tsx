@@ -185,6 +185,21 @@ export default function ProfilePage() {
     setNumberTemplate("enabled", turningOn);
   };
 
+  // Lets the user choose where the sequence begins (e.g. starting mid-year at 51).
+  // We store last_seq = next - 1, so the next generated invoice uses `next`.
+  const setNextNumber = (next: number) => {
+    const safe = Math.max(1, Math.floor(next || 1));
+    setProfile((prev) => ({
+      ...prev,
+      invoice_number_template: {
+        ...DEFAULT_INVOICE_NUMBER_TEMPLATE,
+        ...prev.invoice_number_template,
+        last_seq: safe - 1,
+        last_year: new Date().getFullYear(),
+      },
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isFree) return;
@@ -624,6 +639,19 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
+                  <div className="sm:w-1/2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">Next number</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={(profile.invoice_number_template?.last_seq ?? 0) + 1}
+                      onChange={(e) => setNextNumber(parseInt(e.target.value) || 1)}
+                      className={`${inputClass()} mt-1.5`}
+                      placeholder="1"
+                    />
+                    <p className="mt-1 text-xs text-slate-400">The next invoice will use this number. It auto-increments and resets to 1 each January. Set it to continue from your existing numbering (e.g. 51 if you start mid-year).</p>
+                  </div>
+
                   <p className="text-xs text-slate-500">
                     Placeholders: <code className="rounded bg-slate-100 px-1 py-0.5">{"{PREFIX}"}</code>{" "}
                     <code className="rounded bg-slate-100 px-1 py-0.5">{"{YYYY}"}</code>{" "}
@@ -639,7 +667,7 @@ export default function ProfilePage() {
                         prefix: profile.invoice_number_template?.prefix || "INV",
                         year: new Date().getFullYear(),
                         month: new Date().getMonth() + 1,
-                        seq: 1,
+                        seq: (profile.invoice_number_template?.last_seq ?? 0) + 1,
                       })}
                     </p>
                   </div>
