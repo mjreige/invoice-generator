@@ -233,7 +233,14 @@ function InvoicePageInner() {
         .eq("user_id", user.id);
 
       const next = (count ?? 0) + 1;
-      if (!invoiceNumberTouched) {
+      // Don't apply the legacy default number when the custom numbering template
+      // is active — the dedicated template effect handles that and must not be
+      // overwritten by this count-based default.
+      const templateOn =
+        isActive &&
+        effectivePlan === "business" &&
+        !!businessProfileData?.invoice_number_template?.enabled;
+      if (!invoiceNumberTouched && !templateOn) {
         setInvoiceNumber(formatInvoiceNumber(next));
       }
     };
