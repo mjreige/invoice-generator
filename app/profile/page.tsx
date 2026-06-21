@@ -81,6 +81,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nextNumberInput, setNextNumberInput] = useState("");
 
   const isFree = effectivePlan === "free";
   // Custom invoice numbering is a Business *subscription* feature only —
@@ -130,6 +131,12 @@ export default function ProfilePage() {
     };
     load();
   }, [router]);
+
+  // Keep the "Next number" input in sync when the profile loads or the template is toggled on.
+  useEffect(() => {
+    setNextNumberInput(String((profile.invoice_number_template?.last_seq ?? 0) + 1));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, profile.invoice_number_template?.enabled]);
 
   const set = (field: keyof BusinessProfile, value: string | boolean | number) =>
     setProfile((prev) => ({ ...prev, [field]: value }));
@@ -203,8 +210,28 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isFree) return;
-    setSaving(true);
     setError(null);
+
+    // Validate / normalize the custom invoice "Next number" before saving.
+    let profileToSave = profile;
+    if (profile.invoice_number_template?.enabled) {
+      const n = parseInt(nextNumberInput, 10);
+      if (nextNumberInput.trim() === "" || Number.isNaN(n) || n < 1) {
+        setError("Please enter a starting invoice number (1 or higher).");
+        return;
+      }
+      profileToSave = {
+        ...profile,
+        invoice_number_template: {
+          ...DEFAULT_INVOICE_NUMBER_TEMPLATE,
+          ...profile.invoice_number_template,
+          last_seq: n - 1,
+          last_year: new Date().getFullYear(),
+        },
+      };
+    }
+
+    setSaving(true);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -214,12 +241,13 @@ export default function ProfilePage() {
     }
     const { error: err } = await supabase
       .from("business_profiles")
-      .upsert({ user_id: user.id, ...profile }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, ...profileToSave }, { onConflict: "user_id" });
     setSaving(false);
     if (err) {
       setError("Failed to save. Please try again.");
       return;
     }
+    setProfile(profileToSave);
     setSuccess(true);
     setTimeout(() => {
       setSuccess(false);
@@ -644,8 +672,13 @@ export default function ProfilePage() {
                     <input
                       type="number"
                       min="1"
-                      value={(profile.invoice_number_template?.last_seq ?? 0) + 1}
-                      onChange={(e) => setNextNumber(parseInt(e.target.value) || 1)}
+                      value={nextNumberInput}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        setNextNumberInput(raw);
+                        const n = parseInt(raw, 10);
+                        if (raw !== "" && !Number.isNaN(n) && n >= 1) setNextNumber(n);
+                      }}
                       className={`${inputClass()} mt-1.5`}
                       placeholder="1"
                     />
