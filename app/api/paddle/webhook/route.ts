@@ -85,6 +85,7 @@ export async function POST(request: Request) {
 
     const proPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || "pri_01kkshav4ehmnnwz4an3z07wes";
     const businessPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || "pri_01kkshe2hfk9jp508nyy8q081v";
+    const businessYearlyPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_YEARLY_PRICE_ID || "";
     const starterPriceId = process.env.NEXT_PUBLIC_PADDLE_STARTER_PRICE_ID || "pri_01km55j5sc439a0p5n2772egbp";
     const proPackPriceId = process.env.NEXT_PUBLIC_PADDLE_PRO_PACK_PRICE_ID || "pri_01km55kskn8sv6ea8hrg940h1p";
     const businessPackPriceId = process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PACK_PRICE_ID || "pri_01km55py4yxzgsgg13sec7h5z9";
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
       const customData = data.custom_data || {};
       const userId = customData.userId || customData.user_id;
       const priceId = data.items?.[0]?.price?.id;
-      const plan = priceId === businessPriceId ? "business" : "pro";
+      const plan = priceId === businessPriceId || priceId === businessYearlyPriceId ? "business" : "pro";
 
       console.log("Processing subscription:", { userId, priceId, plan });
 
