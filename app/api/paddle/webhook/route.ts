@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     // 1. Read the RAW body first — signature verification needs the exact bytes.
     const rawBody = await request.text();
 
-    const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET;
+    const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET?.trim();
     if (!webhookSecret) {
       console.error("Webhook rejected: PADDLE_WEBHOOK_SECRET is not configured");
       return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
