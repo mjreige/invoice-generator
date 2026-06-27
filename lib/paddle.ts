@@ -55,3 +55,14 @@ export async function closeCheckout() {
   const paddleInstance = await initPaddle();
   paddleInstance.Checkout.close();
 }
+
+// Paddle-initiated flows (customer portal, payment-method update, dunning/recovery
+// emails, API-created transactions) send the customer to the "default payment link"
+// with `?_ptxn=txn_...`. Call this on that page to resume/open that checkout.
+export async function resumeTransactionFromUrl() {
+  if (typeof window === "undefined") return;
+  const txn = new URLSearchParams(window.location.search).get("_ptxn");
+  if (!txn) return;
+  const paddleInstance = await initPaddle();
+  paddleInstance.Checkout.open({ transactionId: txn });
+}

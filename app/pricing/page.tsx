@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Check, Star, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
-import { openCheckout } from "@/lib/paddle";
+import { openCheckout, resumeTransactionFromUrl } from "@/lib/paddle";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
 import { useRouter } from "next/navigation";
@@ -30,6 +30,8 @@ export default function Pricing() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    // Resume a Paddle-initiated checkout if we were sent here with ?_ptxn=...
+    resumeTransactionFromUrl();
   }, []);
 
   const handleBuy = async (priceId: string, id: string) => {
