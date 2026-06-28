@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import AuthHeader from "@/components/AuthHeader";
 import { SubscriptionProvider } from "@/components/SubscriptionProvider";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Invoice Generator",
@@ -30,6 +31,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   return (
     <html lang="en">
       <head>
@@ -46,6 +48,22 @@ export default function RootLayout({
           <div className="h-[56px]" aria-hidden="true" />
           {children}
         </SubscriptionProvider>
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        )}
         <script
           dangerouslySetInnerHTML={{
             __html: `
