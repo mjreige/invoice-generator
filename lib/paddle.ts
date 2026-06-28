@@ -15,17 +15,27 @@ export async function initPaddle() {
     eventCallback: function(data: any) {
       if (data.name === 'checkout.completed') {
         const priceId = data.data?.items?.[0]?.price_id || '';
+        // One-time credit packs must NOT be welcomed as subscription tiers.
+        const packIds = [
+          process.env.NEXT_PUBLIC_PADDLE_STARTER_PRICE_ID,
+          process.env.NEXT_PUBLIC_PADDLE_PRO_PACK_PRICE_ID,
+          process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PACK_PRICE_ID,
+        ];
         const businessIds = [
           process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID,
           process.env.NEXT_PUBLIC_PADDLE_BUSINESS_YEARLY_PRICE_ID,
-          process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PACK_PRICE_ID,
         ];
         const proIds = [
           process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID,
           process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID,
-          process.env.NEXT_PUBLIC_PADDLE_PRO_PACK_PRICE_ID,
         ];
-        const plan = businessIds.includes(priceId) ? 'business' : proIds.includes(priceId) ? 'pro' : 'credits';
+        const plan = packIds.includes(priceId)
+          ? 'credits'
+          : businessIds.includes(priceId)
+          ? 'business'
+          : proIds.includes(priceId)
+          ? 'pro'
+          : 'credits';
         // Delay redirect to give the Paddle webhook time to update the DB
         // before the page reloads and refetches subscription data
         setTimeout(() => {

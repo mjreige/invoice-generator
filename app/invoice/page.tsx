@@ -29,7 +29,7 @@ type SavedCustomer = {
 
 function formatMoney(value: number) {
   if (!isFinite(value)) return "0.00";
-  return value.toFixed(2);
+  return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function parseNumber(raw: string) {

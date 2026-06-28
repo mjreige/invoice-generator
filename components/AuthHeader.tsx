@@ -18,6 +18,7 @@ export default function AuthHeader() {
     invoiceCount,
     creditsRemaining,
     hasCredits,
+    packType,
     loading: subscriptionLoading,
   } = useSubscription();
 
@@ -104,17 +105,17 @@ export default function AuthHeader() {
 
     if (hasCredits) {
       const badgeColor =
-        effectivePlan === "business"
+        packType === "business_pack"
           ? "bg-purple-600"
-          : effectivePlan === "pro"
+          : packType === "pro_pack"
           ? "bg-blue-500"
           : "bg-amber-500";
       const badgeLabel =
-        effectivePlan === "business"
-          ? "Business"
-          : effectivePlan === "pro"
-          ? "Pro"
-          : "Starter";
+        packType === "business_pack"
+          ? "Max Pack"
+          : packType === "pro_pack"
+          ? "Plus Pack"
+          : "Starter Pack";
       return (
         <div className="space-y-1">
           <div className="flex items-center gap-2">

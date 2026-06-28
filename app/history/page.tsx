@@ -28,7 +28,7 @@ type SortOption = "newest" | "oldest" | "total_high" | "total_low" | "client_az"
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { plan } = useSubscription();
+  const { plan, effectivePlan } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [previewInvoice, setPreviewInvoice] = useState<InvoiceRow | null>(null);
@@ -175,7 +175,7 @@ export default function HistoryPage() {
 
   const formatMoney = (value: number) => {
     if (!isFinite(value)) return "0.00";
-    return value.toFixed(2);
+    return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const getPreviewTotals = (invoice: InvoiceRow) => {
@@ -328,21 +328,34 @@ export default function HistoryPage() {
                         >
                           {loadingPreviewId === invoice.id ? "Loading..." : "View"}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => router.push(`/invoice?edit=${invoice.id}`)}
-                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-semibold text-amber-700 shadow-sm transition hover:bg-amber-100"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDownload(invoice)}
-                          disabled={downloadingId === invoice.id}
-                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {downloadingId === invoice.id ? "Generating..." : <><span className="sm:hidden">Download</span><span className="hidden sm:inline">Download PDF</span></>}
-                        </button>
+                        {effectivePlan !== "free" ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/invoice?edit=${invoice.id}`)}
+                              className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-semibold text-amber-700 shadow-sm transition hover:bg-amber-100"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDownload(invoice)}
+                              disabled={downloadingId === invoice.id}
+                              className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {downloadingId === invoice.id ? "Generating..." : <><span className="sm:hidden">Download</span><span className="hidden sm:inline">Download PDF</span></>}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => router.push("/pricing")}
+                            title="Editing and re-downloading past invoices is available on the Plus pack and the Pro/Business plans"
+                            className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-100"
+                          >
+                            Upgrade to edit &amp; download
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -386,9 +399,9 @@ export default function HistoryPage() {
 
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
                 <div className="grid grid-cols-12 gap-1 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-3 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                  <div className="col-span-5">Description</div>
+                  <div className="col-span-4">Description</div>
                   <div className="col-span-2 text-center">Qty</div>
-                  <div className="col-span-2 text-right">Unit</div>
+                  <div className="col-span-3 text-right">Unit</div>
                   <div className="col-span-3 text-right">Total</div>
                 </div>
                 <div className="space-y-2 p-3">
@@ -398,10 +411,10 @@ export default function HistoryPage() {
                     const rowTotal = Number.isFinite(qty) && Number.isFinite(unit) ? qty * unit : 0;
                     return (
                       <div key={`${previewInvoice.id}-${idx}`} className="grid grid-cols-12 items-center gap-1 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-                        <div className="col-span-5 text-sm font-medium text-slate-900">{li.description || "—"}</div>
+                        <div className="col-span-4 min-w-0 truncate text-sm font-medium text-slate-900">{li.description || "—"}</div>
                         <div className="col-span-2 text-center text-sm text-slate-800">{li.quantity || "—"}</div>
-                        <div className="col-span-2 text-right text-sm text-slate-800">{li.unitPrice ? `${getCurrencySymbol(previewInvoice.currency || "USD")}${formatMoney(unit)}` : "—"}</div>
-                        <div className="col-span-3 text-right text-sm font-semibold text-slate-900">{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(rowTotal)}</div>
+                        <div className="col-span-3 text-right text-xs sm:text-sm text-slate-800 tabular-nums whitespace-nowrap">{li.unitPrice ? `${getCurrencySymbol(previewInvoice.currency || "USD")}${formatMoney(unit)}` : "—"}</div>
+                        <div className="col-span-3 text-right text-xs sm:text-sm font-semibold text-slate-900 tabular-nums whitespace-nowrap">{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(rowTotal)}</div>
                       </div>
                     );
                   })}
@@ -422,9 +435,15 @@ export default function HistoryPage() {
 
             <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-6 py-4">
               <button type="button" onClick={() => setPreviewInvoice(null)} className="h-10 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">Close</button>
-              <button type="button" onClick={() => previewInvoice && handleDownload(previewInvoice)} disabled={downloadingId === previewInvoice.id} className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg hover:brightness-105 disabled:opacity-70">
-                {downloadingId === previewInvoice.id ? "Generating..." : "Download"}
-              </button>
+              {effectivePlan !== "free" ? (
+                <button type="button" onClick={() => previewInvoice && handleDownload(previewInvoice)} disabled={downloadingId === previewInvoice.id} className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg hover:brightness-105 disabled:opacity-70">
+                  {downloadingId === previewInvoice.id ? "Generating..." : "Download"}
+                </button>
+              ) : (
+                <button type="button" onClick={() => router.push("/pricing")} className="h-10 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-lg hover:brightness-105">
+                  Upgrade to download
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ interface SubscriptionData {
   canGenerateInvoice: boolean;
   creditsRemaining: number;
   hasCredits: boolean;
+  packType: string | null;
   loading: boolean;
   refresh: () => void;
 }
@@ -25,6 +26,7 @@ const defaultData: SubscriptionData = {
   canGenerateInvoice: true,
   creditsRemaining: 0,
   hasCredits: false,
+  packType: null,
   loading: true,
   refresh: () => {},
 };
@@ -112,6 +114,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         canGenerateInvoice,
         creditsRemaining,
         hasCredits,
+        packType: (subscription?.pack_type as string | null) ?? null,
         loading: false,
       }));
     } catch {
@@ -123,6 +126,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         isActive: false,
         creditsRemaining: 0,
         hasCredits: false,
+        packType: null,
         canGenerateInvoice: prev.invoiceCount < 5,
         loading: false,
       }));
