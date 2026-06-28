@@ -22,7 +22,7 @@ function LandingPageInner() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [welcomePlan, setWelcomePlan] = useState<"pro" | "business" | "credits">("pro");
-  const { canGenerateInvoice, invoiceCount, isActive, hasCredits, effectivePlan, loading, refresh } = useSubscription();
+  const { canGenerateInvoice, invoiceCount, isActive, hasCredits, effectivePlan, packType, loading, refresh } = useSubscription();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -252,9 +252,9 @@ function LandingPageInner() {
                   </div>
                 )}
                 {!isActive && hasCredits && (
-                  <div className={`inline-flex items-center gap-2 text-sm ${effectivePlan === "business" ? "text-purple-400" : effectivePlan === "pro" ? "text-blue-400" : "text-amber-600"}`}>
-                    <span className={`w-2 h-2 rounded-full inline-block ${effectivePlan === "business" ? "bg-purple-500" : effectivePlan === "pro" ? "bg-blue-500" : "bg-amber-500"}`} />
-                    {effectivePlan === "business" ? "Business" : effectivePlan === "pro" ? "Pro" : "Starter"} credits active
+                  <div className={`inline-flex items-center gap-2 text-sm ${packType === "business_pack" ? "text-purple-400" : packType === "pro_pack" ? "text-blue-400" : "text-amber-600"}`}>
+                    <span className={`w-2 h-2 rounded-full inline-block ${packType === "business_pack" ? "bg-purple-500" : packType === "pro_pack" ? "bg-blue-500" : "bg-amber-500"}`} />
+                    {packType === "business_pack" ? "Max Pack" : packType === "pro_pack" ? "Plus Pack" : "Starter Pack"} credits active
                   </div>
                 )}
                 {!isActive && !hasCredits && invoiceCount >= 5 && (

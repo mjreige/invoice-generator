@@ -398,7 +398,7 @@ export default function HistoryPage() {
               </div>
 
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
-                <div className="grid grid-cols-12 gap-1 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-3 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                <div className="hidden sm:grid grid-cols-12 gap-1 border-b border-slate-200 bg-gradient-to-b from-slate-100 to-slate-50 px-3 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">
                   <div className="col-span-4">Description</div>
                   <div className="col-span-2 text-center">Qty</div>
                   <div className="col-span-3 text-right">Unit</div>
@@ -410,11 +410,25 @@ export default function HistoryPage() {
                     const unit = Number(li.unitPrice || 0);
                     const rowTotal = Number.isFinite(qty) && Number.isFinite(unit) ? qty * unit : 0;
                     return (
-                      <div key={`${previewInvoice.id}-${idx}`} className="grid grid-cols-12 items-center gap-1 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-                        <div className="col-span-4 min-w-0 truncate text-sm font-medium text-slate-900">{li.description || "—"}</div>
-                        <div className="col-span-2 text-center text-sm text-slate-800">{li.quantity || "—"}</div>
-                        <div className="col-span-3 text-right text-xs sm:text-sm text-slate-800 tabular-nums whitespace-nowrap">{li.unitPrice ? `${getCurrencySymbol(previewInvoice.currency || "USD")}${formatMoney(unit)}` : "—"}</div>
-                        <div className="col-span-3 text-right text-xs sm:text-sm font-semibold text-slate-900 tabular-nums whitespace-nowrap">{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(rowTotal)}</div>
+                      <div key={`${previewInvoice.id}-${idx}`} className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+                        {/* Mobile: stacked so wide amounts never overlap */}
+                        <div className="sm:hidden">
+                          <div className="text-sm font-medium text-slate-900">{li.description || "—"}</div>
+                          <div className="mt-2 flex items-end justify-between gap-3 text-sm">
+                            <span className="text-slate-500">Qty: <span className="font-medium text-slate-800">{li.quantity || "—"}</span></span>
+                            <div className="text-right">
+                              <div className="text-xs text-slate-500 tabular-nums whitespace-nowrap">{li.unitPrice ? `${getCurrencySymbol(previewInvoice.currency || "USD")}${formatMoney(unit)} each` : "—"}</div>
+                              <div className="font-semibold text-slate-900 tabular-nums whitespace-nowrap">{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(rowTotal)}</div>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Desktop: table grid */}
+                        <div className="hidden sm:grid sm:grid-cols-12 sm:items-center sm:gap-1">
+                          <div className="col-span-4 min-w-0 truncate text-sm font-medium text-slate-900">{li.description || "—"}</div>
+                          <div className="col-span-2 text-center text-sm text-slate-800">{li.quantity || "—"}</div>
+                          <div className="col-span-3 text-right text-sm text-slate-800 tabular-nums whitespace-nowrap">{li.unitPrice ? `${getCurrencySymbol(previewInvoice.currency || "USD")}${formatMoney(unit)}` : "—"}</div>
+                          <div className="col-span-3 text-right text-sm font-semibold text-slate-900 tabular-nums whitespace-nowrap">{getCurrencySymbol(previewInvoice.currency || "USD")}{formatMoney(rowTotal)}</div>
+                        </div>
                       </div>
                     );
                   })}
