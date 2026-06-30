@@ -203,6 +203,74 @@ export async function POST(request: Request) {
       if (error) console.error("Subscription cancel error:", error);
     }
 
+    // Handle refunds & chargebacks — revoke what was granted, but only once the
+    // adjustment is APPROVED (live refunds start as pending_approval).
+    if (eventType === "adjustment.created" || eventType === "adjustment.updated") {
+      const action = data.action;
+      const status = data.status;
+      if ((action === "refund" || action === "chargeback") && status === "approved") {
+        // Guard against double-revoke: adjustment.created and adjustment.updated can
+        // both arrive "approved" for the same adjustment. Revoke once per adjustment id.
+        const guardKey = `adj-revoked:${data.id}`;
+        const { error: guardErr } = await supabase
+          .from("processed_webhook_events")
+          .insert({ event_id: guardKey });
+        if (guardErr) {
+          if (guardErr.code === "23505") {
+            console.log("Adjustment already revoked, skipping:", data.id);
+            return NextResponse.json({ success: true }, { status: 200 });
+          }
+          console.error("Adjustment guard insert error:", guardErr);
+          // proceed anyway rather than miss the revoke
+        }
+
+        const subscriptionId = data.subscription_id;
+        const customerId = data.customer_id;
+
+        let subRes: any = null;
+        if (subscriptionId) {
+          subRes = await supabase
+            .from("subscriptions")
+            .select("user_id, invoice_credits, credits_used, pack_type")
+            .eq("paddle_subscription_id", subscriptionId)
+            .single();
+        } else if (customerId) {
+          subRes = await supabase
+            .from("subscriptions")
+            .select("user_id, invoice_credits, credits_used, pack_type")
+            .eq("paddle_customer_id", customerId)
+            .single();
+        }
+        const sub = subRes?.data;
+
+        if (sub) {
+          if (subscriptionId) {
+            // Subscription refund/chargeback -> revoke access
+            const { error } = await supabase
+              .from("subscriptions")
+              .update({ status: "cancelled", updated_at: new Date().toISOString() })
+              .eq("paddle_subscription_id", subscriptionId);
+            if (error) console.error("Refund (subscription) update error:", error);
+            else console.log("Revoked subscription via refund/chargeback:", subscriptionId);
+          } else {
+            // One-time pack refund/chargeback -> remove the refunded pack's credits.
+            // Once remaining credits hit 0 the app reverts the user to Free automatically.
+            const packCredits =
+              sub.pack_type === "business_pack" ? 50 : sub.pack_type === "pro_pack" ? 25 : 10;
+            const newCredits = Math.max(0, (sub.invoice_credits || 0) - packCredits);
+            const { error } = await supabase
+              .from("subscriptions")
+              .update({ invoice_credits: newCredits, updated_at: new Date().toISOString() })
+              .eq("user_id", sub.user_id);
+            if (error) console.error("Refund (credits) update error:", error);
+            else console.log(`Revoked ${packCredits} credits via refund/chargeback for user ${sub.user_id}, remaining: ${newCredits}`);
+          }
+        } else {
+          console.log("Refund/chargeback received but no matching subscription row found");
+        }
+      }
+    }
+
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("Webhook error:", error);
