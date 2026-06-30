@@ -121,3 +121,24 @@ Run the **Manual test checklist** in `QA_TEST_REPORT.md` section 4 against the l
 3. Smoke test every purchase + PDF + reminder path.
 4. Soft launch to communities; gather feedback.
 5. Big push (Product Hunt + SEO) once stable.
+
+---
+
+## D. Refunds runbook
+
+**Policy (consistent across pricing FAQ, support page, and the Billing button):** 30-day money-back on eligible purchases. Subscriptions are refundable within 30 days; credit packs within 30 days as long as **no more than half** the credits have been used. Thresholds are constants at the top of `app/api/refund-request/route.ts` (`REFUND_WINDOW_DAYS`, `PACK_USED_LIMIT`).
+
+**Prerequisite:** the Paddle webhook destination must be subscribed to `adjustment.created` and `adjustment.updated` (in addition to the subscription/transaction events), or refunds won't auto-revoke.
+
+**The flow:**
+1. **Customer requests** — either self-serve from **Billing → "Request a refund"** (the app checks eligibility and emails you a structured request) or by emailing `sales@ncgmgroup.com`.
+2. **You action it in Paddle** — Transactions → open the order → **Refund** (full). **For subscriptions, also Cancel the subscription** — refund returns the money, cancel stops future billing; they're two separate actions.
+3. **App auto-revokes** — once Paddle marks the adjustment **approved**, the webhook revokes access: packs lose the refunded credits; subscriptions end access **immediately** (status cancelled + period cleared). Acts only on `approved`, and is deduped so it can't double-revoke.
+
+**What "return to free" means:** free-tier rules re-apply — it does **not** grant a fresh 5 invoices. The free cap is a lifetime count of existing invoices, so a customer who already created more than 5 (using credits) is blocked from creating new ones after a refund. They keep their existing invoices (view only). Refunds never delete created invoices.
+
+**Timing:** live refunds are reviewed by Paddle (not instant); card refunds typically land in 3–5 business days.
+
+**Abuse note:** the ≤50%-used pack rule caps refund abuse at half the value while keeping light users happy (avoiding chargebacks). If abuse appears, tighten `PACK_USED_LIMIT` (e.g. to `0` for unused-only).
+
+**Manual override (if ever needed):** to revoke without a Paddle event, in Supabase set the user's `subscriptions` row to `invoice_credits = credits_used` (packs) or `status = 'cancelled', current_period_end = NULL` (subscriptions).
