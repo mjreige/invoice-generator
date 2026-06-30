@@ -68,7 +68,7 @@ export default function Pricing() {
     },
     {
       question: "Do you offer refunds?",
-      answer: "We offer a 30-day refund policy. Contact us at sales@ncgmgroup.com for a full refund, no questions asked.",
+      answer: "We offer a 30-day money-back guarantee on eligible purchases. You can request a refund from Billing (Manage Subscription) or email sales@ncgmgroup.com. Subscriptions are refundable within 30 days; credit packs are refundable within 30 days as long as no more than half the credits have been used.",
     },
   ];
 

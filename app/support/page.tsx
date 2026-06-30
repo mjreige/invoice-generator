@@ -119,8 +119,8 @@ export default function SupportPage() {
               /* Form */
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                  <span className="font-semibold">Looking for a refund?</span> We offer a 30-day money-back guarantee. Just send a message below with <span className="font-semibold">&quot;Refund&quot;</span> in the subject, or email{" "}
-                  <a href="mailto:sales@ncgmgroup.com" className="font-medium underline">sales@ncgmgroup.com</a>.
+                  <span className="font-semibold">Looking for a refund?</span> You can request one yourself from{" "}
+                  <a href="/manage-subscription" className="font-medium underline">Billing</a> — we&apos;ll check your eligibility (30-day money-back on eligible purchases). Or send a message below and we&apos;ll help.
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">

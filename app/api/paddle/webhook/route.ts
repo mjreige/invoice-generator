@@ -109,6 +109,7 @@ export async function POST(request: Request) {
           current_period_end: data.current_billing_period?.ends_at || null,
           invoice_credits: 0,
           credits_used: 0,
+          last_purchase_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
 
@@ -153,6 +154,7 @@ export async function POST(request: Request) {
             .update({
               invoice_credits: newCredits,
               pack_type: packType,
+              last_purchase_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", userId);
@@ -167,6 +169,7 @@ export async function POST(request: Request) {
             invoice_credits: creditsToAdd,
             credits_used: 0,
             pack_type: packType,
+            last_purchase_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });
 
@@ -248,7 +251,7 @@ export async function POST(request: Request) {
             // Subscription refund/chargeback -> revoke access
             const { error } = await supabase
               .from("subscriptions")
-              .update({ status: "cancelled", updated_at: new Date().toISOString() })
+              .update({ status: "cancelled", current_period_end: null, updated_at: new Date().toISOString() })
               .eq("paddle_subscription_id", subscriptionId);
             if (error) console.error("Refund (subscription) update error:", error);
             else console.log("Revoked subscription via refund/chargeback:", subscriptionId);

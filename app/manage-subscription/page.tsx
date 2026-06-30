@@ -19,6 +19,10 @@ export default function ManageSubscriptionPage() {
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [justCancelled, setJustCancelled] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [refundLoading, setRefundLoading] = useState(false);
+  const [refundCheck, setRefundCheck] = useState<{ eligible: boolean; reason?: string; summary?: string } | null>(null);
+  const [refundSent, setRefundSent] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -86,6 +90,50 @@ export default function ManageSubscriptionPage() {
       setError(err.message || "Failed to cancel. Please contact support at sales@ncgmgroup.com");
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const openRefund = async () => {
+    setRefundOpen(true);
+    setRefundSent(false);
+    setRefundCheck(null);
+    setError(null);
+    setRefundLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) { setError("Your session expired. Please sign in again."); setRefundLoading(false); return; }
+      const res = await fetch("/api/refund-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ confirm: false }),
+      });
+      const data = await res.json();
+      setRefundCheck({ eligible: !!data.eligible, reason: data.reason, summary: data.summary });
+    } catch {
+      setError("Couldn't check refund eligibility. Please try again.");
+    } finally {
+      setRefundLoading(false);
+    }
+  };
+
+  const submitRefund = async () => {
+    setRefundLoading(true);
+    setError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) { setError("Your session expired. Please sign in again."); setRefundLoading(false); return; }
+      const res = await fetch("/api/refund-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ confirm: true }),
+      });
+      const data = await res.json();
+      if (data.sent) setRefundSent(true);
+      else setRefundCheck({ eligible: false, reason: data.reason || "Refund request could not be submitted." });
+    } catch {
+      setError("Couldn't submit your refund request. Please try again.");
+    } finally {
+      setRefundLoading(false);
     }
   };
 
@@ -210,6 +258,20 @@ export default function ManageSubscriptionPage() {
                 </button>
               </div>
             )}
+
+            {/* Request a refund — shown for active subscribers and credit-pack holders */}
+            {(subStatus === "active" || subStatus === "credits_only" || subStatus === "cancelled_active") && !justCancelled && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <h2 className="text-sm font-semibold text-slate-700 mb-1">Request a refund</h2>
+                <p className="text-sm text-slate-500 mb-3">30-day money-back on eligible purchases. We'll check your eligibility before anything is submitted.</p>
+                <button
+                  onClick={openRefund}
+                  className="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-100 transition"
+                >
+                  Request a refund
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -244,6 +306,41 @@ export default function ManageSubscriptionPage() {
                 {cancelling ? "Cancelling..." : "Cancel Anyway"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Refund Modal */}
+      {refundOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setRefundOpen(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
+            {refundSent ? (
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Refund request sent</h3>
+                <p className="text-sm text-slate-600 mb-5">We've received your request and will process it shortly. Refunds are reviewed and typically take 3–5 business days to reach your card.</p>
+                <button onClick={() => setRefundOpen(false)} className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition">Close</button>
+              </div>
+            ) : refundLoading && !refundCheck ? (
+              <div className="py-8 text-center text-sm text-slate-500">Checking your eligibility…</div>
+            ) : refundCheck?.eligible ? (
+              <>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Request a refund</h3>
+                <p className="text-sm text-slate-600 mb-5">{refundCheck.summary}</p>
+                <div className="flex flex-col gap-3">
+                  <button onClick={submitRefund} disabled={refundLoading} className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition disabled:opacity-60">
+                    {refundLoading ? "Submitting…" : "Confirm refund request"}
+                  </button>
+                  <button onClick={() => setRefundOpen(false)} className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition">Never mind</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Refund not available</h3>
+                <p className="text-sm text-slate-600 mb-5">{refundCheck?.reason || "This purchase isn't eligible for a refund."}</p>
+                <button onClick={() => setRefundOpen(false)} className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition">Close</button>
+              </>
+            )}
           </div>
         </div>
       )}
