@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { escapeHtml } from "@/lib/escapeHtml";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -31,6 +32,12 @@ function reminderEmailHtml({
   type: "before" | "after";
   days: number;
 }) {
+  // Escape all sender-controlled values before interpolating into email HTML.
+  clientName = escapeHtml(clientName);
+  senderName = escapeHtml(senderName);
+  invoiceNumber = escapeHtml(invoiceNumber);
+  currency = escapeHtml(currency);
+
   const formattedDate = new Date(dueDate).toLocaleDateString("en-US", {
     year: "numeric", month: "long", day: "numeric",
   });

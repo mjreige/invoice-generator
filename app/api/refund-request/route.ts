@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { escapeHtml } from "@/lib/escapeHtml";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -38,6 +40,10 @@ export async function POST(request: Request) {
     );
     const { data: { user }, error: userError } = await authClient.auth.getUser(token);
     if (userError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (!rateLimit(`refund:${user.id}`, 3, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
 
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
@@ -106,16 +112,16 @@ export async function POST(request: Request) {
       from: "Invoice Generator <noreply@ncgmgroup.com>",
       to: "sales@ncgmgroup.com",
       replyTo: user.email || undefined,
-      subject: `[Refund request] ${user.email}`,
+      subject: `[Refund request] ${escapeHtml(user.email)}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color:#1e293b;">Refund request</h2>
-          <p><strong>Customer:</strong> ${user.email}</p>
-          <p><strong>Type:</strong> ${kind}</p>
-          <p><strong>Plan / pack:</strong> ${kind === "subscription" ? sub!.plan : packLabel(sub!.pack_type)}</p>
+          <p><strong>Customer:</strong> ${escapeHtml(user.email)}</p>
+          <p><strong>Type:</strong> ${escapeHtml(kind)}</p>
+          <p><strong>Plan / pack:</strong> ${escapeHtml(kind === "subscription" ? sub!.plan : packLabel(sub!.pack_type))}</p>
           <p><strong>Credits:</strong> ${creditsUsed} used of ${invoiceCredits} (${remaining} remaining)</p>
-          <p><strong>Paddle subscription id:</strong> ${sub!.paddle_subscription_id || "—"}</p>
-          <p><strong>Paddle customer id:</strong> ${sub!.paddle_customer_id || "—"}</p>
+          <p><strong>Paddle subscription id:</strong> ${escapeHtml(sub!.paddle_subscription_id || "—")}</p>
+          <p><strong>Paddle customer id:</strong> ${escapeHtml(sub!.paddle_customer_id || "—")}</p>
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;" />
           <p style="color:#1e293b;"><strong>Action:</strong> ${action}</p>
           <p style="color:#64748b;font-size:13px;">Once Paddle approves the refund, the app automatically revokes the credits / cancels access.</p>

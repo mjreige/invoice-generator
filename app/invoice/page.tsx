@@ -555,18 +555,14 @@ function InvoicePageInner() {
         setBusinessProfile((prev: any) => (prev ? { ...prev, invoice_number_template: updatedTemplate } : prev));
       }
 
-      // Increment credits_used if user is on credits (not subscription)
+      // Consume a credit server-side via an atomic, guarded DB function.
+      // The client can no longer write `subscriptions` directly (RLS locked down),
+      // so this is the only sanctioned path. It also prevents skipping the decrement.
       if (!isActive && hasCredits) {
-        const { data: sub } = await supabase
-          .from("subscriptions")
-          .select("credits_used")
-          .eq("user_id", user.id)
-          .single();
-        if (sub) {
-          await supabase
-            .from("subscriptions")
-            .update({ credits_used: (sub.credits_used || 0) + 1 })
-            .eq("user_id", user.id);
+        const { data: result, error: creditErr } = await supabase.rpc("consume_credit");
+        if (creditErr || !result?.[0]?.ok) {
+          setConfirmError("Couldn't confirm your remaining credits. Please refresh and try again.");
+          return;
         }
       }
     }
