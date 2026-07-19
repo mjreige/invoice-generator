@@ -151,6 +151,32 @@ const steps = [
     ),
   },
   {
+    icon: "📊",
+    title: "Export to Excel",
+    body: (
+      <div>
+        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+          Download your invoices as a spreadsheet — handy for bookkeeping or handing figures to your
+          accountant.
+        </p>
+        <ul className="space-y-2 mb-4">
+          {[
+            ["Where to find it", "Open My Invoices and click Export to Excel"],
+            ["Respects your filters", "Filter by customer or due-date range first — the file matches exactly what you filtered"],
+            ["Exports everything, not just the page", "All matching invoices are included, not only the ones currently on screen"],
+            ["What's included", "Invoice number, customer, date, total and currency"],
+          ].map(([title, desc]) => (
+            <li key={title} className="flex gap-2 text-sm">
+              <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>
+              <span><strong className="text-slate-800">{title}</strong> — <span className="text-slate-500">{desc}</span></span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-slate-400">Available on Plus Pack &amp; above.</p>
+      </div>
+    ),
+  },
+  {
     icon: "📐",
     title: "Units",
     body: (

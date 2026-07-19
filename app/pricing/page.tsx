@@ -188,7 +188,7 @@ export default function Pricing() {
                 <div className="text-xs text-slate-400">$0.40 per invoice</div>
               </div>
               <ul className="space-y-3 mb-6">
-                {["Everything in Starter", "Multi-currency invoicing (25+ currencies)", "Business profile & digital signature", "Tax support (rate + custom label)", "Line item templates & my customers", "Edit & re-download past invoices", "Billable item units"].map(f => (
+                {["Everything in Starter", "Multi-currency invoicing (25+ currencies)", "Business profile & digital signature", "Tax support (rate + custom label)", "Line item templates & my customers", "Edit & re-download past invoices", "Export invoices to Excel", "Billable item units"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300 text-sm">{f}</span></li>
                 ))}
               </ul>
@@ -299,7 +299,7 @@ export default function Pricing() {
                 <p className="text-slate-300 mt-2">For freelancers</p>
               </div>
               <ul className="space-y-4 mb-8">
-                {["Unlimited invoices", "Multi-currency invoicing (25+ currencies)", "Business profile & digital signature", "Tax support (rate + custom label)", "Line item templates & my customers", "Edit & re-download past invoices", "Billable item units", "Automatic payment reminders (profile defaults + per-invoice control)", "Priority email support"].map(f => (
+                {["Unlimited invoices", "Multi-currency invoicing (25+ currencies)", "Business profile & digital signature", "Tax support (rate + custom label)", "Line item templates & my customers", "Edit & re-download past invoices", "Export invoices to Excel", "Billable item units", "Automatic payment reminders (profile defaults + per-invoice control)", "Priority email support"].map(f => (
                   <li key={f} className="flex items-start gap-3"><Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span className="text-slate-300">{f}</span></li>
                 ))}
               </ul>

@@ -100,6 +100,32 @@ Run for **Pro** and **Business**, and test both **monthly** and **annual** at le
 
 ---
 
+## 5B. Excel export (History → "Export to Excel")
+
+Gated on `effectivePlan !== "free"` — same gate as edit/re-download. **Note: Starter Pack maps to `effectivePlan="free"`, so Starter users must NOT be able to export.**
+
+| # | Step | Expected | Result | Notes |
+|---|------|----------|--------|-------|
+| 5B.1 | [SEC] As **Free** user | Button greyed/locked; clicking routes to `/pricing`. No file downloads | | |
+| 5B.2 | [SEC] As **Starter Pack** user | Same as Free — export **locked** (Starter is `effectivePlan="free"`) | | |
+| 5B.3 | As **Plus / Max / Pro / Business** | Button active; export downloads | | |
+| 5B.4 | Export with **no filters** | File contains **all** your invoices, not just the 5 on the visible page | | |
+| 5B.5 | Filter by customer, then export | File contains only matching rows | | |
+| 5B.6 | Filter by due-date range, then export | File respects both from/to bounds | | |
+| 5B.7 | Change sort order, then export | Row order in the file matches the selected sort | | |
+| 5B.8 | Open the file in Excel | Opens without repair prompts; sheet named "Invoices" | | |
+| 5B.9 | Column check | Invoice #, Customer, Date, Total, Currency — headers in row 1 | | |
+| 5B.10 | Total column type | Totals are **numeric** (Excel can SUM them), not text | | |
+| 5B.11 | Mixed currencies | Each row shows its own currency; totals are not silently mixed | | |
+| 5B.12 | Special characters | Customer names with `&`, `<`, `'`, quotes render correctly (not escaped artifacts) | | |
+| 5B.13 | Arabic / RTL customer name | Renders correctly in the sheet | | |
+| 5B.14 | Filters matching **zero** invoices | Inline message "No invoices match the current filters"; no empty file downloads | | |
+| 5B.15 | Filename | `invoices-YYYY-MM-DD.xlsx` with today's date | | |
+| 5B.16 | Large account (optional) | Export with 100+ invoices completes in reasonable time | | |
+| 5B.17 | Also open in Google Sheets / LibreOffice | Opens cleanly (cross-tool compatibility) | | |
+
+---
+
 ## 6. Automation & templates (subscription-only)
 
 | # | Feature | Steps / expected | Result | Notes |

@@ -116,6 +116,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Tax support (rate + custom label)</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Line item templates & my customers</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Edit & re-download past invoices</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Export invoices to Excel</li>
                 </ul>
                 <button
                   onClick={() => handleBuy(PRICES.proPack, "proPack")}
@@ -176,6 +177,7 @@ export default function UpgradePopup({ show, onClose }: UpgradePopupProps) {
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Tax support (rate + custom label)</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Line item templates & my customers</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Edit & re-download past invoices</li>
+                  <li className="flex gap-2"><span className="text-green-400">✓</span>Export invoices to Excel</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Automatic payment reminders</li>
                   <li className="flex gap-2"><span className="text-green-400">✓</span>Priority email support</li>
                 </ul>
