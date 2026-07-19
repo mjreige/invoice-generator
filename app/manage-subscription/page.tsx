@@ -262,8 +262,38 @@ export default function ManageSubscriptionPage() {
             {/* Request a refund — shown for active subscribers and credit-pack holders */}
             {(subStatus === "active" || subStatus === "credits_only" || subStatus === "cancelled_active") && !justCancelled && (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <h2 className="text-sm font-semibold text-slate-700 mb-1">Request a refund</h2>
-                <p className="text-sm text-slate-500 mb-3">30-day money-back on eligible purchases. We'll check your eligibility before anything is submitted.</p>
+                <h2 className="text-sm font-semibold text-slate-700 mb-1">Refunds</h2>
+                <p className="text-sm text-slate-500 mb-3">
+                  We offer a 30-day money-back guarantee on eligible purchases. We&apos;ll check your
+                  eligibility before anything is submitted &mdash; nothing is sent until you confirm.
+                </p>
+
+                <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                    What&apos;s eligible
+                  </p>
+                  <ul className="space-y-1.5 text-sm text-slate-600">
+                    <li>
+                      <span className="font-medium text-slate-700">Subscriptions</span> &mdash; refundable
+                      within 30 days of your latest payment. Your plan is cancelled and access ends
+                      immediately.
+                    </li>
+                    <li>
+                      <span className="font-medium text-slate-700">Credit packs</span> &mdash; refundable
+                      within 30 days, as long as no more than half the credits have been used. Remaining
+                      credits are removed and your account returns to Free.
+                    </li>
+                    <li>
+                      Invoices you&apos;ve already created always stay in your history.
+                    </li>
+                  </ul>
+                  <p className="mt-3 text-xs text-slate-500">
+                    How it works: submit the request below &rarr; our team reviews it &rarr; once approved
+                    in Paddle, your refund is issued and access is updated automatically. Questions?
+                    Email sales@ncgmgroup.com.
+                  </p>
+                </div>
+
                 <button
                   onClick={openRefund}
                   className="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-100 transition"

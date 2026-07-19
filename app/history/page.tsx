@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useSubscription } from "@/lib/useSubscription";
 import { getCurrencySymbol } from "@/lib/currencies";
+import { downloadXlsx } from "@/lib/exportXlsx";
 import type { LineItemForPdf } from "@/lib/types";
 
 type InvoiceRow = {
@@ -40,6 +41,8 @@ export default function HistoryPage() {
   const [filterCustomer, setFilterCustomer] = useState("");
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -91,6 +94,60 @@ export default function HistoryPage() {
   }, [router, currentPage, sortBy, filterCustomer, filterFrom, filterTo]);
 
   const totalPages = Math.ceil(totalInvoices / itemsPerPage);
+
+  // Export every invoice matching the CURRENT filters (not just the visible page).
+  // Paid feature, mirroring the edit/re-download gate.
+  const canExport = effectivePlan !== "free";
+
+  const handleExport = async () => {
+    if (!canExport) return;
+    setExporting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { router.replace("/login?redirect=/history"); return; }
+
+      let q = supabase
+        .from("invoices")
+        .select("invoice_number, client_name, due_date, created_at, grand_total, currency")
+        .eq("user_id", session.user.id);
+      if (filterCustomer.trim()) q = q.ilike("client_name", `%${filterCustomer.trim()}%`);
+      if (filterFrom) q = q.gte("due_date", filterFrom);
+      if (filterTo) q = q.lte("due_date", filterTo);
+
+      let orderByColumn = "created_at";
+      let ascending = false;
+      switch (sortBy) {
+        case "oldest": orderByColumn = "created_at"; ascending = true; break;
+        case "total_high": orderByColumn = "grand_total"; ascending = false; break;
+        case "total_low": orderByColumn = "grand_total"; ascending = true; break;
+        case "client_az": orderByColumn = "client_name"; ascending = true; break;
+      }
+
+      const { data, error } = await q.order(orderByColumn, { ascending });
+      if (error || !data || data.length === 0) {
+        setExportError(error ? "Export failed. Please try again." : "No invoices match the current filters.");
+        return;
+      }
+
+      const rows: (string | number)[][] = [
+        ["Invoice #", "Customer", "Date", "Total", "Currency"],
+        ...data.map((r) => [
+          r.invoice_number ?? "",
+          r.client_name ?? "",
+          (r.due_date ?? r.created_at ?? "").slice(0, 10),
+          Number(r.grand_total ?? 0),
+          r.currency ?? "",
+        ]),
+      ];
+
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadXlsx(rows, `invoices-${stamp}.xlsx`, "Invoices");
+    } catch {
+      setExportError("Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleViewInvoice = async (invoiceId: string) => {
     setLoadingPreviewId(invoiceId);
@@ -239,6 +296,24 @@ export default function HistoryPage() {
                   <option value="total_low">Total low to high</option>
                   <option value="client_az">Client A to Z</option>
                 </select>
+                {canExport ? (
+                  <button
+                    onClick={handleExport}
+                    disabled={exporting}
+                    title="Export the invoices matching your current filters to Excel"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 min-h-[44px] disabled:opacity-60"
+                  >
+                    {exporting ? "Exporting…" : "Export to Excel"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => router.push("/pricing")}
+                    title="Exporting to Excel is available on paid plans"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-400 shadow-sm transition hover:bg-slate-50 min-h-[44px]"
+                  >
+                    Export to Excel
+                  </button>
+                )}
                 <button
                   onClick={() => router.push("/")}
                   className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 min-h-[44px]"
@@ -286,6 +361,9 @@ export default function HistoryPage() {
                 </button>
               )}
             </div>
+            {exportError && (
+              <p className="mt-3 text-sm text-red-600">{exportError}</p>
+            )}
           </div>
 
           <div className="px-6 py-6 sm:px-8 sm:py-8">
