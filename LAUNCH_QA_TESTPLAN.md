@@ -30,6 +30,14 @@ Key rule to keep in mind while testing: **credit packs unlock *features* but nev
 | 1.4 | After login via a `?redirect=` link | Sent to the intended page post-login | | |
 | 1.5 | Change password (`/change-password`) | Succeeds; old password no longer works | | |
 | 1.6 | Log in on a second browser/incognito as a **different** user | Each session sees only its own data (setup for 8.x cross-tenant checks) | | |
+| 1.7 | Login page shows **"Forgot password?"** link | Present; routes to `/forgot-password` | | |
+| 1.8 | Request reset for a **real** account email | Neutral "if an account exists…" confirmation shown; reset email arrives | | |
+| 1.9 | [SEC] Request reset for an email with **no account** | **Same** neutral confirmation (no account-enumeration leak); no error revealing existence | | |
+| 1.10 | Reset email deliverability | Lands in Gmail **inbox** (not spam); from your domain; SPF/DKIM/DMARC PASS | | |
+| 1.11 | Click the reset link → `/reset-password` | Loads; password rules enforced; setting a valid new password succeeds | | |
+| 1.12 | Log in with the **new** password | Works; **old** password no longer works | | |
+| 1.13 | Reuse an **already-used** or expired reset link | Shows "invalid or expired" with a link to request a new one | | |
+| 1.14 | After reset completes | Recovery session is signed out; you land on `/login` | | |
 
 ---
 
