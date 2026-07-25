@@ -14,6 +14,20 @@ const HOME_PRICES = {
   business: process.env.NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID || "pri_01kkshe2hfk9jp508nyy8q081v",
 };
 
+// ── Launch-week config ─────────────────────────────────────────────
+// Flip `enabled` to true for launch week, then back to false when the offer ends.
+// `promoCode` must match the capped discount you create in Paddle.
+// `productHuntUrl` / `productHuntBadgeId`: fill in after your PH listing is live
+// (badge id is the number in the "featured" badge embed Product Hunt gives you).
+const LAUNCH = {
+  enabled: false,
+  promoCode: "LAUNCH50",
+  bannerText: "Launch week: 50% off your first purchase with code",
+  ctaText: "See plans",
+  productHuntUrl: "", // e.g. "https://www.producthunt.com/posts/invoice-generator"
+  productHuntBadgeId: "", // e.g. "123456"
+};
+
 function LandingPageInner() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -22,6 +36,7 @@ function LandingPageInner() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [welcomePlan, setWelcomePlan] = useState<"pro" | "business" | "credits">("pro");
+  const [launchBannerDismissed, setLaunchBannerDismissed] = useState(true);
   const { canGenerateInvoice, invoiceCount, isActive, hasCredits, effectivePlan, packType, loading, refresh } = useSubscription();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -35,6 +50,10 @@ function LandingPageInner() {
       if (user && typeof window !== "undefined" && localStorage.getItem("show_guide") === "true") {
         localStorage.removeItem("show_guide");
         setShowGuide(true);
+      }
+      // Launch banner: show unless the user dismissed it this launch cycle.
+      if (typeof window !== "undefined" && LAUNCH.enabled) {
+        setLaunchBannerDismissed(localStorage.getItem("launch_banner_dismissed") === LAUNCH.promoCode);
       }
     };
     void load();
@@ -242,6 +261,30 @@ function LandingPageInner() {
 
   return (
     <div className="min-h-screen bg-slate-950">
+      {LAUNCH.enabled && !launchBannerDismissed && (
+        <div className="relative flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-center text-sm text-white">
+          <span>
+            🚀 {LAUNCH.bannerText}{" "}
+            <span className="font-bold tracking-wide">{LAUNCH.promoCode}</span>
+          </span>
+          <a
+            href="/pricing"
+            className="hidden rounded-full bg-white/15 px-3 py-1 text-xs font-semibold hover:bg-white/25 sm:inline-block"
+          >
+            {LAUNCH.ctaText}
+          </a>
+          <button
+            aria-label="Dismiss"
+            onClick={() => {
+              setLaunchBannerDismissed(true);
+              if (typeof window !== "undefined") localStorage.setItem("launch_banner_dismissed", LAUNCH.promoCode);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <main className="min-h-[calc(100vh-56px)] bg-slate-950 px-4 py-12 text-slate-900">
         <div className="mx-auto w-full max-w-5xl">
           <div className="rounded-3xl border border-white/10 bg-white/95 px-6 py-10 shadow-2xl shadow-black/40 backdrop-blur sm:px-10">
@@ -251,6 +294,23 @@ function LandingPageInner() {
             <p className="mt-3 max-w-2xl text-sm text-slate-600 sm:text-base">
               Fill out your details, add line items, apply a discount, and export a clean PDF invoice. Start free — no credit card needed.
             </p>
+
+            {LAUNCH.enabled && LAUNCH.productHuntUrl && LAUNCH.productHuntBadgeId && (
+              <a
+                href={LAUNCH.productHuntUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-block"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=${LAUNCH.productHuntBadgeId}&theme=light`}
+                  alt="Featured on Product Hunt"
+                  width={200}
+                  height={43}
+                />
+              </a>
+            )}
 
             {/* Usage indicator for logged in users */}
             {isLoggedIn && !loading && (
