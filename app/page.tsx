@@ -21,8 +21,8 @@ const HOME_PRICES = {
 // (badge id is the number in the "featured" badge embed Product Hunt gives you).
 const LAUNCH = {
   enabled: false,
-  promoCode: "LAUNCH50",
-  bannerText: "Launch week: 50% off your first purchase with code",
+  promoCode: "LAUNCH30",
+  bannerText: "Launch week: 30% off your first purchase with code",
   ctaText: "See plans",
   productHuntUrl: "", // e.g. "https://www.producthunt.com/posts/invoice-generator"
   productHuntBadgeId: "", // e.g. "123456"
