@@ -20,9 +20,9 @@ const HOME_PRICES = {
 // `productHuntUrl` / `productHuntBadgeId`: fill in after your PH listing is live
 // (badge id is the number in the "featured" badge embed Product Hunt gives you).
 const LAUNCH = {
-  enabled: false,
+  enabled: true,
   promoCode: "LAUNCH30",
-  bannerText: "Launch week: 30% off your first purchase with code",
+  bannerText: "Launch week: 30% off your first purchase — first 100 customers, code",
   ctaText: "See plans",
   productHuntUrl: "", // e.g. "https://www.producthunt.com/posts/invoice-generator"
   productHuntBadgeId: "", // e.g. "123456"
