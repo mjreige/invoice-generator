@@ -1,3 +1,9 @@
-node_modules 
-.next 
-.env.local 
+node_modules
+.next
+.env.local
+tsconfig.tsbuildinfo
+
+# Build/output & large media artifacts (don't commit these)
+*.mp4
+*.gif
+*.mov
