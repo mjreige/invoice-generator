@@ -262,14 +262,14 @@ function LandingPageInner() {
   return (
     <div className="min-h-screen bg-slate-950">
       {LAUNCH.enabled && !launchBannerDismissed && (
-        <div className="relative flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-center text-sm text-white">
+        <div className="relative flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 pl-4 pr-10 text-center text-sm text-white">
           <span>
             🚀 {LAUNCH.bannerText}{" "}
             <span className="font-bold tracking-wide">{LAUNCH.promoCode}</span>
           </span>
           <a
             href="/pricing"
-            className="hidden rounded-full bg-white/15 px-3 py-1 text-xs font-semibold hover:bg-white/25 sm:inline-block"
+            className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold hover:bg-white/25"
           >
             {LAUNCH.ctaText}
           </a>
