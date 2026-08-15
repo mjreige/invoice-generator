@@ -260,6 +260,34 @@ const steps = [
     ),
   },
   {
+    icon: "🔁",
+    title: "Recurring Invoices",
+    body: (
+      <div>
+        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+          Bill the same client on a schedule without redoing the work — perfect for retainers, rent, or subscriptions.
+        </p>
+        <ol className="space-y-3 mb-4">
+          {[
+            ["Create the invoice once", "Build a normal invoice for your client and generate it as usual."],
+            ["Open My Invoices and click Repeat", "Find the invoice in your history and hit the Repeat button."],
+            ["Pick a schedule", "Choose weekly, monthly, quarterly, or yearly, a start date, an optional end date, and the payment terms."],
+            ["It generates automatically", "Each period a new invoice is created for you and you're emailed to review and send it. Manage or pause schedules under Recurring Invoices."],
+          ].map(([title, desc], i) => (
+            <li key={i} className="flex gap-3">
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">{i + 1}</span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{title}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="text-xs text-slate-400">Available on the <strong>Business monthly subscription</strong> only.</p>
+      </div>
+    ),
+  },
+  {
     icon: "💳",
     title: "Plans & Credits",
     body: (
@@ -272,7 +300,7 @@ const steps = [
             ["Plus Pack", "bg-blue-100 text-blue-700", "$9.99 · 25 credits + pro features"],
             ["Max Pack", "bg-purple-100 text-purple-700", "$19.99 · 50 credits + all features"],
             ["Pro Monthly", "bg-blue-100 text-blue-700", "$9/mo · unlimited invoices"],
-            ["Business Monthly", "bg-purple-100 text-purple-700", "$15/mo · Arabic PDF + custom numbering"],
+            ["Business Monthly", "bg-purple-100 text-purple-700", "$15/mo · Arabic PDF, custom numbering & recurring"],
           ].map(([name, colors, desc]) => (
             <div key={name} className="flex items-center gap-2 text-sm">
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold flex-shrink-0 ${colors}`}>{name}</span>

@@ -256,6 +256,16 @@ function LandingPageInner() {
       title: "Custom Invoice Numbering",
       description: "Define your own numbering format — e.g. ACME-2026-0001 — with a live preview, automatic yearly reset, and an option to lock it from manual edits",
       badge: "Business"
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      ),
+      title: "Recurring Invoices",
+      description: "Set an invoice to repeat weekly, monthly, quarterly, or yearly — it's generated automatically each period and you're emailed to review and send it",
+      badge: "Business"
     }
   ];
 
@@ -455,7 +465,7 @@ function LandingPageInner() {
                   <p className="text-slate-400 text-sm">Unlimited invoices</p>
                 </div>
                 <ul className="space-y-2 mb-6 flex-1">
-                  {["Pro $9/mo · unlimited + payment reminders", "Business $15/mo · Arabic PDF + custom invoice numbering", "Cancel anytime"].map((f, fi) => (
+                  {["Pro $9/mo · unlimited + payment reminders", "Business $15/mo · Arabic PDF, custom numbering & recurring invoices", "Cancel anytime"].map((f, fi) => (
                     <li key={fi} className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                       <span className="text-slate-300 text-sm">{f}</span>
@@ -520,7 +530,7 @@ function LandingPageInner() {
                 ? ["10 invoices — never expire", "PDF download & my invoices", "Discounts (% or fixed)", "Line item units"]
                 : welcomePlan === "pro"
                 ? ["Unlimited invoices", "My profile & branding", "Digital signature", "Tax support (rate + custom label)", "My customers with autocomplete", "Line item templates with autocomplete", "Edit & re-download past invoices", "Export invoices to Excel", "Line item units", "Priority email support"]
-                : ["Everything in Pro", "Arabic PDF support (RTL text rendering)", "Custom invoice numbering templates", "My customers list", "Priority customer support"]
+                : ["Everything in Pro", "Arabic PDF support (RTL text rendering)", "Custom invoice numbering templates", "Recurring / scheduled invoices", "My customers list", "Priority customer support"]
               ).map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
                   <svg className={`w-4 h-4 flex-shrink-0 mt-0.5 ${welcomePlan === "business" ? "text-purple-500" : "text-blue-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
