@@ -31,6 +31,11 @@ export async function GET(req: NextRequest) {
 
   const today = new Date().toISOString().slice(0, 10);
 
+  // --- TEMP DEBUG: see what the service-role client actually sees ---
+  const { data: allRows, error: allErr } = await supabaseAdmin
+    .from("recurring_invoices")
+    .select("id, status, next_run_date");
+
   const { data: schedules, error } = await supabaseAdmin
     .from("recurring_invoices")
     .select("*")
@@ -39,8 +44,17 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error("Recurring cron: fetch failed", error);
-    return NextResponse.json({ error: "DB error" }, { status: 500 });
+    return NextResponse.json({ error: "DB error", detail: error.message }, { status: 500 });
   }
+
+  const debug = {
+    today,
+    allRowsError: allErr?.message ?? null,
+    allRowsCount: allRows?.length ?? 0,
+    allRows: allRows ?? [],
+    filteredCount: schedules?.length ?? 0,
+  };
+  // --- end debug ---
 
   let generated = 0;
   let skipped = 0;
@@ -139,5 +153,5 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, due: schedules?.length ?? 0, generated, skipped, errors });
+  return NextResponse.json({ ok: true, due: schedules?.length ?? 0, generated, skipped, errors, debug });
 }
