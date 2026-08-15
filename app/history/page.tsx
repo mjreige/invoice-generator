@@ -475,12 +475,12 @@ export default function HistoryPage() {
                       <div className="sm:col-span-1 text-right text-sm font-semibold text-slate-900">
                         {getCurrencySymbol(invoice.currency || "USD")}{formatMoney(getPreviewTotals(invoice).grandTotal)}
                       </div>
-                      <div className="flex items-center gap-2 sm:col-span-4 sm:justify-end">
+                      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:col-span-4 sm:justify-end">
                         <button
                           type="button"
                           onClick={() => handleViewInvoice(invoice.id)}
                           disabled={loadingPreviewId === invoice.id}
-                          className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="basis-[calc(50%-0.25rem)] grow shrink sm:basis-auto sm:grow-0 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {loadingPreviewId === invoice.id ? "Loading..." : "View"}
                         </button>
@@ -489,7 +489,7 @@ export default function HistoryPage() {
                             type="button"
                             onClick={() => openRepeat(invoice)}
                             title="Set this invoice to repeat automatically on a schedule"
-                            className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                            className="basis-[calc(50%-0.25rem)] grow shrink sm:basis-auto sm:grow-0 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
                           >
                             Repeat
                           </button>
@@ -499,7 +499,7 @@ export default function HistoryPage() {
                             <button
                               type="button"
                               onClick={() => router.push(`/invoice?edit=${invoice.id}`)}
-                              className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-semibold text-amber-700 shadow-sm transition hover:bg-amber-100"
+                              className="basis-[calc(50%-0.25rem)] grow shrink sm:basis-auto sm:grow-0 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-semibold text-amber-700 shadow-sm transition hover:bg-amber-100"
                             >
                               Edit
                             </button>
@@ -507,7 +507,7 @@ export default function HistoryPage() {
                               type="button"
                               onClick={() => handleDownload(invoice)}
                               disabled={downloadingId === invoice.id}
-                              className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="basis-[calc(50%-0.25rem)] grow shrink sm:basis-auto sm:grow-0 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {downloadingId === invoice.id ? "Generating..." : <><span className="sm:hidden">Download</span><span className="hidden sm:inline">Download PDF</span></>}
                             </button>
@@ -517,7 +517,7 @@ export default function HistoryPage() {
                             type="button"
                             onClick={() => router.push("/pricing")}
                             title="Editing and re-downloading past invoices is available on the Plus pack and the Pro/Business plans"
-                            className="flex-1 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-100"
+                            className="basis-[calc(50%-0.25rem)] grow shrink sm:basis-auto sm:grow-0 sm:flex-none inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-600 shadow-sm transition hover:bg-slate-100"
                           >
                             Upgrade to edit &amp; download
                           </button>
