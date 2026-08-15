@@ -31,33 +31,17 @@ export async function GET(req: NextRequest) {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  // --- TEMP DEBUG: isolate which filter fails ---
-  const base = () => supabaseAdmin.from("recurring_invoices").select("id");
-  const [s1, s2, s3, s4] = await Promise.all([
-    base().eq("status", "active"),
-    base().lte("next_run_date", today),
-    base().eq("next_run_date", today),
-    base().eq("status", "active").lte("next_run_date", today),
-  ]);
-  const debug = {
-    today,
-    statusActiveCount: s1.data?.length ?? 0,
-    dateLteCount: s2.data?.length ?? 0,
-    dateEqCount: s3.data?.length ?? 0,
-    bothCount: s4.data?.length ?? 0,
-    errs: [s1.error?.message, s2.error?.message, s3.error?.message, s4.error?.message],
-  };
-  // --- end debug ---
-
+  // NB: use explicit columns — `.select("*")` on this table (jsonb `template`)
+  // returned zero rows via PostgREST; listing columns works reliably.
   const { data: schedules, error } = await supabaseAdmin
     .from("recurring_invoices")
-    .select("*")
+    .select("id, user_id, template, frequency, due_days, next_run_date, end_date")
     .eq("status", "active")
     .lte("next_run_date", today);
 
   if (error) {
     console.error("Recurring cron: fetch failed", error);
-    return NextResponse.json({ error: "DB error", detail: error.message }, { status: 500 });
+    return NextResponse.json({ error: "DB error" }, { status: 500 });
   }
 
   let generated = 0;
@@ -157,5 +141,5 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, due: schedules?.length ?? 0, generated, skipped, errors, debug });
+  return NextResponse.json({ ok: true, due: schedules?.length ?? 0, generated, skipped, errors });
 }
